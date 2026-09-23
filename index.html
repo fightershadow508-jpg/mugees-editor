@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#07111f" />
+  <meta name="description" content="Mughees Edtior — live creator training, TikTok growth, CapCut, Hypic and managed student dashboards." />
+  <title>Mughees Edtior — Creator Academy</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta property="og:title" content="Mughees Edtior — Creator Academy">
+  <meta property="og:description" content="Live creator training, private student dashboards, progress tracking and managed earnings.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="toastRoot" class="toast-root" aria-live="polite"></div>
+  <div class="site-shell">
+    <header class="topbar">
+      <a href="#/" class="brand" data-route="home" aria-label="Mughees Edtior home">
+        <span class="brand-mark">ME</span>
+        <span class="brand-copy"><strong>Mughees Edtior</strong><small>Creator Academy</small></span>
+      </a>
+      <nav class="desktop-nav" aria-label="Primary">
+        <a href="#/" data-route="home">Home</a>
+        <a href="#/courses" data-route="courses">Courses</a>
+        <a href="#/programs" data-route="programs">Creator Programs</a>
+        <a href="#/live" data-route="live">Live Classes</a>
+        <a href="#/how-it-works" data-route="how-it-works">How It Works</a>
+        <a href="#/faq" data-route="faq">FAQ</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="icon-btn mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
+        <button class="btn ghost" data-action="open-login">Login</button>
+        <button class="btn primary" data-action="open-signup">Join Now</button>
+      </div>
+    </header>
+
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="#/" data-route="home">Home</a>
+      <a href="#/courses" data-route="courses">Courses</a>
+      <a href="#/programs" data-route="programs">Creator Programs</a>
+      <a href="#/live" data-route="live">Live Classes</a>
+      <a href="#/how-it-works" data-route="how-it-works">How It Works</a>
+      <a href="#/faq" data-route="faq">FAQ</a>
+      <a href="#/contact" data-route="contact">Contact</a>
+    </div>
+
+    <main id="app"></main>
+
+    <footer class="footer" id="siteFooter">
+      <div class="footer-grid">
+        <div>
+          <div class="brand footer-brand"><span class="brand-mark">ME</span><span class="brand-copy"><strong>Mughees Edtior</strong><small>Creator Academy</small></span></div>
+          <p>Practical live training for TikTok growth, content creation, CapCut, Hypic and future creator tools.</p>
+          <p class="micro">Independent training platform. TikTok, CapCut and Hypic are trademarks of their respective owners. We are not endorsed by or affiliated with them unless expressly stated.</p>
+        </div>
+        <div><h4>Platform</h4><a href="#/courses">Courses</a><a href="#/programs">Creator Programs</a><a href="#/live">Live Classes</a><a href="#/how-it-works">How It Works</a></div>
+        <div><h4>Support</h4><a href="#/faq">FAQ</a><a href="#/contact">Contact</a><a href="#/community-guidelines">Community Guidelines</a><a href="#/earnings-policy">Earnings Policy</a></div>
+        <div><h4>Legal</h4><a href="#/terms">Terms & Conditions</a><a href="#/privacy">Privacy Policy</a><a href="#/payout-policy">Payout Policy</a><a href="#/refund-policy">Refund Policy</a><a href="#/earnings-disclaimer">Earnings Disclaimer</a></div>
+      </div>
+      <div class="footer-bottom"><span>© <span id="year"></span> Mughees Edtior. All rights reserved.</span><span>Built for creator education & managed payouts.</span></div>
+    </footer>
+  </div>
+
+  <div class="modal" id="authModal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Account access">
+    <div class="modal-card auth-card">
+      <button class="modal-close" data-action="close-modal" aria-label="Close">×</button>
+      <div class="auth-tabs"><button class="active" data-auth-tab="login">Login</button><button data-auth-tab="signup">Create Account</button></div>
+      <div id="authBody"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="genericModal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Details">
+    <div class="modal-card" id="genericModalBody"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
