@@ -356,4 +356,13 @@ supabase.auth.onAuthStateChange((event, session) => {
 // On page load, if URL contains reset query, open reset password modal
 if (new URLSearchParams(location.search).has('reset')) {
   supabase.auth.getSession().then(function(res) {
-    if (res.data && res.data.session) { openResetPassword(); } else { $('#authModal').classList.add('open'); $('#authModal').setAttribute('aria-hidden','false'); $('#authBody').innerHTML = '<h2>Invalid reset link</h2><p style="color:#728096">This password reset link is invalid or has expired. Please request a new one.</p><a href="#" data-action="open-forgot-password" style="color:#3b82f6">Request a new reset email</a>'; bindGlobal(); }
+    if (res.data && res.data.session) {
+      openResetPassword();
+    } else {
+      $('#authModal').classList.add('open');
+      $('#authModal').setAttribute('aria-hidden','false');
+      $('#authBody').innerHTML = '<h2>Invalid reset link</h2><p style="color:#728096">This password reset link is invalid or has expired. Please request a new one.</p><a href="#" data-action="open-forgot-password" style="color:#3b82f6">Request a new reset email</a>';
+      bindGlobal();
+    }
+  });
+}
