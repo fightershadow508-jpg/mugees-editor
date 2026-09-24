@@ -63,12 +63,37 @@ const demoState = {
   admin:{email:'admin@mugheeseditor.pk',password:'admin123',name:'Platform Admin'},
   settings:{brand:'Mughees Edtior',supportEmail:'support@mugheeseditor.pk',supportWhatsApp:'+92 300 0000000',weeklyUpdateText:'Creator earning updates are posted after the latest partner/program report becomes available.'}
 };
+const SCHEMA_VERSION = 3;
 
-function loadState(){
-  try{
-    const saved=localStorage.getItem('me_creator_state_v2');
-    if(saved){const x=JSON.parse(saved); return {...demoState,...x,admin:demoState.admin,settings:{...demoState.settings,...(x.settings||{})}};}
-  }catch(e){}
+// Merge demo student accounts into saved state, preserving other fields
+function mergeDemoAccounts(saved) {
+  const demoStudents = demoState.students;
+  const merged = (saved?.students || []).map(s => {
+    const demo = demoStudents.find(d => d.id === s.id);
+    if (demo) {
+      // enforce canonical email/password, keep other fields
+      return { ...s, email: demo.email, password: demo.password };
+    }
+    return s;
+  });
+  // add any missing demo students
+  demoStudents.forEach(d => {
+    if (!merged.find(s => s.id === d.id)) merged.push(d);
+  });
+  return merged;
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('me_creator_state_v2');
+    if (saved) {
+      const x = JSON.parse(saved);
+      const students = mergeDemoAccounts(x);
+      const admin = demoState.admin; // canonical admin credentials
+      const settings = { ...demoState.settings, ...(x.settings || {}) };
+      return { ...demoState, ...x, students, admin, settings };
+    }
+  } catch (e) {}
   return structuredClone(demoState);
 }
 let state=loadState();
