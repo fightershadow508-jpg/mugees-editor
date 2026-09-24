@@ -1,11 +1,13 @@
 # Test Access
 
-Student
+Authentication is now handled by Supabase Auth.
+
+## Student
 - Email: zain@mugheeseditor.pk
-- Password: demo123
+- Password: Set via Supabase Auth (contact admin to invite or reset)
 
-Admin
+## Admin
 - Email: admin@mugheeseditor.pk
-- Password: admin123
+- Password: Set via Supabase Auth (contact admin to reset)
 
-These credentials are for testing the supplied front-end package only. Replace browser-side authentication with secure server-side authentication before a public launch.
+Passwords are managed securely by Supabase. Never share or hardcode passwords in source files.

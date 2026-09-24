@@ -1,3 +1,4 @@
+﻿import { supabase } from './supabase-client.js';
 const $ = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 const esc = (v='') => String(v).replace(/[&<>'"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
@@ -10,12 +11,12 @@ const demoState = {
   session:null,
   students:[
     {
-      id:'ST-1048',name:'Zain Ali',avatar:'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80',email:'zain@mugheeseditor.pk',password:'demo123',phone:'0300 1234567',status:'Active Creator',program:'Hypic + CapCut',joinDate:'2026-08-14',
+      id:'ST-1048',name:'Zain Ali',avatar:'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80',email:'zain@mugheeseditor.pk',password:'',phone:'0300 1234567',status:'Active Creator',program:'Hypic + CapCut',joinDate:'2026-08-14',
       today:8.75,week:66.79,month:223.21,lifetime:659.29,available:44.64,paid:614.65,attendance:91,progress:82,tasksDone:16,tasksTotal:20,trendParticipation:11,performance:'Very Good',
       payoutMethod:'JazzCash',payoutAccount:'0300 1234567',city:'Lahore',bio:'Learning creator workflows and short-form content systems.'
     },
     {
-      id:'ST-1052',name:'Ayesha Noor',avatar:'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80',email:'ayesha@mugheeseditor.pk',password:'demo123',phone:'0312 5550099',status:'Active Creator',program:'TikTok Growth + Hypic',joinDate:'2026-08-22',
+      id:'ST-1052',name:'Ayesha Noor',avatar:'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80',email:'ayesha@mugheeseditor.pk',password:'',phone:'0312 5550099',status:'Active Creator',program:'TikTok Growth + Hypic',joinDate:'2026-08-22',
       today:6.43,week:47.32,month:174.64,lifetime:455.00,available:30.00,paid:425.00,attendance:96,progress:88,tasksDone:18,tasksTotal:20,trendParticipation:16,performance:'Excellent',
       payoutMethod:'Easypaisa',payoutAccount:'0312 5550099',city:'Islamabad',bio:'Short-form creator focused on face-led trend education.'
     }
@@ -60,7 +61,7 @@ const demoState = {
   ],
   supportMessages:[],
   contactMessages:[],
-  admin:{email:'admin@mugheeseditor.pk',password:'admin123',name:'Platform Admin'},
+  admin:{email:'admin@mugheeseditor.pk',password:'',name:'Platform Admin'},
   settings:{brand:'Mughees Edtior',supportEmail:'support@mugheeseditor.pk',supportWhatsApp:'+92 300 0000000',weeklyUpdateText:'Creator earning updates are posted after the latest partner/program report becomes available.'}
 };
 const SCHEMA_VERSION = 3;
@@ -203,7 +204,7 @@ const legalPages={
 function legalPage(key){const p=legalPages[key];return `<div class="legal-wrap"><span class="kicker">Mughees Edtior · Legal</span><h1>${esc(p.title)}</h1><div class="legal-callout">Draft for product design purposes. Have a qualified local lawyer review the final version before taking real payments or processing real creator payouts.</div><p style="margin-top:24px">${esc(p.intro)}</p>${p.sections.map(s=>`<h2>${esc(s[0])}</h2><p>${esc(s[1])}</p>`).join('')}<p class="micro" style="margin-top:35px">Last updated: ${niceDate()}</p></div>`}
 
 function authHTML(tab='login'){
- if(tab==='login')return `<h2>Welcome back</h2><p style="color:#728096">Login to your student or admin account.</p><form id="loginForm"><div class="field"><label>Email</label><input required type="email" name="email" placeholder="you@example.com"></div><div class="field"><label>Password</label><input required type="password" name="password" placeholder="••••••••"></div><button class="btn primary" style="width:100%" type="submit">Login</button></form>`;
+ if(tab==='login')return `<h2>Welcome back</h2><p style="color:#728096">Login to your student or admin account.</p><form id="loginForm"><div class="field"><label>Email</label><input required type="email" name="email" placeholder="you@example.com"></div><div class="field"><label>Password</label><input required type="password" name="password" placeholder="••••••••"></div><button class="btn primary" style="width:100%" type="submit">Login</button></form><a href="#" data-action="open-forgot-password" class="forgot-link" style="display:block;margin-top:10px;color:#3b82f6;text-align:center;">Forgot password?</a>`;
  return `<h2>Create student account</h2><p style="color:#728096">Create your account to access courses, classes, progress and earnings.</p><form id="signupForm"><div class="field"><label>Full name</label><input required name="name" placeholder="Your name"></div><div class="field"><label>Email</label><input required type="email" name="email" placeholder="you@example.com"></div><div class="field"><label>Phone</label><input required name="phone" placeholder="03xx xxxxxxx"></div><div class="field"><label>Password</label><input required minlength="6" type="password" name="password" placeholder="Minimum 6 characters"></div><div class="field"><label>Program</label><select name="program"><option>TikTok Growth</option><option>Hypic + CapCut</option><option>TikTok Growth + Hypic</option></select></div><button class="btn primary" style="width:100%" type="submit">Create Account</button></form>`;
 }
 
@@ -211,6 +212,20 @@ function openAuth(tab='login'){
  if(state.session?.role==='student'){closeModals();location.hash='#/dashboard';render();return;}
  if(state.session?.role==='admin'){closeModals();location.hash='#/admin';render();return;}
  $('#authModal').classList.add('open');$('#authModal').setAttribute('aria-hidden','false');$$('[data-auth-tab]').forEach(b=>b.classList.toggle('active',b.dataset.authTab===tab));$('#authBody').innerHTML=authHTML(tab);bindForms();
+}
+
+function openForgotPassword(){
+  $('#authModal').classList.add('open');
+  $('#authModal').setAttribute('aria-hidden','false');
+  $('#authBody').innerHTML = `<h2>Reset password</h2><p style="color:#728096">Enter your email to receive a reset link.</p><form id="forgotPasswordForm"><div class="field"><label>Email</label><input required type="email" name="email" placeholder="you@example.com"></div><button class="btn primary" style="width:100%" type="submit">Send Reset Email</button></form>`;
+  bindForms();
+}
+
+function openResetPassword(){
+  $('#authModal').classList.add('open');
+  $('#authModal').setAttribute('aria-hidden','false');
+  $('#authBody').innerHTML = "<h2>Set new password</h2><p style=\"color:#728096\">Enter a new password (minimum 8 characters).</p><form id=\"resetPasswordForm\"><div class=\"field\" style=\"position:relative\"><label>New Password</label><input required minlength=\"8\" type=\"password\" name=\"password\" id=\"rp_pw\" placeholder=\"Minimum 8 characters\"><button type=\"button\" onclick=\"(function(){var f=document.getElementById('rp_pw');f.type=f.type==='password'?'text':'password';})()\" style=\"position:absolute;right:10px;top:34px;background:none;border:none;cursor:pointer;color:#728096;font-size:16px\">ðŸ‘</button></div><div class=\"field\" style=\"position:relative\"><label>Confirm Password</label><input required minlength=\"8\" type=\"password\" name=\"confirm\" id=\"rp_cf\" placeholder=\"Confirm new password\"><button type=\"button\" onclick=\"(function(){var f=document.getElementById('rp_cf');f.type=f.type==='password'?'text':'password';})()\" style=\"position:absolute;right:10px;top:34px;background:none;border:none;cursor:pointer;color:#728096;font-size:16px\">ðŸ‘</button></div><p id=\"rp_err\" style=\"color:#ef4444;font-size:12px;margin:0 0 8px\"></p><button class=\"btn primary\" style=\"width:100%\" type=\"submit\">Update Password</button></form>\";
+  bindForms();
 }
 function closeModals(){$$('.modal').forEach(m=>m.classList.remove('open'));}
 
@@ -280,8 +295,8 @@ function payWithdrawal(id){const w=state.withdrawals.find(x=>x.id===id);if(!w||w
 function rejectWithdrawal(id){const w=state.withdrawals.find(x=>x.id===id);if(!w||w.status!=='Pending'){toast('This withdrawal has already been processed.');return;}if(!confirm('Reject this withdrawal and return the reserved amount to the student balance?'))return;w.status='Rejected';const s=state.students.find(x=>x.id===w.studentId);if(s){s.available+=w.amount;notify(s.id,'Withdrawal rejected',`${money(w.amount)} has been returned to your available balance.`)}save();render();toast('Withdrawal rejected and balance restored.');}
 
 function bindForms(){
- const login=$('#loginForm'); if(login)login.onsubmit=e=>{e.preventDefault();const fd=new FormData(login),email=String(fd.get('email')).trim().toLowerCase(),pw=String(fd.get('password'));if(email===state.admin.email&&pw===state.admin.password){state.session={role:'admin'};save();closeModals();location.hash='#/admin';render();return}const s=state.students.find(x=>x.email.toLowerCase()===email&&x.password===pw);if(s){state.session={role:'student',studentId:s.id};save();closeModals();location.hash='#/dashboard';render()}else toast('Invalid email or password.');};
- const signup=$('#signupForm'); if(signup)signup.onsubmit=e=>{e.preventDefault();const fd=new FormData(signup),email=String(fd.get('email')).trim().toLowerCase();if(state.students.some(x=>x.email.toLowerCase()===email)){toast('An account with this email already exists.');return}const s={id:uid('ST'),name:String(fd.get('name')).trim(),avatar:'',email,password:String(fd.get('password')),phone:String(fd.get('phone')).trim(),status:'Active Student',program:String(fd.get('program')),joinDate:todayISO(),today:0,week:0,month:0,lifetime:0,available:0,paid:0,attendance:100,progress:0,tasksDone:0,tasksTotal:20,trendParticipation:0,performance:'New',payoutMethod:'JazzCash',payoutAccount:'',city:'',bio:''};state.students.push(s);state.session={role:'student',studentId:s.id};save();closeModals();location.hash='#/dashboard';render();toast('Student account created.');};
+ const login=$('#loginForm'); if(login)login.onsubmit=async e=>{e.preventDefault();const fd=new FormData(login),email=String(fd.get('email')).trim().toLowerCase(),pw=String(fd.get('password')); const {data,error}=await supabase.auth.signInWithPassword({email,password:pw}); if(error||!data){toast('Invalid email or password.');return;} if(email===state.admin.email){state.session={role:'admin'}; save(); closeModals(); location.hash='#/admin'; render(); return;} const s=state.students.find(x=>x.email.toLowerCase()===email); if(s){state.session={role:'student',studentId:s.id}; save(); closeModals(); location.hash='#/dashboard'; render();} else {toast('Student record not found.');} };
+ const signup=$('#signupForm'); if(signup)signup.onsubmit=async e=>{e.preventDefault();const fd=new FormData(signup),email=String(fd.get('email')).trim().toLowerCase(),pw=String(fd.get('password')); if(state.students.some(x=>x.email.toLowerCase()===email)){toast('An account with this email already exists.');return} const {data,error}=await supabase.auth.signUp({email,password:pw}); if(error||!data){toast('Signup failed.');return} const s={id:uid('ST'),name:String(fd.get('name')).trim(),avatar:'',email,password:'',phone:String(fd.get('phone')).trim(),status:'Active Student',program:String(fd.get('program')),joinDate:todayISO(),today:0,week:0,month:0,lifetime:0,available:0,paid:0,attendance:100,progress:0,tasksDone:0,tasksTotal:20,trendParticipation:0,performance:'New',payoutMethod:'JazzCash',payoutAccount:'',city:'',bio:''}; state.students.push(s); state.session={role:'student',studentId:s.id}; save(); closeModals(); location.hash='#/dashboard'; render(); toast('Student account created.'); };
  const w=$('#withdrawForm'); if(w)w.onsubmit=e=>{e.preventDefault();const s=currentStudent(),fd=new FormData(w),amt=Number(fd.get('amount')),method=String(fd.get('method')),account=String(fd.get('account')).trim();if(!amt||amt<0.01||amt>s.available){toast('Enter an amount within your available balance.');return}if(!account){toast('Enter your payout account.');return}s.available-=amt;s.payoutMethod=method;s.payoutAccount=account;state.withdrawals.unshift({id:uid('WD'),studentId:s.id,date:todayISO(),amount:amt,method,account,status:'Pending',paidDate:'',reference:''});notify(s.id,'Withdrawal submitted',`${money(amt)} withdrawal request is pending review.`);save();dashView='payments';render();toast('Withdrawal request submitted.');};
  const pf=$('#profileForm');if(pf)pf.onsubmit=e=>{e.preventDefault();const s=currentStudent(),fd=new FormData(pf);['name','phone','city','payoutMethod','payoutAccount','bio'].forEach(k=>s[k]=String(fd.get(k)||''));save();toast('Profile saved.');render();};
  const ef=$('#addEarningForm');if(ef)ef.onsubmit=e=>{e.preventDefault();const fd=new FormData(ef),sid=String(fd.get('studentId')),amt=Number(fd.get('amount')),program=String(fd.get('program')),s=state.students.find(x=>x.id===sid);if(!s||!amt)return;state.earnings.unshift({id:uid('E'),studentId:sid,date:todayISO(),program,amount:amt,note:String(fd.get('note')||''),internalGross:Number(fd.get('internalGross')||0)});s.lifetime=Number(s.lifetime||0)+amt;s.available+=amt;notify(sid,'New earnings added',`${money(amt)} has been added to your approved account balance.`);save();render();toast('Earning added and student notified.');};
@@ -293,10 +308,12 @@ function bindForms(){
  const tf=$('#trendForm');if(tf)tf.onsubmit=e=>{e.preventDefault();const fd=new FormData(tf),t={id:uid('TR'),program:String(fd.get('program')),title:String(fd.get('title')),added:todayISO(),difficulty:String(fd.get('difficulty')),status:'New'};state.trends.unshift(t);state.students.forEach(s=>notify(s.id,'New creator trend',`${t.program}: ${t.title}`));save();closeModals();render();toast('Trend published and students notified.');};
  const prf=$('#programForm');if(prf)prf.onsubmit=e=>{e.preventDefault();const fd=new FormData(prf),name=String(fd.get('name')).trim(),desc=String(fd.get('desc')).trim();state.programs=state.programs||[];state.programs.push({id:uid('PG'),name,desc,code:name.slice(0,2).toUpperCase(),status:'Active'});save();closeModals();render();toast('Program added.');};
  const contact=$('#contactForm');if(contact)contact.onsubmit=e=>{e.preventDefault();const fd=new FormData(contact);state.contactMessages=state.contactMessages||[];state.contactMessages.unshift({id:uid('MSG'),name:String(fd.get('name')),email:String(fd.get('email')),message:String(fd.get('message')),date:todayISO()});save();contact.reset();toast('Message submitted to support.');};
+const fp=$('#forgotPasswordForm');if(fp)fp.onsubmit=async e=>{e.preventDefault();const fd=new FormData(fp),email=String(fd.get('email')).trim().toLowerCase();const {data,error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:'https://mugees-editor.vercel.app/?reset=1'});if(error){toast(error.message||'Failed to send reset email');}else{toast('Password reset email sent');closeModals();}};
+const rp=$('#resetPasswordForm');if(rp)rp.onsubmit=async e=>{e.preventDefault();const fd=new FormData(rp),pw=String(fd.get('password')),cp=String(fd.get('confirm'));if(pw.length<8){var er=document.getElementById('rp_err');if(er)er.textContent='Password must be at least 8 characters.';toast('Password must be at least 8 characters.');return;}if(pw!==cp){var er=document.getElementById('rp_err');if(er)er.textContent='Passwords do not match.';toast('Passwords do not match.');return;}var er=document.getElementById('rp_err');if(er)er.textContent='';const {data,error}=await supabase.auth.updateUser({password:pw});if(error){toast(error.message||'Failed to reset password');}else{toast('Password updated');closeModals();openAuth('login');}};
 }
 
 function bindGlobal(){
- $$('[data-action]').forEach(el=>el.onclick=e=>{const a=el.dataset.action,id=el.dataset.id;if(a==='open-login')openAuth('login');else if(a==='open-signup')openAuth('signup');else if(a==='close-modal')closeModals();else if(a==='logout'){state.session=null;save();dashView='overview';adminView='overview';$('#mobileMenu').classList.remove('open');location.hash='#/';render();}else if(a==='mark-notifications'){const s=currentStudent();state.notifications.forEach(n=>{if(n.studentId===s.id)n.read=true});save();render();}else if(a==='view-student')showStudentModal(id);else if(a==='add-class')addClassModal();else if(a==='add-trend')addTrendModal();else if(a==='add-program')addProgramModal();else if(a==='pay-withdrawal')payWithdrawal(id);else if(a==='reject-withdrawal')rejectWithdrawal(id);else if(a==='resolve-ticket')resolveTicket(id);else if(a==='reset-demo'){if(confirm('Reset all local data?'))resetDemo();}else if(a==='class-detail')showClassDetail(id);else if(a==='course-detail')showCourseDetail(id);else if(a==='trend-detail')showTrendDetail(id);else if(a==='edit-course')editCourseModal(id);});
+ $$('[data-action]').forEach(el=>el.onclick=e=>{const a=el.dataset.action,id=el.dataset.id;if(a==='open-login')openAuth('login');else if(a==='open-signup')openAuth('signup');else if(a==='open-forgot-password')openForgotPassword();else if(a==='close-modal')closeModals();else if(a==='logout'){state.session=null;save();dashView='overview';adminView='overview';$('#mobileMenu').classList.remove('open');location.hash='#/';render();}else if(a==='mark-notifications'){const s=currentStudent();state.notifications.forEach(n=>{if(n.studentId===s.id)n.read=true});save();render();}else if(a==='view-student')showStudentModal(id);else if(a==='add-class')addClassModal();else if(a==='add-trend')addTrendModal();else if(a==='add-program')addProgramModal();else if(a==='pay-withdrawal')payWithdrawal(id);else if(a==='reject-withdrawal')rejectWithdrawal(id);else if(a==='resolve-ticket')resolveTicket(id);else if(a==='reset-demo'){if(confirm('Reset all local data?'))resetDemo();}else if(a==='class-detail')showClassDetail(id);else if(a==='course-detail')showCourseDetail(id);else if(a==='trend-detail')showTrendDetail(id);else if(a==='edit-course')editCourseModal(id);});
  $$('[data-dash]').forEach(el=>el.onclick=()=>{
   dashView=el.dataset.dash;
   $('#mobileMenu').classList.remove('open');
@@ -329,3 +346,13 @@ function render(){syncHeader();const r=route();const app=$('#app');$('#year').te
 window.addEventListener('hashchange',()=>{$('#mobileMenu').classList.remove('open');render();});
 window.addEventListener('click',e=>{if(e.target.classList.contains('modal'))closeModals();});
 render();
+// Listen for Supabase auth state changes for password recovery
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'PASSWORD_RECOVERY') {
+    openResetPassword();
+  }
+});
+// On page load, if URL contains reset query, open reset password modal
+if (new URLSearchParams(location.search).has('reset')) {
+  supabase.auth.getSession().then(function(res) {
+    if (res.data && res.data.session) { openResetPassword(); } else { $('#authModal').classList.add('open'); $('#authModal').setAttribute('aria-hidden','false'); $('#authBody').innerHTML = '<h2>Invalid reset link</h2><p style="color:#728096">This password reset link is invalid or has expired. Please request a new one.</p><a href="#" data-action="open-forgot-password" style="color:#3b82f6">Request a new reset email</a>'; bindGlobal(); }

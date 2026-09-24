@@ -1,4 +1,4 @@
-# Mughees Edtior — Creator Academy Demo
+﻿# Mughees Edtior — Creator Academy Demo
 
 A premium static front-end prototype for a creator-training platform with:
 
@@ -17,15 +17,9 @@ A premium static front-end prototype for a creator-training platform with:
 - Draft legal pages (Terms, Privacy, Payout, Refund, Earnings Policy, Earnings Disclaimer, Community Guidelines)
 - Responsive mobile layout inspired by modern learning dashboards, but with an original visual design
 
-## Demo logins
+## Authentication
 
-**Student**
-- Email: `zain@mugheeseditor.pk`
-- Password: `demo123`
-
-**Admin**
-- Email: `admin@mugheeseditor.pk`
-- Password: `admin123`
+Authentication is now handled by Supabase Auth. Passwords are managed securely via Supabase and are not stored in source code.
 
 ## Important: what this ZIP is
 
