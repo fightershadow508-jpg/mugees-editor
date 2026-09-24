@@ -168,7 +168,7 @@ h1,h2,h3,.brand-copy strong,.dash-card strong,.stat strong{font-family:"Montserr
 .modal-card { -ms-overflow-style: none; scrollbar-width: none; }
 .modal-card::-webkit-scrollbar { display: none; }
 .pw-wrap { display: block; }
-.eye-btn { right: 15px; z-index: 2; }
+.eye-btn { right: 15px; z-index: 10; }
 .pw-strength { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 12px; font-weight: 600; }
 .pw-strength-bars { display: flex; gap: 4px; flex: 1; }
 .pw-strength-bars span { height: 4px; flex: 1; background: #e2e8f0; border-radius: 2px; transition: background 0.3s; }
