@@ -91,14 +91,23 @@ const icons={
   learn:'📚',live:'🎥',trend:'🔥',earn:'💰',growth:'📈',edit:'✂️',light:'💡',phone:'📱',bell:'🔔',wallet:'👛',shield:'🛡️',chart:'📊'
 };
 
+function heroCTAs(){
+  if(state.session?.role==='student'){
+    return `<div class="hero-actions"><a class="btn primary" href="#/dashboard">Go to Dashboard</a><a class="btn ghost" href="#/courses">Explore Courses</a></div>`;
+  }else if(state.session?.role==='admin'){
+    return `<div class="hero-actions"><a class="btn primary" href="#/admin">Admin Dashboard</a><a class="btn ghost" href="#/">View Website</a></div>`;
+  }
+  return `<div class="hero-actions"><button class="btn primary" data-action="open-signup">Start Learning</button><button class="btn ghost" data-action="open-login">Student Login</button></div>`;
+}
+
 function headerHero(){return `
 <section class="hero premium-hero">
   <div class="hero-grid">
     <div class="hero-copy">
-      <span class="eyebrow"><span class="dot"></span> Creator skills • Live mentorship • Student earnings</span>
+      <span class="eyebrow"><span class="dot"></span> Creator skills • Live mentorship • Personal dashboard</span>
       <h1>Build creator skills.<br><span class="gradient-text">Turn progress into opportunity.</span></h1>
-      <p>A premium learning platform for TikTok growth, CapCut, Hypic and modern creator workflows — with live classes, trend updates, progress tracking and a private earnings dashboard.</p>
-      <div class="hero-actions"><button class="btn primary" data-action="open-signup">Start Learning</button><button class="btn ghost" data-action="open-login">Student Login</button></div>
+      <p>A premium learning platform for TikTok growth, CapCut, Hypic and modern creator workflows — with live classes, trend updates, progress tracking and a private dashboard.</p>
+      ${heroCTAs()}
       <div class="hero-proof">
         <div class="proof-faces"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80" alt="Creator"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=100&q=80" alt="Creator"><img src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=100&q=80" alt="Creator"></div>
         <div><strong>Practical creator community</strong><small>Live training • Weekly opportunities • Personal dashboard</small></div>
@@ -106,15 +115,28 @@ function headerHero(){return `
     </div>
     <div class="hero-visual">
       <div class="creator-photo-card">
-        <img src="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1000&q=86" alt="Student learning creator skills on a laptop">
+        <img src="assets/images/hero-creator.webp" alt="Young creator editing content in a professional studio workspace">
         <div class="photo-gradient"></div>
-        <div class="mentor-label"><span class="live-dot"></span><div><strong>Learn with a clear system</strong><small>Classes, tasks, trends & progress in one place</small></div></div>
+        <div class="mentor-label"><span class="live-dot"></span><div><strong>Learn with a clear system</strong><small>Classes, tasks, trends &amp; progress in one place</small></div></div>
       </div>
-      <div class="dash-preview premium-preview">
-        <div class="dash-preview-head"><div class="mini-user"><div class="avatar photo-avatar"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80" alt="Student"></div><div><strong>Zain Ali</strong><small>Active Creator</small></div></div><span class="status">CREATOR ACCOUNT</span></div>
-        <div class="metric-grid"><div class="metric violet"><small>Today</small><strong>$8.75</strong></div><div class="metric cyan"><small>7 Days</small><strong>$66.79</strong></div><div class="metric green"><small>Available</small><strong>$44.64</strong></div><div class="metric gold"><small>Total Paid</small><strong>$614.65</strong></div></div>
+      <div class="hero-platform-stats">
+        <div class="hps-card hps-wide">
+          <span class="hps-icon">📚</span>
+          <div class="hps-body"><strong class="hps-value">4</strong><span class="hps-label">Creator Skill Tracks</span><small class="hps-sub">TikTok · CapCut · Hypic · Editing</small></div>
+        </div>
+        <div class="hps-card">
+          <span class="hps-icon">🎥</span>
+          <div class="hps-body"><strong class="hps-value">Weekly</strong><span class="hps-label">Live Sessions</span></div>
+        </div>
+        <div class="hps-card">
+          <span class="hps-icon">⏰</span>
+          <div class="hps-body"><strong class="hps-value">24/7</strong><span class="hps-label">Learning Access</span></div>
+        </div>
+        <div class="hps-card hps-accent">
+          <span class="hps-icon">🔥</span>
+          <div class="hps-body"><strong class="hps-value">Live</strong><span class="hps-label">Trend Updates</span><small class="hps-sub">Fresh creator opportunities</small></div>
+        </div>
       </div>
-      <div class="floating-chip one">✓ Payment history organized</div><div class="floating-chip two">🔥 New creator trend available</div>
     </div>
   </div>
 </section>`}
@@ -160,7 +182,11 @@ function authHTML(tab='login'){
  return `<h2>Create student account</h2><p style="color:#728096">Create your account to access courses, classes, progress and earnings.</p><form id="signupForm"><div class="field"><label>Full name</label><input required name="name" placeholder="Your name"></div><div class="field"><label>Email</label><input required type="email" name="email" placeholder="you@example.com"></div><div class="field"><label>Phone</label><input required name="phone" placeholder="03xx xxxxxxx"></div><div class="field"><label>Password</label><input required minlength="6" type="password" name="password" placeholder="Minimum 6 characters"></div><div class="field"><label>Program</label><select name="program"><option>TikTok Growth</option><option>Hypic + CapCut</option><option>TikTok Growth + Hypic</option></select></div><button class="btn primary" style="width:100%" type="submit">Create Account</button></form>`;
 }
 
-function openAuth(tab='login'){$('#authModal').classList.add('open');$('#authModal').setAttribute('aria-hidden','false');$$('[data-auth-tab]').forEach(b=>b.classList.toggle('active',b.dataset.authTab===tab));$('#authBody').innerHTML=authHTML(tab);bindForms();}
+function openAuth(tab='login'){
+ if(state.session?.role==='student'){closeModals();location.hash='#/dashboard';render();return;}
+ if(state.session?.role==='admin'){closeModals();location.hash='#/admin';render();return;}
+ $('#authModal').classList.add('open');$('#authModal').setAttribute('aria-hidden','false');$$('[data-auth-tab]').forEach(b=>b.classList.toggle('active',b.dataset.authTab===tab));$('#authBody').innerHTML=authHTML(tab);bindForms();
+}
 function closeModals(){$$('.modal').forEach(m=>m.classList.remove('open'));}
 
 function sparkline(values){const w=620,h=220,p=18,max=Math.max(...values),min=Math.min(...values),range=Math.max(1,max-min);const pts=values.map((v,i)=>`${p+i*((w-2*p)/(values.length-1))},${h-p-((v-min)/range)*(h-2*p)}`).join(' ');return `<svg class="earn-chart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8b5cf6" stop-opacity=".28"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></linearGradient><linearGradient id="line" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#8b5cf6"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs><polyline points="${pts} ${w-p},${h-p} ${p},${h-p}" fill="url(#area)" stroke="none"/><polyline points="${pts}" fill="none" stroke="url(#line)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>${values.map((v,i)=>{const [x,y]=pts.split(' ')[i].split(',');return `<circle cx="${x}" cy="${y}" r="4" fill="#fff" stroke="#7c3aed" stroke-width="3"/>`}).join('')}</svg>`}
@@ -245,8 +271,12 @@ function bindForms(){
 }
 
 function bindGlobal(){
- $$('[data-action]').forEach(el=>el.onclick=e=>{const a=el.dataset.action,id=el.dataset.id;if(a==='open-login')openAuth('login');else if(a==='open-signup')openAuth('signup');else if(a==='close-modal')closeModals();else if(a==='logout'){state.session=null;save();dashView='overview';adminView='overview';location.hash='#/';render();}else if(a==='mark-notifications'){const s=currentStudent();state.notifications.forEach(n=>{if(n.studentId===s.id)n.read=true});save();render();}else if(a==='view-student')showStudentModal(id);else if(a==='add-class')addClassModal();else if(a==='add-trend')addTrendModal();else if(a==='add-program')addProgramModal();else if(a==='pay-withdrawal')payWithdrawal(id);else if(a==='reject-withdrawal')rejectWithdrawal(id);else if(a==='resolve-ticket')resolveTicket(id);else if(a==='reset-demo'){if(confirm('Reset all local data?'))resetDemo();}else if(a==='class-detail')showClassDetail(id);else if(a==='course-detail')showCourseDetail(id);else if(a==='trend-detail')showTrendDetail(id);else if(a==='edit-course')editCourseModal(id);});
- $$('[data-dash]').forEach(el=>el.onclick=()=>{dashView=el.dataset.dash;render();});
+ $$('[data-action]').forEach(el=>el.onclick=e=>{const a=el.dataset.action,id=el.dataset.id;if(a==='open-login')openAuth('login');else if(a==='open-signup')openAuth('signup');else if(a==='close-modal')closeModals();else if(a==='logout'){state.session=null;save();dashView='overview';adminView='overview';$('#mobileMenu').classList.remove('open');location.hash='#/';render();}else if(a==='mark-notifications'){const s=currentStudent();state.notifications.forEach(n=>{if(n.studentId===s.id)n.read=true});save();render();}else if(a==='view-student')showStudentModal(id);else if(a==='add-class')addClassModal();else if(a==='add-trend')addTrendModal();else if(a==='add-program')addProgramModal();else if(a==='pay-withdrawal')payWithdrawal(id);else if(a==='reject-withdrawal')rejectWithdrawal(id);else if(a==='resolve-ticket')resolveTicket(id);else if(a==='reset-demo'){if(confirm('Reset all local data?'))resetDemo();}else if(a==='class-detail')showClassDetail(id);else if(a==='course-detail')showCourseDetail(id);else if(a==='trend-detail')showTrendDetail(id);else if(a==='edit-course')editCourseModal(id);});
+ $$('[data-dash]').forEach(el=>el.onclick=()=>{
+  dashView=el.dataset.dash;
+  $('#mobileMenu').classList.remove('open');
+  if(route()!=='dashboard'){location.hash='#/dashboard';render();}else{render();}
+ });
  $$('[data-admin]').forEach(el=>el.onclick=()=>{adminView=el.dataset.admin;render();});
  $$('[data-auth-tab]').forEach(el=>el.onclick=()=>openAuth(el.dataset.authTab));
  $$('[data-faq]').forEach(el=>el.onclick=()=>el.closest('.faq').classList.toggle('open'));
@@ -255,9 +285,17 @@ function bindGlobal(){
 
 function syncHeader(){
  const actions=$('.nav-actions'); if(!actions)return;
- if(state.session?.role==='student') actions.innerHTML=`<button class="icon-btn mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false">☰</button><a class="btn ghost" href="#/dashboard">Dashboard</a><button class="btn primary" data-action="logout">Logout</button>`;
- else if(state.session?.role==='admin') actions.innerHTML=`<button class="icon-btn mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false">☰</button><a class="btn ghost" href="#/admin">Admin Panel</a><button class="btn primary" data-action="logout">Logout</button>`;
- else actions.innerHTML=`<button class="icon-btn mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false">☰</button><button class="btn ghost" data-action="open-login">Login</button><button class="btn primary" data-action="open-signup">Join Now</button>`;
+ const mobileMenu=$('#mobileMenu');
+ if(state.session?.role==='student'){
+   actions.innerHTML=`<button class="icon-btn mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false">☰</button><a class="btn ghost" href="#/dashboard" id="headerDashBtn">Dashboard</a><button class="btn primary" data-action="logout" id="headerLogoutBtn">Logout</button>`;
+   if(mobileMenu) mobileMenu.innerHTML=`<a href="#/" data-route="home">Home</a><a href="#/courses" data-route="courses">Courses</a><a href="#/programs" data-route="programs">Creator Programs</a><a href="#/live" data-route="live">Live Classes</a><a href="#/dashboard" id="mobileDashBtn">Dashboard</a><a href="#/how-it-works" data-route="how-it-works">How It Works</a><a href="#/faq" data-route="faq">FAQ</a><button class="mobile-nav-btn" data-dash="notifications" id="mobileNotifBtn">🔔 Notifications</button><button class="mobile-nav-btn" data-dash="profile" id="mobileProfileBtn">👤 Profile</button><button class="mobile-nav-btn mobile-logout-btn" data-action="logout" id="mobileLogoutBtn">↩ Logout</button>`;
+ }else if(state.session?.role==='admin'){
+   actions.innerHTML=`<button class="icon-btn mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false">☰</button><a class="btn ghost" href="#/admin" id="headerAdminBtn">Admin Dashboard</a><button class="btn primary" data-action="logout" id="headerLogoutBtn">Logout</button>`;
+   if(mobileMenu) mobileMenu.innerHTML=`<a href="#/" data-route="home">Home</a><a href="#/courses" data-route="courses">Courses</a><a href="#/programs" data-route="programs">Creator Programs</a><a href="#/live" data-route="live">Live Classes</a><a href="#/admin" id="mobileAdminBtn">Admin Dashboard</a><a href="#/how-it-works" data-route="how-it-works">How It Works</a><a href="#/faq" data-route="faq">FAQ</a><a href="#/contact" data-route="contact">Contact</a><button class="mobile-nav-btn mobile-logout-btn" data-action="logout" id="mobileAdminLogoutBtn">↩ Logout</button>`;
+ }else{
+   actions.innerHTML=`<button class="icon-btn mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false">☰</button><button class="btn ghost" data-action="open-login" id="headerLoginBtn">Login</button><button class="btn primary" data-action="open-signup" id="headerJoinBtn">Join Now</button>`;
+   if(mobileMenu) mobileMenu.innerHTML=`<a href="#/" data-route="home">Home</a><a href="#/courses" data-route="courses">Courses</a><a href="#/programs" data-route="programs">Creator Programs</a><a href="#/live" data-route="live">Live Classes</a><a href="#/how-it-works" data-route="how-it-works">How It Works</a><a href="#/faq" data-route="faq">FAQ</a><a href="#/contact" data-route="contact">Contact</a><button class="mobile-nav-btn" data-action="open-login" id="mobileLoginBtn">Login</button><button class="mobile-nav-btn mobile-join-btn" data-action="open-signup" id="mobileJoinBtn">Join Now</button>`;
+ }
  const mb=$('#mobileMenuBtn');if(mb)mb.onclick=()=>{const menu=$('#mobileMenu'),open=menu.classList.toggle('open');mb.setAttribute('aria-expanded',String(open));};
 }
 function route(){const r=(location.hash||'#/').replace(/^#\//,'').split('?')[0];return r||'home'}
