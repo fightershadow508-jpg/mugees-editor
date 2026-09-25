@@ -350,42 +350,58 @@ function studentCourses(s){return `<div class="subpage-head"><div><h1>My Courses
 function studentLive(){return `<div class="subpage-head"><div><h1>Curriculum</h1><p style="color:#748195">Upcoming sessions and previous recordings.</p></div></div><div class="live-grid">${state.classes.map(c=>`<div class="live-card"><span class="tag ${c.status==='Upcoming'?'orange':'green'}">${esc(c.status)}</span><h3 style="margin-top:14px">${esc(c.title)}</h3><p style="color:#748195">${niceDate(c.date)} · ${esc(c.time)}<br>${esc(c.trainer)} · ${esc(c.batch)}</p><button class="btn primary" data-action="class-detail" data-id="${c.id}">${c.status==='Upcoming'?'Join Class':'Watch Recording'}</button></div>`).join('')}</div>`}
 function studentTrends(){return `<div class="subpage-head"><div><h1>Trend Updates</h1><p style="color:#748195">New creator trends published by Admin.</p></div></div><div class="cards">${state.trends.map(t=>`<div class="card"><div style="display:flex;justify-content:space-between"><span class="pill">${esc(t.program)}</span><span class="tag ${t.status==='New'?'green':''}">${esc(t.status)}</span></div><h3 style="margin-top:16px">${esc(t.title)}</h3><p>Difficulty: ${esc(t.difficulty)} · Added ${niceDate(t.added)}</p><button class="btn primary" data-action="trend-detail" data-id="${t.id}">View Tutorial</button></div>`).join('')}</div>`}
 
+const LEADERBOARD_AVATARS = [
+  'https://api.dicebear.com/7.x/initials/svg?seed=Ahmad+Raza&backgroundColor=7c3aed&textColor=ffffff',
+  'https://api.dicebear.com/7.x/initials/svg?seed=Zainab+Bibi&backgroundColor=0891b2&textColor=ffffff',
+  'https://api.dicebear.com/7.x/initials/svg?seed=Usman+Ali&backgroundColor=059669&textColor=ffffff',
+  'https://api.dicebear.com/7.x/initials/svg?seed=Fatima+Noor&backgroundColor=d97706&textColor=ffffff',
+  'https://api.dicebear.com/7.x/initials/svg?seed=Ali+Hassan&backgroundColor=e11d48&textColor=ffffff',
+  'https://api.dicebear.com/7.x/initials/svg?seed=Aisha+Khan&backgroundColor=7c3aed&textColor=ffffff',
+  'https://api.dicebear.com/7.x/initials/svg?seed=Bilal+Tariq&backgroundColor=0369a1&textColor=ffffff'
+];
+
 function getMockLeaderboard() {
-  const names = ['Ahmad Raza', 'Zainab Bibi', 'Usman Ali', 'Fatima Noor', 'Ali Hassan', 'Aisha Khan', 'Bilal Tariq'];
-  return names.map((name, i) => {
-    const earnings = 'Rs' + Math.floor(Math.random() * 5000000 + 1000000).toLocaleString();
-    return {
-      name,
-      rank: 'TOP ' + (i + 1),
-      amount: earnings,
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff&size=128`
-    };
-  });
+  const users = [
+    { name: 'Ahmad Raza',   rank: 'TOP 1', amount: 'Rs11,873,137' },
+    { name: 'Zainab Bibi',  rank: 'TOP 2', amount: 'Rs9,441,280'  },
+    { name: 'Usman Ali',    rank: 'TOP 3', amount: 'Rs7,820,500'  },
+    { name: 'Fatima Noor',  rank: 'TOP 4', amount: 'Rs6,155,900'  },
+    { name: 'Ali Hassan',   rank: 'TOP 5', amount: 'Rs4,932,640'  },
+    { name: 'Aisha Khan',   rank: 'TOP 6', amount: 'Rs3,710,000'  },
+    { name: 'Bilal Tariq',  rank: 'TOP 7', amount: 'Rs2,490,800'  },
+  ];
+  return users.map((u, i) => ({ ...u, avatar: LEADERBOARD_AVATARS[i] }));
 }
 
-function studentLeaderboard() {
-  const top7 = getMockLeaderboard().slice(0, 5);
-  const top30 = getMockLeaderboard().slice(0, 5);
-  const allTime = getMockLeaderboard().slice(0, 7);
+function studentLeaderboard(s) {
+  const all  = getMockLeaderboard();
+  const top7  = all.slice(0, 5);
+  const top30 = all.slice(0, 5);
+  const allTime = all.slice(0, 7);
+
+  const medal = ['🥇','🥈','🥉'];
+  const rankColor = i => i===0?'#f59e0b': i===1?'#94a3b8': i===2?'#cd7c2f':'#8b5cf6';
 
   const renderTable = (data, isAllTime) => `
     <div style="overflow-x:auto;">
-      <table class="table leaderboard-table" style="width:100%; border-collapse:collapse; min-width:300px; margin-top:10px;">
+      <table style="width:100%; border-collapse:collapse;">
         <thead>
           <tr>
-            <th style="background:#000; color:#fff; padding:12px; text-align:left; border-top-left-radius:8px;">Profile</th>
-            <th style="background:#000; color:#fff; padding:12px; text-align:left;">Name</th>
-            <th style="background:#000; color:#fff; padding:12px; text-align:right; border-top-right-radius:8px;">${isAllTime ? 'Amount' : 'Ranks'}</th>
+            <th style="background:rgba(139,92,246,0.15); color:#a78bfa; padding:11px 14px; text-align:left; font-size:11px; letter-spacing:.5px; text-transform:uppercase; border-bottom:1px solid rgba(139,92,246,0.2);">Profile</th>
+            <th style="background:rgba(139,92,246,0.15); color:#a78bfa; padding:11px 14px; text-align:left; font-size:11px; letter-spacing:.5px; text-transform:uppercase; border-bottom:1px solid rgba(139,92,246,0.2);">Name</th>
+            <th style="background:rgba(139,92,246,0.15); color:#a78bfa; padding:11px 14px; text-align:right; font-size:11px; letter-spacing:.5px; text-transform:uppercase; border-bottom:1px solid rgba(139,92,246,0.2);">${isAllTime ? 'Amount' : 'Rank'}</th>
           </tr>
         </thead>
         <tbody>
-          ${data.map(u => `
-            <tr style="border-bottom:1px solid #edf1f6;">
-              <td style="padding:10px 12px;">
-                <img src="${u.avatar}" alt="${u.name}" style="width:40px; height:40px; object-fit:cover; border-radius:50%; display:block; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+          ${data.map((u,i) => `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.05); transition:background .15s;" onmouseover="this.style.background='rgba(139,92,246,0.07)'" onmouseout="this.style.background='transparent'">
+              <td style="padding:10px 14px;">
+                <img src="${u.avatar}" alt="${u.name}" style="width:38px; height:38px; border-radius:50%; display:block; border:2px solid rgba(139,92,246,0.4);">
               </td>
-              <td style="padding:10px 12px; font-weight:600; color:#111827;">${esc(u.name)}</td>
-              <td style="padding:10px 12px; text-align:right; font-weight:700; color:${isAllTime ? '#059669' : '#8b5cf6'};">
+              <td style="padding:10px 14px; color:#e2e8f0; font-weight:600; font-size:14px;">
+                ${i<3?medal[i]+' ':''}${esc(u.name)}
+              </td>
+              <td style="padding:10px 14px; text-align:right; font-weight:800; color:${isAllTime ? '#34d399' : rankColor(i)}; font-size:13px;">
                 ${isAllTime ? u.amount : u.rank}
               </td>
             </tr>
@@ -395,30 +411,61 @@ function studentLeaderboard() {
     </div>
   `;
 
+  const currentAvatar = s.avatar || LEADERBOARD_AVATARS[0];
+
   return `
     <div class="subpage-head">
       <div>
-        <h1 style="color:#edf5ff;">Leaderboard</h1>
+        <h1 style="color:#edf5ff;">🏆 Leaderboard</h1>
         <p style="color:#8fa1b8;">Top performers across the platform.</p>
       </div>
     </div>
-    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px; margin-top:10px;">
-      
-      <!-- Top 7 Days -->
-      <div class="leaderboard-card" style="background:#fff; border-radius:16px; padding:20px; box-shadow:0 8px 30px rgba(0,0,0,0.1);">
-        <h3 style="color:#111827; margin:0 0 16px 0; font-size:18px;">Top 7 Days</h3>
+
+    <!-- Avatar Upload Banner -->
+    <div style="background:linear-gradient(135deg,rgba(139,92,246,0.18),rgba(34,211,238,0.1)); border:1px solid rgba(139,92,246,0.25); border-radius:18px; padding:22px 26px; margin-bottom:24px; display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+      <img id="lbAvatarPreview" src="${currentAvatar}" alt="Your avatar" style="width:64px; height:64px; border-radius:50%; border:3px solid rgba(139,92,246,0.5); object-fit:cover; flex-shrink:0;">
+      <div style="flex:1; min-width:180px;">
+        <div style="color:#e2e8f0; font-weight:700; font-size:15px; margin-bottom:4px;">Update Your Avatar</div>
+        <div style="color:#8fa1b8; font-size:13px;">Upload a photo to personalise your leaderboard profile.</div>
+      </div>
+      <label for="lbAvatarInput" style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; background:linear-gradient(135deg,#7c3aed,#22d3ee); color:#fff; font-weight:700; font-size:13px; padding:10px 20px; border-radius:999px; box-shadow:0 4px 18px rgba(124,58,237,0.4); transition:opacity .2s; white-space:nowrap;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+        📤 Upload Photo
+        <input type="file" id="lbAvatarInput" accept="image/*" style="display:none;" onchange="(function(e){
+          const file=e.target.files[0]; if(!file)return;
+          const reader=new FileReader();
+          reader.onload=function(ev){
+            const prev=document.getElementById('lbAvatarPreview');
+            if(prev) prev.src=ev.target.result;
+          };
+          reader.readAsDataURL(file);
+        })(event)">
+      </label>
+    </div>
+
+    <!-- 3-Column Leaderboard Grid -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px;">
+
+      <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:20px; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+          <span style="font-size:20px;">📅</span>
+          <h3 style="color:#e2e8f0; margin:0; font-size:16px; font-weight:800;">Top 7 Days</h3>
+        </div>
         ${renderTable(top7, false)}
       </div>
 
-      <!-- Top 30 Days -->
-      <div class="leaderboard-card" style="background:#fff; border-radius:16px; padding:20px; box-shadow:0 8px 30px rgba(0,0,0,0.1);">
-        <h3 style="color:#111827; margin:0 0 16px 0; font-size:18px;">Top 30 days</h3>
+      <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:20px; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+          <span style="font-size:20px;">🗓️</span>
+          <h3 style="color:#e2e8f0; margin:0; font-size:16px; font-weight:800;">Top 30 Days</h3>
+        </div>
         ${renderTable(top30, false)}
       </div>
 
-      <!-- All Time -->
-      <div class="leaderboard-card" style="background:#fff; border-radius:16px; padding:20px; box-shadow:0 8px 30px rgba(0,0,0,0.1);">
-        <h3 style="color:#111827; margin:0 0 16px 0; font-size:18px;">All Time</h3>
+      <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:20px; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+          <span style="font-size:20px;">🌟</span>
+          <h3 style="color:#e2e8f0; margin:0; font-size:16px; font-weight:800;">All Time</h3>
+        </div>
         ${renderTable(allTime, true)}
       </div>
 
@@ -496,7 +543,7 @@ function syncHeader(){
  const mobileMenu=$('#mobileMenu');
  if(state.session?.role==='student'){
    actions.innerHTML=`<button class="icon-btn mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false">☰</button><a class="btn ghost" href="#/dashboard" id="headerDashBtn">Dashboard</a>`;
-   if(mobileMenu) mobileMenu.innerHTML=`<a href="#/" data-route="home">Home</a><a href="#/courses" data-route="courses">Courses</a><a href="#/programs" data-route="programs">Creator Programs</a><a href="#/live" data-route="live">Curriculum</a><button class="mobile-nav-btn" data-dash="overview" id="mobileDashBtn">Dashboard</button><a href="#/how-it-works" data-route="how-it-works">How It Works</a><a href="#/faq" data-route="faq">FAQ</a><button class="mobile-nav-btn" data-dash="notifications" id="mobileNotifBtn">🔔 Notifications</button><button class="mobile-nav-btn" data-dash="profile" id="mobileProfileBtn">👤 Profile</button><button class="mobile-nav-btn mobile-logout-btn" data-action="logout" id="mobileLogoutBtn">↩ Logout</button>`;
+   if(mobileMenu) mobileMenu.innerHTML=`<a href="#/" data-route="home">Home</a><a href="#/courses" data-route="courses">Courses</a><a href="#/programs" data-route="programs">Creator Programs</a><a href="#/live" data-route="live">Curriculum</a><button class="mobile-nav-btn" data-dash="overview" id="mobileDashBtn">Dashboard</button><a href="#/how-it-works" data-route="how-it-works">How It Works</a><a href="#/faq" data-route="faq">FAQ</a><button class="mobile-nav-btn" data-dash="leaderboard" id="mobileLeaderboardBtn">🏆 Leaderboard</button><button class="mobile-nav-btn" data-dash="notifications" id="mobileNotifBtn">🔔 Notifications</button><button class="mobile-nav-btn" data-dash="profile" id="mobileProfileBtn">👤 Profile</button><button class="mobile-nav-btn mobile-logout-btn" data-action="logout" id="mobileLogoutBtn">↩ Logout</button>`;
  }else if(state.session?.role==='admin'){
    actions.innerHTML=`<button class="icon-btn mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false">☰</button><a class="btn ghost" href="#/admin" id="headerAdminBtn">Admin Dashboard</a>`;
    if(mobileMenu) mobileMenu.innerHTML=`<a href="#/" data-route="home">Home</a><a href="#/courses" data-route="courses">Courses</a><a href="#/programs" data-route="programs">Creator Programs</a><a href="#/live" data-route="live">Curriculum</a><button class="mobile-nav-btn" data-admin="overview" id="mobileAdminBtn">Admin Dashboard</button><a href="#/how-it-works" data-route="how-it-works">How It Works</a><a href="#/faq" data-route="faq">FAQ</a><a href="#/contact" data-route="contact">Contact</a><button class="mobile-nav-btn mobile-logout-btn" data-action="logout" id="mobileAdminLogoutBtn">↩ Logout</button>`;
