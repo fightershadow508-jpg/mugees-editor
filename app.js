@@ -510,6 +510,13 @@ document.addEventListener('click', e => {
     return;
   }
 
+  // ── Mobile Menu Auto-Close for all clicks inside it ───────────────────────
+  const mobileMenuClick = e.target.closest('#mobileMenu a, #mobileMenu button');
+  if (mobileMenuClick && !mobileMenuClick.classList.contains('mobile-menu-btn')) {
+    const menu = document.getElementById('mobileMenu');
+    if (menu) menu.classList.remove('open');
+  }
+
   // ── FAQ accordions (data-faq) ─────────────────────────────────────────────
   const faqEl = e.target.closest('[data-faq]');
   if (faqEl) {
