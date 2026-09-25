@@ -482,6 +482,11 @@ document.addEventListener('click', e => {
     }
     return;
   }
+  // Close mobile menu for any click inside it (buttons, links, etc.) before handling actions
+  if (e.target.closest('#mobileMenu')) {
+    const menu = document.getElementById('mobileMenu');
+    if (menu) menu.classList.remove('open');
+  }
 
   // ── DEDICATED MOBILE NAV BUTTON HANDLER ───────────────────────────────────
   const mobileNavBtn = e.target.closest('#mobileMenu .mobile-nav-btn');
