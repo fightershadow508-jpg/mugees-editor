@@ -398,8 +398,9 @@ function syncHeader(){
 }
 function route(){const r=(location.hash||'#/').replace(/^#\//,'').split('?')[0];return r||'home'}
 function render(){syncHeader();const r=route();const app=$('#app');$('#year').textContent=new Date().getFullYear();$('#siteFooter').classList.toggle('hidden',r==='dashboard'||r==='admin');let html='';switch(r){case'home':html=homePage();break;case'courses':html=coursesPage();break;case'programs':html=programsPage();break;case'live':html=livePage();break;case'how-it-works':html=howPage();break;case'faq':html=faqPage();break;case'contact':html=contactPage();break;case'dashboard':html=studentDashboard();break;case'admin':html=adminDashboard();break;case'terms':case'privacy':case'payout-policy':case'refund-policy':case'earnings-policy':case'earnings-disclaimer':case'community-guidelines':html=legalPage(r);break;default:html=`${pageHero('Page not found','The page you requested does not exist.')}<section class="section"><a class="btn primary" href="#/">Back Home</a></section>`}app.innerHTML=html;bindGlobal();window.scrollTo({top:0,behavior:'instant'});syncActiveLinks();}
-function syncActiveLinks(){const r=route();document.querySelectorAll('.sidebar a, .sidebar button, .side-nav button, .desktop-nav a, #mobileMenu a, #mobileMenu button, .mobile-menu a, .mobile-menu button').forEach(el=>el.classList.remove('active'));document.querySelectorAll('.sidebar a, .sidebar button, .side-nav button, .desktop-nav a, #mobileMenu a, #mobileMenu button, .mobile-menu a, .mobile-menu button').forEach(el=>{if(el.tagName==='A'){if(el.getAttribute('href')==='#/'+r||(r==='home'&&el.getAttribute('href')==='#/'))el.classList.add('active')}else if(el.tagName==='BUTTON'){if(el.dataset.dash&&dashView===el.dataset.dash&&r==='dashboard')el.classList.add('active');if(el.dataset.admin&&adminView===el.dataset.admin&&r==='admin')el.classList.add('active')}});}
+function syncActiveLinks(){const r=route();document.querySelectorAll('.sidebar a, .sidebar button, .side-nav button, .desktop-nav a, #mobileMenu a, #mobileMenu button, .mobile-menu a, .mobile-menu button').forEach(el=>{if(el.tagName==='A'){if(el.getAttribute('href')==='#/'+r||(r==='home'&&el.getAttribute('href')==='#/'))el.classList.add('active')}else if(el.tagName==='BUTTON'){if(el.dataset.dash&&dashView===el.dataset.dash&&r==='dashboard')el.classList.add('active');if(el.dataset.admin&&adminView===el.dataset.admin&&r==='admin')el.classList.add('active')}});}
 
+window.addEventListener('click', e => { if (e.target.closest('#mobileMenu a, #mobileMenu button, .mobile-menu a, .mobile-menu button')) { const mm = document.getElementById('mobileMenu'); if (mm) mm.classList.remove('open'); } });
 window.addEventListener('hashchange',()=>{$('#mobileMenu').classList.remove('open');render();});
 window.addEventListener('mousedown',e=>{if(e.target.classList.contains('modal'))closeModals();});
 render();
@@ -485,8 +486,8 @@ document.addEventListener('click', e => {
     if (dash) {
       dashView = dash;
       if (route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } else { render(); }
-      document.querySelectorAll('.side-nav button, #mobileMenu a, #mobileMenu button').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll(`[data-dash="${dashView}"]`).forEach(el => el.classList.add('active'));
+      
+      
       return;
     }
 
@@ -494,8 +495,8 @@ document.addEventListener('click', e => {
     if (admin) {
       adminView = admin;
       if (route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
-      document.querySelectorAll('.side-nav button, #mobileMenu a, #mobileMenu button').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll(`[data-admin="${adminView}"]`).forEach(el => el.classList.add('active'));
+      
+      
       return;
     }
   }
@@ -510,7 +511,7 @@ document.addEventListener('click', e => {
   // ── Chart filter tabs ─────────────────────────────────────────────────────
   const chartBtn = e.target.closest('#chartTabs button');
   if (chartBtn) {
-    document.querySelectorAll('#chartTabs button').forEach(x => x.classList.remove('active'));
+    
     chartBtn.classList.add('active');
     const r = chartBtn.dataset.range;
     const data = r==='1W' ? [12,15,14,20,18,25,28] :
@@ -523,34 +524,22 @@ document.addEventListener('click', e => {
   }
 
   // ── Sidebar / dashboard nav (data-dash) ───────────────────────────────────
-  const dashEl = e.target.closest('.side-nav [data-dash], .dash-top [data-dash], .dashboard-page [data-dash]');
+  const dashEl = e.target.closest('.side-nav [data-dash], .dash-top [data-dash], .dashboard-page [data-dash], #mobileMenu [data-dash], .mobile-menu [data-dash]');
   if (dashEl) {
     dashView = dashEl.dataset.dash;
+    const mm = document.getElementById('mobileMenu');
+    if (mm) mm.classList.remove('open');
     if (route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } else { render(); }
-    
-    // Explicitly update active states across ALL navigation links (Desktop + Mobile)
-    document.querySelectorAll('.side-nav button, #mobileMenu a, #mobileMenu button').forEach(el => {
-      el.classList.remove('active');
-    });
-    document.querySelectorAll(`[data-dash="${dashView}"]`).forEach(el => {
-      el.classList.add('active');
-    });
     return;
   }
 
   // ── Admin sidebar nav (data-admin) ────────────────────────────────────────
-  const adminEl = e.target.closest('.side-nav [data-admin], .dashboard-page [data-admin]');
+  const adminEl = e.target.closest('.side-nav [data-admin], .dashboard-page [data-admin], #mobileMenu [data-admin], .mobile-menu [data-admin]');
   if (adminEl) {
     adminView = adminEl.dataset.admin;
+    const mm = document.getElementById('mobileMenu');
+    if (mm) mm.classList.remove('open');
     if (route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
-    
-    // Explicitly update active states across ALL navigation links (Desktop + Mobile)
-    document.querySelectorAll('.side-nav button, #mobileMenu a, #mobileMenu button').forEach(el => {
-      el.classList.remove('active');
-    });
-    document.querySelectorAll(`[data-admin="${adminView}"]`).forEach(el => {
-      el.classList.add('active');
-    });
     return;
   }
 
@@ -612,3 +601,4 @@ document.addEventListener('click', e => {
     if (a === 'reset-demo')         { if (confirm('Reset all local data?')) resetDemo(); return; }
   }
 });
+
