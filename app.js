@@ -412,8 +412,6 @@ function bindMobileMenu() {
       if (el._mobileHandled) return;
       el._mobileHandled = true;
       setTimeout(function() { el._mobileHandled = false; }, 400);
-      // Debug alert — remove after confirming it works
-      alert('Mobile tap: ' + (el.textContent || '').trim());
       // Close the menu immediately
       menu.classList.remove('open');
       // Determine what this element should do
@@ -440,9 +438,9 @@ function bindMobileMenu() {
           location.hash = '#/'; render();
         }
       } else if (actionTarget === 'open-login') {
-        openAuth('login');
+        setTimeout(function() { openAuth('login'); }, 50);
       } else if (actionTarget === 'open-signup') {
-        openAuth('signup');
+        setTimeout(function() { openAuth('signup'); }, 50);
       } else if (hrefTarget && hrefTarget !== '#') {
         location.hash = hrefTarget;
       }
