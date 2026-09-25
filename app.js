@@ -201,8 +201,8 @@ function homePage(){return `${headerHero()}
 </div>
 <div class="stat">
   <svg width="34" height="34" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="stat-icon"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-  <strong class="stat-big-val">Weekly</strong>
-  <span class="stat-lbl">Creator trend updates</span>
+  <strong class="stat-big-val">$500+/month</strong>
+  <span class="stat-lbl">Potential earnings target</span>
 </div>
 <div class="stat">
   <svg width="34" height="34" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="stat-icon"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>

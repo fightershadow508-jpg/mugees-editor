@@ -395,7 +395,7 @@ h1,h2,h3,.brand-copy strong,.dash-card strong,.stat strong{font-family:"Montserr
   margin-bottom: 14px;
 }
 .stat-big-val {
-  font-size: 42px !important;
+  font-size: 28px !important;
   font-weight: 900 !important;
   line-height: 1.1 !important;
   margin-bottom: 4px;
@@ -413,4 +413,32 @@ h1,h2,h3,.brand-copy strong,.dash-card strong,.stat strong{font-family:"Montserr
 @media(max-width:640px) {
   .premium-stats .stat { border-right: 0 !important; border-bottom: 1px solid #e5e7eb !important; }
   .premium-stats .stat:last-child { border-bottom: 0 !important; }
+}
+
+/* Mobile Overrides for User Requests */
+@media (max-width: 768px) {
+  .hero-proof {
+    display: none !important;
+  }
+}
+@media (max-width: 640px) {
+  .hero-platform-stats {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  .hps-card {
+    padding: 12px 14px !important;
+  }
+  .hps-value {
+    font-size: 16px !important;
+  }
+  .hps-label {
+    font-size: 13px !important;
+  }
+  .hps-sub {
+    font-size: 11px !important;
+  }
+  .stat-big-val {
+    font-size: 24px !important;
+  }
 }
