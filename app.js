@@ -398,7 +398,29 @@ function syncHeader(){
 }
 function route(){const r=(location.hash||'#/').replace(/^#\//,'').split('?')[0];return r||'home'}
 function render(){syncHeader();const r=route();const app=$('#app');$('#year').textContent=new Date().getFullYear();$('#siteFooter').classList.toggle('hidden',r==='dashboard'||r==='admin');let html='';switch(r){case'home':html=homePage();break;case'courses':html=coursesPage();break;case'programs':html=programsPage();break;case'live':html=livePage();break;case'how-it-works':html=howPage();break;case'faq':html=faqPage();break;case'contact':html=contactPage();break;case'dashboard':html=studentDashboard();break;case'admin':html=adminDashboard();break;case'terms':case'privacy':case'payout-policy':case'refund-policy':case'earnings-policy':case'earnings-disclaimer':case'community-guidelines':html=legalPage(r);break;default:html=`${pageHero('Page not found','The page you requested does not exist.')}<section class="section"><a class="btn primary" href="#/">Back Home</a></section>`}app.innerHTML=html;bindGlobal();window.scrollTo({top:0,behavior:'instant'});syncActiveLinks();}
-function syncActiveLinks(){const r=route();document.querySelectorAll('.sidebar a, .sidebar button, .side-nav button, .desktop-nav a, #mobileMenu a, #mobileMenu button, .mobile-menu a, .mobile-menu button').forEach(el=>{if(el.tagName==='A'){if(el.getAttribute('href')==='#/'+r||(r==='home'&&el.getAttribute('href')==='#/'))el.classList.add('active')}else if(el.tagName==='BUTTON'){if(el.dataset.dash&&dashView===el.dataset.dash&&r==='dashboard')el.classList.add('active');if(el.dataset.admin&&adminView===el.dataset.admin&&r==='admin')el.classList.add('active')}});}
+function syncActiveLinks(){const r=route();  // Remove existing active classes from all navigation elements
+  document.querySelectorAll('.sidebar a, .sidebar button, .side-nav button, .desktop-nav a, #mobileMenu a, #mobileMenu button, .mobile-menu a, .mobile-menu button').forEach(el => el.classList.remove('active'));
+
+  // Apply active class based on current route for links
+  document.querySelectorAll('.sidebar a, .desktop-nav a, #mobileMenu a, .mobile-menu a').forEach(el => {
+    if (el.tagName === 'A') {
+      if (el.getAttribute('href') === '#/' + r || (r === 'home' && el.getAttribute('href') === '#/')) {
+        el.classList.add('active');
+      }
+    }
+  });
+
+  // Apply active class for button-based navigation (dashboard, admin, etc.)
+  document.querySelectorAll('.sidebar button, .side-nav button, #mobileMenu button, .mobile-menu button').forEach(el => {
+    if (el.tagName === 'BUTTON') {
+      if (el.dataset.dash && dashView === el.dataset.dash && r === 'dashboard') {
+        el.classList.add('active');
+      }
+      if (el.dataset.admin && adminView === el.dataset.admin && r === 'admin') {
+        el.classList.add('active');
+      }
+    }
+  });}
 
 window.addEventListener('click', e => { if (e.target.closest('#mobileMenu a, #mobileMenu button, .mobile-menu a, .mobile-menu button')) { const mm = document.getElementById('mobileMenu'); if (mm) mm.classList.remove('open'); } });
 window.addEventListener('hashchange',()=>{$('#mobileMenu').classList.remove('open');render();});
