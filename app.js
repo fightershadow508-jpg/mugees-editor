@@ -377,40 +377,6 @@ function bindGlobal(){
   // Only call bindForms — all click delegation is handled by the permanent
   // document-level listener below so it survives DOM re-renders.
   bindForms();
-
-  // EXPLICIT MOBILE MENU BINDING (User requested specific bindings for mobile nav)
-  document.querySelectorAll('#mobileMenu [data-dash]').forEach(btn => {
-    btn.onclick = (e) => {
-      e.preventDefault();
-      e.stopPropagation(); // ensure no conflicts
-      dashView = btn.dataset.dash;
-      const menu = document.getElementById('mobileMenu');
-      if (menu) menu.classList.remove('open');
-      if (route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } else { render(); }
-    };
-  });
-
-  document.querySelectorAll('#mobileMenu [data-admin]').forEach(btn => {
-    btn.onclick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      adminView = btn.dataset.admin;
-      const menu = document.getElementById('mobileMenu');
-      if (menu) menu.classList.remove('open');
-      if (route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
-    };
-  });
-
-  document.querySelectorAll('#mobileMenu [data-action="logout"]').forEach(btn => {
-    btn.onclick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      state.session = null; save(); dashView = 'overview'; adminView = 'overview';
-      const menu = document.getElementById('mobileMenu');
-      if (menu) menu.classList.remove('open');
-      location.hash = '#/'; render();
-    };
-  });
 }
 
 function syncHeader(){
@@ -530,7 +496,16 @@ document.addEventListener('click', e => {
     dashView = dashEl.dataset.dash;
     const menu = document.getElementById('mobileMenu');
     if (menu) menu.classList.remove('open');
+    
     if (route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } else { render(); }
+    
+    // Explicitly update active states across ALL navigation links (Desktop + Mobile)
+    document.querySelectorAll('.side-nav button, #mobileMenu a, #mobileMenu button').forEach(el => {
+      el.classList.remove('active');
+    });
+    document.querySelectorAll(`[data-dash="${dashView}"]`).forEach(el => {
+      el.classList.add('active');
+    });
     return;
   }
 
@@ -540,7 +515,16 @@ document.addEventListener('click', e => {
     adminView = adminEl.dataset.admin;
     const menu = document.getElementById('mobileMenu');
     if (menu) menu.classList.remove('open');
+    
     if (route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
+    
+    // Explicitly update active states across ALL navigation links (Desktop + Mobile)
+    document.querySelectorAll('.side-nav button, #mobileMenu a, #mobileMenu button').forEach(el => {
+      el.classList.remove('active');
+    });
+    document.querySelectorAll(`[data-admin="${adminView}"]`).forEach(el => {
+      el.classList.add('active');
+    });
     return;
   }
 
