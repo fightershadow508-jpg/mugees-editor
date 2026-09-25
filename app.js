@@ -377,6 +377,40 @@ function bindGlobal(){
   // Only call bindForms — all click delegation is handled by the permanent
   // document-level listener below so it survives DOM re-renders.
   bindForms();
+
+  // EXPLICIT MOBILE MENU BINDING (User requested specific bindings for mobile nav)
+  document.querySelectorAll('#mobileMenu [data-dash]').forEach(btn => {
+    btn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation(); // ensure no conflicts
+      dashView = btn.dataset.dash;
+      const menu = document.getElementById('mobileMenu');
+      if (menu) menu.classList.remove('open');
+      if (route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } else { render(); }
+    };
+  });
+
+  document.querySelectorAll('#mobileMenu [data-admin]').forEach(btn => {
+    btn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      adminView = btn.dataset.admin;
+      const menu = document.getElementById('mobileMenu');
+      if (menu) menu.classList.remove('open');
+      if (route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
+    };
+  });
+
+  document.querySelectorAll('#mobileMenu [data-action="logout"]').forEach(btn => {
+    btn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      state.session = null; save(); dashView = 'overview'; adminView = 'overview';
+      const menu = document.getElementById('mobileMenu');
+      if (menu) menu.classList.remove('open');
+      location.hash = '#/'; render();
+    };
+  });
 }
 
 function syncHeader(){
@@ -468,6 +502,13 @@ document.addEventListener('click', e => {
     return;
   }
 
+  // ── Mobile Menu Auto-Close for all clicks inside it ───────────────────────
+  const mobileMenuClick = e.target.closest('#mobileMenu a, #mobileMenu button');
+  if (mobileMenuClick && !mobileMenuClick.classList.contains('mobile-menu-btn')) {
+    const menu = document.getElementById('mobileMenu');
+    if (menu) menu.classList.remove('open');
+  }
+
   // ── Chart filter tabs ─────────────────────────────────────────────────────
   const chartBtn = e.target.closest('#chartTabs button');
   if (chartBtn) {
@@ -508,13 +549,6 @@ document.addEventListener('click', e => {
   if (authTabEl) {
     openAuth(authTabEl.dataset.authTab);
     return;
-  }
-
-  // ── Mobile Menu Auto-Close for all clicks inside it ───────────────────────
-  const mobileMenuClick = e.target.closest('#mobileMenu a, #mobileMenu button');
-  if (mobileMenuClick && !mobileMenuClick.classList.contains('mobile-menu-btn')) {
-    const menu = document.getElementById('mobileMenu');
-    if (menu) menu.classList.remove('open');
   }
 
   // ── FAQ accordions (data-faq) ─────────────────────────────────────────────
