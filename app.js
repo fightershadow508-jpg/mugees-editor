@@ -374,30 +374,9 @@ const rp=$('#resetPasswordForm');if(rp)rp.onsubmit=async e=>{e.preventDefault();
 }
 
 function bindGlobal(){
-
-  $('#chartTabs button').forEach(b => {
-    b.onclick = () => {
-      $('#chartTabs button').forEach(x => x.classList.remove('active'));
-      b.classList.add('active');
-      const r = b.dataset.range;
-      const data = r==='1W' ? [12,15,14,20,18,25,28] :
-                   r==='3M' ? [20,30,25,40,45,60,55,70,85,80,95,110] :
-                   r==='1Y' ? [50,60,45,80,95,120,110,140,160,180,170,210] :
-                   [12,20,15,31,28,41,36,56,49,62,58,71];
-      const cc = document.getElementById('chartContainer');
-      if(cc) cc.innerHTML = sparkline(data);
-    };
-  });
- $$('[data-action]').forEach(el=>el.onclick=e=>{const a=el.dataset.action,id=el.dataset.id;if(a==='open-login')openAuth('login');else if(a==='open-signup')openAuth('signup');else if(a==='open-forgot-password')openForgotPassword();else if(a==='toggle-eye'){var t=document.getElementById(el.dataset.target);if(t)t.type=t.type==='password'?'text':'password';}else if(a==='close-modal')closeModals();else if(a==='logout'){state.session=null;save();dashView='overview';adminView='overview';$('#mobileMenu').classList.remove('open');location.hash='#/';render();}else if(a==='mark-notifications'){const s=currentStudent();state.notifications.forEach(n=>{if(n.studentId===s.id)n.read=true});save();render();}else if(a==='view-student')showStudentModal(id);else if(a==='add-class')addClassModal();else if(a==='add-trend')addTrendModal();else if(a==='add-program')addProgramModal();else if(a==='pay-withdrawal')payWithdrawal(id);else if(a==='reject-withdrawal')rejectWithdrawal(id);else if(a==='resolve-ticket')resolveTicket(id);else if(a==='reset-demo'){if(confirm('Reset all local data?'))resetDemo();}else if(a==='class-detail')showClassDetail(id);else if(a==='course-detail')showCourseDetail(id);else if(a==='trend-detail')showTrendDetail(id);else if(a==='edit-course')editCourseModal(id);});
- $$('[data-dash]').forEach(el=>el.onclick=()=>{
-  dashView=el.dataset.dash;
-  $('#mobileMenu').classList.remove('open');
-  if(route()!=='dashboard'){location.hash='#/dashboard';render();}else{render();}
- });
- $$('[data-admin]').forEach(el=>el.onclick=()=>{adminView=el.dataset.admin;render();});
- $$('[data-auth-tab]').forEach(el=>el.onclick=()=>openAuth(el.dataset.authTab));
- $$('[data-faq]').forEach(el=>el.onclick=()=>el.closest('.faq').classList.toggle('open'));
- bindForms();
+  // Only call bindForms — all click delegation is handled by the permanent
+  // document-level listener below so it survives DOM re-renders.
+  bindForms();
 }
 
 function syncHeader(){
@@ -424,7 +403,7 @@ function syncHeader(){
    actions.innerHTML=`<button class="icon-btn mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false">☰</button><button class="btn ghost" data-action="open-login" id="headerLoginBtn">Login</button><button class="btn primary" data-action="open-signup" id="headerJoinBtn">Join Now</button>`;
    if(mobileMenu) mobileMenu.innerHTML=`<a href="#/" data-route="home">Home</a><a href="#/courses" data-route="courses">Courses</a><a href="#/programs" data-route="programs">Creator Programs</a><a href="#/live" data-route="live">Curriculum</a><a href="#/how-it-works" data-route="how-it-works">How It Works</a><a href="#/faq" data-route="faq">FAQ</a><a href="#/contact" data-route="contact">Contact</a><button class="mobile-nav-btn" data-action="open-login" id="mobileLoginBtn">Login</button><button class="mobile-nav-btn mobile-join-btn" data-action="open-signup" id="mobileJoinBtn">Join Now</button>`;
  }
- const mb=$('#mobileMenuBtn');if(mb)mb.onclick=()=>{const menu=$('#mobileMenu'),open=menu.classList.toggle('open');mb.setAttribute('aria-expanded',String(open));};
+ // mobile menu toggle is handled by the permanent delegation listener
 }
 function route(){const r=(location.hash||'#/').replace(/^#\//,'').split('?')[0];return r||'home'}
 function render(){syncHeader();const r=route();const app=$('#app');$('#year').textContent=new Date().getFullYear();$('#siteFooter').classList.toggle('hidden',r==='dashboard'||r==='admin');let html='';switch(r){case'home':html=homePage();break;case'courses':html=coursesPage();break;case'programs':html=programsPage();break;case'live':html=livePage();break;case'how-it-works':html=howPage();break;case'faq':html=faqPage();break;case'contact':html=contactPage();break;case'dashboard':html=studentDashboard();break;case'admin':html=adminDashboard();break;case'terms':case'privacy':case'payout-policy':case'refund-policy':case'earnings-policy':case'earnings-disclaimer':case'community-guidelines':html=legalPage(r);break;default:html=`${pageHero('Page not found','The page you requested does not exist.')}<section class="section"><a class="btn primary" href="#/">Back Home</a></section>`}app.innerHTML=html;bindGlobal();window.scrollTo({top:0,behavior:'instant'});}
@@ -474,8 +453,22 @@ function bindPasswordStrength(inputId, indicatorId) {
 }
 
 
+// ─── PERMANENT EVENT DELEGATION ──────────────────────────────────────────────
+// Attached ONCE to document — survives all DOM re-renders caused by render().
 document.addEventListener('click', e => {
-  // Chart Tabs Delegation
+
+  // ── Mobile menu toggle ────────────────────────────────────────────────────
+  const menuBtn = e.target.closest('.mobile-menu-btn');
+  if (menuBtn) {
+    const menu = document.getElementById('mobileMenu');
+    if (menu) {
+      const open = menu.classList.toggle('open');
+      menuBtn.setAttribute('aria-expanded', String(open));
+    }
+    return;
+  }
+
+  // ── Chart filter tabs ─────────────────────────────────────────────────────
   const chartBtn = e.target.closest('#chartTabs button');
   if (chartBtn) {
     document.querySelectorAll('#chartTabs button').forEach(x => x.classList.remove('active'));
@@ -486,24 +479,85 @@ document.addEventListener('click', e => {
                  r==='1Y' ? [50,60,45,80,95,120,110,140,160,180,170,210] :
                  [12,20,15,31,28,41,36,56,49,62,58,71];
     const cc = document.getElementById('chartContainer');
-    if(cc) cc.innerHTML = sparkline(data);
+    if (cc) cc.innerHTML = sparkline(data);
+    return;
   }
 
-  // Mobile Dashboard Nav Delegation
-  const dashBtn = e.target.closest('#mobileDashBtn');
-  if (dashBtn && dashBtn.tagName === 'BUTTON') {
-    dashView = dashBtn.dataset.dash || 'overview';
+  // ── Sidebar / dashboard nav (data-dash) ───────────────────────────────────
+  const dashEl = e.target.closest('[data-dash]');
+  if (dashEl) {
+    dashView = dashEl.dataset.dash;
     const menu = document.getElementById('mobileMenu');
-    if(menu) menu.classList.remove('open');
-    if(route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } else { render(); }
+    if (menu) menu.classList.remove('open');
+    if (route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } else { render(); }
+    return;
   }
 
-  // Mobile Admin Nav Delegation
-  const adminBtn = e.target.closest('#mobileAdminBtn');
-  if (adminBtn && adminBtn.tagName === 'BUTTON') {
-    adminView = adminBtn.dataset.admin || 'overview';
+  // ── Admin sidebar nav (data-admin) ────────────────────────────────────────
+  const adminEl = e.target.closest('[data-admin]');
+  if (adminEl) {
+    adminView = adminEl.dataset.admin;
     const menu = document.getElementById('mobileMenu');
-    if(menu) menu.classList.remove('open');
-    if(route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
+    if (menu) menu.classList.remove('open');
+    if (route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
+    return;
+  }
+
+  // ── Auth modal tabs (data-auth-tab) ───────────────────────────────────────
+  const authTabEl = e.target.closest('[data-auth-tab]');
+  if (authTabEl) {
+    openAuth(authTabEl.dataset.authTab);
+    return;
+  }
+
+  // ── FAQ accordions (data-faq) ─────────────────────────────────────────────
+  const faqEl = e.target.closest('[data-faq]');
+  if (faqEl) {
+    const faqItem = faqEl.closest('.faq');
+    if (faqItem) faqItem.classList.toggle('open');
+    return;
+  }
+
+  // ── Password eye toggle ───────────────────────────────────────────────────
+  const eyeEl = e.target.closest('[data-action="toggle-eye"]');
+  if (eyeEl) {
+    const t = document.getElementById(eyeEl.dataset.target);
+    if (t) t.type = t.type === 'password' ? 'text' : 'password';
+    return;
+  }
+
+  // ── Generic data-action buttons ───────────────────────────────────────────
+  const actionEl = e.target.closest('[data-action]');
+  if (actionEl) {
+    const a = actionEl.dataset.action;
+    const id = actionEl.dataset.id;
+    if (a === 'toggle-eye') return; // handled above
+    if (a === 'open-login')           { openAuth('login'); return; }
+    if (a === 'open-signup')          { openAuth('signup'); return; }
+    if (a === 'open-forgot-password') { openForgotPassword(); return; }
+    if (a === 'close-modal')          { closeModals(); return; }
+    if (a === 'logout') {
+      state.session = null; save(); dashView = 'overview'; adminView = 'overview';
+      const menu = document.getElementById('mobileMenu');
+      if (menu) menu.classList.remove('open');
+      location.hash = '#/'; render(); return;
+    }
+    if (a === 'mark-notifications') {
+      const s = currentStudent();
+      state.notifications.forEach(n => { if (n.studentId === s.id) n.read = true; });
+      save(); render(); return;
+    }
+    if (a === 'view-student')       { showStudentModal(id); return; }
+    if (a === 'add-class')          { addClassModal(); return; }
+    if (a === 'add-trend')          { addTrendModal(); return; }
+    if (a === 'add-program')        { addProgramModal(); return; }
+    if (a === 'pay-withdrawal')     { payWithdrawal(id); return; }
+    if (a === 'reject-withdrawal')  { rejectWithdrawal(id); return; }
+    if (a === 'resolve-ticket')     { resolveTicket(id); return; }
+    if (a === 'class-detail')       { showClassDetail(id); return; }
+    if (a === 'course-detail')      { showCourseDetail(id); return; }
+    if (a === 'trend-detail')       { showTrendDetail(id); return; }
+    if (a === 'edit-course')        { editCourseModal(id); return; }
+    if (a === 'reset-demo')         { if (confirm('Reset all local data?')) resetDemo(); return; }
   }
 });
