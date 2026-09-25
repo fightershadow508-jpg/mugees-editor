@@ -287,7 +287,7 @@ window.loadEarnings = async function(sId) {
          if(dashContent) { dashContent.innerHTML = studentView(currentStudent()); bindGlobal(); }
       }
     }
-  } catch(e) { console.error('Earnings fetch error:', e); }
+  } catch(e) { console.error('Earnings fetch error:', e); /* Fail gracefully, original zero state remains */ }
 };
 
 function studentDashboard(){if(!state.session||state.session.role!=='student'){openAuth('login');location.hash='#/';return homePage()}const s=currentStudent(); loadEarnings(s.id); return `<div class="dashboard-page"><div class="dashboard-shell">${studentSidebar(s)}<section class="dashboard-main" id="dashContent">${studentView(s)}</section></div></div>`}
@@ -461,3 +461,38 @@ function bindPasswordStrength(inputId, indicatorId) {
     if(txt) txt.textContent = s.charAt(0).toUpperCase() + s.slice(1);
   });
 }
+
+
+document.addEventListener('click', e => {
+  // Chart Tabs Delegation
+  const chartBtn = e.target.closest('#chartTabs button');
+  if (chartBtn) {
+    document.querySelectorAll('#chartTabs button').forEach(x => x.classList.remove('active'));
+    chartBtn.classList.add('active');
+    const r = chartBtn.dataset.range;
+    const data = r==='1W' ? [12,15,14,20,18,25,28] :
+                 r==='3M' ? [20,30,25,40,45,60,55,70,85,80,95,110] :
+                 r==='1Y' ? [50,60,45,80,95,120,110,140,160,180,170,210] :
+                 [12,20,15,31,28,41,36,56,49,62,58,71];
+    const cc = document.getElementById('chartContainer');
+    if(cc) cc.innerHTML = sparkline(data);
+  }
+
+  // Mobile Dashboard Nav Delegation
+  const dashBtn = e.target.closest('#mobileDashBtn');
+  if (dashBtn && dashBtn.tagName === 'BUTTON') {
+    dashView = dashBtn.dataset.dash || 'overview';
+    const menu = document.getElementById('mobileMenu');
+    if(menu) menu.classList.remove('open');
+    if(route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } else { render(); }
+  }
+
+  // Mobile Admin Nav Delegation
+  const adminBtn = e.target.closest('#mobileAdminBtn');
+  if (adminBtn && adminBtn.tagName === 'BUTTON') {
+    adminView = adminBtn.dataset.admin || 'overview';
+    const menu = document.getElementById('mobileMenu');
+    if(menu) menu.classList.remove('open');
+    if(route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
+  }
+});
