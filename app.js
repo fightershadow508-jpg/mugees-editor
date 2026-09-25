@@ -350,16 +350,6 @@ function studentCourses(s){return `<div class="subpage-head"><div><h1>My Courses
 function studentLive(){return `<div class="subpage-head"><div><h1>Curriculum</h1><p style="color:#748195">Upcoming sessions and previous recordings.</p></div></div><div class="live-grid">${state.classes.map(c=>`<div class="live-card"><span class="tag ${c.status==='Upcoming'?'orange':'green'}">${esc(c.status)}</span><h3 style="margin-top:14px">${esc(c.title)}</h3><p style="color:#748195">${niceDate(c.date)} · ${esc(c.time)}<br>${esc(c.trainer)} · ${esc(c.batch)}</p><button class="btn primary" data-action="class-detail" data-id="${c.id}">${c.status==='Upcoming'?'Join Class':'Watch Recording'}</button></div>`).join('')}</div>`}
 function studentTrends(){return `<div class="subpage-head"><div><h1>Trend Updates</h1><p style="color:#748195">New creator trends published by Admin.</p></div></div><div class="cards">${state.trends.map(t=>`<div class="card"><div style="display:flex;justify-content:space-between"><span class="pill">${esc(t.program)}</span><span class="tag ${t.status==='New'?'green':''}">${esc(t.status)}</span></div><h3 style="margin-top:16px">${esc(t.title)}</h3><p>Difficulty: ${esc(t.difficulty)} · Added ${niceDate(t.added)}</p><button class="btn primary" data-action="trend-detail" data-id="${t.id}">View Tutorial</button></div>`).join('')}</div>`}
 
-const LEADERBOARD_AVATARS = [
-  'https://api.dicebear.com/7.x/initials/svg?seed=Ahmad+Raza&backgroundColor=7c3aed&textColor=ffffff',
-  'https://api.dicebear.com/7.x/initials/svg?seed=Zainab+Bibi&backgroundColor=0891b2&textColor=ffffff',
-  'https://api.dicebear.com/7.x/initials/svg?seed=Usman+Ali&backgroundColor=059669&textColor=ffffff',
-  'https://api.dicebear.com/7.x/initials/svg?seed=Fatima+Noor&backgroundColor=d97706&textColor=ffffff',
-  'https://api.dicebear.com/7.x/initials/svg?seed=Ali+Hassan&backgroundColor=e11d48&textColor=ffffff',
-  'https://api.dicebear.com/7.x/initials/svg?seed=Aisha+Khan&backgroundColor=7c3aed&textColor=ffffff',
-  'https://api.dicebear.com/7.x/initials/svg?seed=Bilal+Tariq&backgroundColor=0369a1&textColor=ffffff'
-];
-
 function getMockLeaderboard() {
   const users = [
     { name: 'Ahmad Raza',   rank: 'TOP 1', amount: 'Rs11,873,137' },
@@ -370,7 +360,7 @@ function getMockLeaderboard() {
     { name: 'Aisha Khan',   rank: 'TOP 6', amount: 'Rs3,710,000'  },
     { name: 'Bilal Tariq',  rank: 'TOP 7', amount: 'Rs2,490,800'  },
   ];
-  return users.map((u, i) => ({ ...u, avatar: LEADERBOARD_AVATARS[i] }));
+  return users.map((u) => ({ ...u, avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random&color=fff&rounded=true` }));
 }
 
 function studentLeaderboard(s) {
@@ -411,7 +401,7 @@ function studentLeaderboard(s) {
     </div>
   `;
 
-  const currentAvatar = s.avatar || LEADERBOARD_AVATARS[0];
+  const currentAvatar = s.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name || 'Admin')}&background=random&color=fff&rounded=true`;
 
   return `
     <div class="subpage-head">
@@ -430,15 +420,7 @@ function studentLeaderboard(s) {
       </div>
       <label for="lbAvatarInput" style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; background:linear-gradient(135deg,#7c3aed,#22d3ee); color:#fff; font-weight:700; font-size:13px; padding:10px 20px; border-radius:999px; box-shadow:0 4px 18px rgba(124,58,237,0.4); transition:opacity .2s; white-space:nowrap;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
         📤 Upload Photo
-        <input type="file" id="lbAvatarInput" accept="image/*" style="display:none;" onchange="(function(e){
-          const file=e.target.files[0]; if(!file)return;
-          const reader=new FileReader();
-          reader.onload=function(ev){
-            const prev=document.getElementById('lbAvatarPreview');
-            if(prev) prev.src=ev.target.result;
-          };
-          reader.readAsDataURL(file);
-        })(event)">
+        <input type="file" id="lbAvatarInput" accept="image/*" style="display:none;" onchange="const file=this.files[0]; if(file) { const reader=new FileReader(); reader.onload=e=>document.getElementById('lbAvatarPreview').src=e.target.result; reader.readAsDataURL(file); }">
       </label>
     </div>
 
