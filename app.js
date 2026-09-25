@@ -270,7 +270,42 @@ function openResetPassword(){
 }
 function closeModals(){$$('.modal').forEach(m=>m.classList.remove('open'));}
 
-function sparkline(values){const w=620,h=220,p=18,max=Math.max(...values),min=Math.min(...values),range=Math.max(1,max-min);const pts=values.map((v,i)=>`${p+i*((w-2*p)/(values.length-1))},${h-p-((v-min)/range)*(h-2*p)}`).join(' ');return `<svg class="earn-chart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8b5cf6" stop-opacity=".28"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></linearGradient><linearGradient id="line" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#8b5cf6"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs><polyline points="${pts} ${w-p},${h-p} ${p},${h-p}" fill="url(#area)" stroke="none"/><polyline points="${pts}" fill="none" stroke="url(#line)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>${values.map((v,i)=>{const [x,y]=pts.split(' ')[i].split(',');return `<circle cx="${x}" cy="${y}" r="4" fill="#fff" stroke="#7c3aed" stroke-width="3" style="cursor:pointer;"><title>${v}</title></circle>`}).join('')}</svg>`}
+function sparkline(values) {
+  const w=620, h=220, p=25, max=Math.max(...values), min=Math.min(...values), range=Math.max(1, max-min);
+  const coords = values.map((v,i) => [p+i*((w-2*p)/(values.length-1)), h-p-((v-min)/range)*(h-2*p)]);
+  let d = `M ${coords[0][0]} ${coords[0][1]}`;
+  for(let i=0; i<coords.length-1; i++) {
+    const [x0,y0] = coords[i];
+    const [x1,y1] = coords[i+1];
+    const cx = (x0 + x1) / 2;
+    d += ` C ${cx} ${y0}, ${cx} ${y1}, ${x1} ${y1}`;
+  }
+  const areaD = d + ` L ${coords[coords.length-1][0]} ${h-p} L ${coords[0][0]} ${h-p} Z`;
+  const gridLines = [0, 0.25, 0.5, 0.75, 1].map(ratio => {
+    const y = p + ratio * (h - 2*p);
+    return `<line x1="${p}" y1="${y}" x2="${w-p}" y2="${y}" stroke="rgba(255,255,255,0.06)" stroke-width="1" stroke-dasharray="4 4"/>`;
+  }).join('');
+  return `<svg class="earn-chart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#8b5cf6" stop-opacity=".45"/>
+        <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#8b5cf6"/>
+        <stop offset="1" stop-color="#22d3ee"/>
+      </linearGradient>
+      <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="3" result="blur"/>
+        <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+      </filter>
+    </defs>
+    ${gridLines}
+    <path d="${areaD}" fill="url(#area)" stroke="none"/>
+    <path d="${d}" fill="none" stroke="url(#line)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    ${coords.map(([x,y], i) => `<circle cx="${x}" cy="${y}" r="3.5" fill="#0d192a" stroke="#a78bfa" stroke-width="2" style="cursor:pointer;" filter="url(#glow)"><title>${values[i]}</title></circle>`).join('')}
+  </svg>`;
+}
 
 function studentSidebar(s){const items=[['overview','🏠 Dashboard'],['courses','📚 My Courses'],['live','🎥 Curriculum'],['trends','🔥 Trends'],['performance','📊 Performance'],['earnings','💰 Earnings'],['withdraw','🏦 Withdraw'],['payments','🧾 Payments'],['notifications','🔔 Notifications'],['profile','👤 Profile'],['support','💬 Support']];return `<aside class="sidebar"><div class="side-profile side-profile-rich">${s.avatar?`<img src="${esc(s.avatar)}" alt="">`:`<span class="side-avatar-fallback">${esc(s.name.split(' ').map(x=>x[0]).join('').slice(0,2))}</span>`}<div><strong>${esc(s.name)}</strong><div style="margin-top:5px"><span class="role-badge role-student">Student</span></div></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${dashView===id?'active':''}" data-dash="${id}">${l}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`}
 
@@ -590,7 +625,10 @@ document.addEventListener('click', e => {
   // ── Chart filter tabs ─────────────────────────────────────────────────────
   const chartBtn = e.target.closest('#chartTabs button');
   if (chartBtn) {
-    
+    const parent = chartBtn.parentElement;
+    if (parent) {
+      parent.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    }
     chartBtn.classList.add('active');
     const r = chartBtn.dataset.range;
     const data = r==='1W' ? [12,15,14,20,18,25,28] :

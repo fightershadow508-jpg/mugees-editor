@@ -600,13 +600,13 @@ h1,h2,h3,.brand-copy strong,.dash-card strong,.stat strong{font-family:"Montserr
   .premium-stats .stat:last-child { border-bottom: 0 !important; }
 }
 
-#chartTabs button { cursor: pointer; transition: all 0.2s; }
+#chartTabs button { cursor: pointer; transition: all 0.2s; background: rgba(0,0,0,0.15) !important; color: #9ca3af !important; border: 1px solid rgba(255,255,255,0.05); }
 /* Graph Tabs Active State */
 #chartTabs button.active {
     background: #8b5cf6 !important;
     color: #ffffff !important;
     border-color: #8b5cf6 !important;
-    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+    box-shadow: 0 4px 14px rgba(139, 92, 246, 0.45);
 }
 
 /* Mobile Menu Active State */
