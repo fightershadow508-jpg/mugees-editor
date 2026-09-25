@@ -307,7 +307,7 @@ function sparkline(values) {
   </svg>`;
 }
 
-function studentSidebar(s){const items=[['overview','🏠 Dashboard'],['courses','📚 My Courses'],['live','🎥 Curriculum'],['trends','🔥 Trends'],['performance','📊 Performance'],['earnings','💰 Earnings'],['withdraw','🏦 Withdraw'],['payments','🧾 Payments'],['notifications','🔔 Notifications'],['profile','👤 Profile'],['support','💬 Support']];return `<aside class="sidebar"><div class="side-profile side-profile-rich">${s.avatar?`<img src="${esc(s.avatar)}" alt="">`:`<span class="side-avatar-fallback">${esc(s.name.split(' ').map(x=>x[0]).join('').slice(0,2))}</span>`}<div><strong>${esc(s.name)}</strong><div style="margin-top:5px"><span class="role-badge role-student">Student</span></div></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${dashView===id?'active':''}" data-dash="${id}">${l}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`}
+function studentSidebar(s){const items=[['overview','🏠 Dashboard'],['courses','📚 My Courses'],['live','🎥 Curriculum'],['trends','🔥 Trends'],['performance','📊 Performance'],['earnings','💰 Earnings'],['leaderboard','🏆 Leaderboard'],['withdraw','🏦 Withdraw'],['payments','🧾 Payments'],['notifications','🔔 Notifications'],['profile','👤 Profile'],['support','💬 Support']];return `<aside class="sidebar"><div class="side-profile side-profile-rich">${s.avatar?`<img src="${esc(s.avatar)}" alt="">`:`<span class="side-avatar-fallback">${esc(s.name.split(' ').map(x=>x[0]).join('').slice(0,2))}</span>`}<div><strong>${esc(s.name)}</strong><div style="margin-top:5px"><span class="role-badge role-student">Student</span></div></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${dashView===id?'active':''}" data-dash="${id}">${l}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`}
 
 
 window.loadEarnings = async function(sId) {
@@ -332,6 +332,7 @@ function studentView(s){
  if(dashView==='trends') return studentTrends(s);
  if(dashView==='performance') return studentPerformance(s);
  if(dashView==='earnings') return studentEarnings(s);
+ if(dashView==='leaderboard') return studentLeaderboard(s);
  if(dashView==='withdraw') return studentWithdraw(s);
  if(dashView==='payments') return studentPayments(s);
  if(dashView==='notifications') return studentNotifications(s);
@@ -348,6 +349,82 @@ function nextClassCard(){const c=state.classes.find(x=>x.status==='Upcoming')||s
 function studentCourses(s){return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">Assigned training and course progress.</p></div></div><div class="cards">${state.courses.map(c=>{const p=c.progressBy[s.id]??0;return `<div class="card"><span class="pill">${esc(c.type)}</span><h3 style="margin-top:14px">${esc(c.title)}</h3><p>${esc(c.desc)}</p><div style="display:flex;justify-content:space-between;font-size:12px;margin:18px 0 7px"><span>Progress</span><strong>${p}%</strong></div><div class="progress"><i style="width:${p}%"></i></div><ul class="feature-list">${c.modules.slice(0,5).map(m=>`<li>${esc(m)}</li>`).join('')}</ul><button class="btn primary" data-action="course-detail" data-id="${c.id}">Continue Learning</button></div>`}).join('')}</div>`}
 function studentLive(){return `<div class="subpage-head"><div><h1>Curriculum</h1><p style="color:#748195">Upcoming sessions and previous recordings.</p></div></div><div class="live-grid">${state.classes.map(c=>`<div class="live-card"><span class="tag ${c.status==='Upcoming'?'orange':'green'}">${esc(c.status)}</span><h3 style="margin-top:14px">${esc(c.title)}</h3><p style="color:#748195">${niceDate(c.date)} · ${esc(c.time)}<br>${esc(c.trainer)} · ${esc(c.batch)}</p><button class="btn primary" data-action="class-detail" data-id="${c.id}">${c.status==='Upcoming'?'Join Class':'Watch Recording'}</button></div>`).join('')}</div>`}
 function studentTrends(){return `<div class="subpage-head"><div><h1>Trend Updates</h1><p style="color:#748195">New creator trends published by Admin.</p></div></div><div class="cards">${state.trends.map(t=>`<div class="card"><div style="display:flex;justify-content:space-between"><span class="pill">${esc(t.program)}</span><span class="tag ${t.status==='New'?'green':''}">${esc(t.status)}</span></div><h3 style="margin-top:16px">${esc(t.title)}</h3><p>Difficulty: ${esc(t.difficulty)} · Added ${niceDate(t.added)}</p><button class="btn primary" data-action="trend-detail" data-id="${t.id}">View Tutorial</button></div>`).join('')}</div>`}
+
+function getMockLeaderboard() {
+  const names = ['Ahmad Raza', 'Zainab Bibi', 'Usman Ali', 'Fatima Noor', 'Ali Hassan', 'Aisha Khan', 'Bilal Tariq'];
+  return names.map((name, i) => {
+    const earnings = 'Rs' + Math.floor(Math.random() * 5000000 + 1000000).toLocaleString();
+    return {
+      name,
+      rank: 'TOP ' + (i + 1),
+      amount: earnings,
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff&size=128`
+    };
+  });
+}
+
+function studentLeaderboard() {
+  const top7 = getMockLeaderboard().slice(0, 5);
+  const top30 = getMockLeaderboard().slice(0, 5);
+  const allTime = getMockLeaderboard().slice(0, 7);
+
+  const renderTable = (data, isAllTime) => `
+    <div style="overflow-x:auto;">
+      <table class="table leaderboard-table" style="width:100%; border-collapse:collapse; min-width:300px; margin-top:10px;">
+        <thead>
+          <tr>
+            <th style="background:#000; color:#fff; padding:12px; text-align:left; border-top-left-radius:8px;">Profile</th>
+            <th style="background:#000; color:#fff; padding:12px; text-align:left;">Name</th>
+            <th style="background:#000; color:#fff; padding:12px; text-align:right; border-top-right-radius:8px;">${isAllTime ? 'Amount' : 'Ranks'}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map(u => `
+            <tr style="border-bottom:1px solid #edf1f6;">
+              <td style="padding:10px 12px;">
+                <img src="${u.avatar}" alt="${u.name}" style="width:40px; height:40px; object-fit:cover; border-radius:50%; display:block; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+              </td>
+              <td style="padding:10px 12px; font-weight:600; color:#111827;">${esc(u.name)}</td>
+              <td style="padding:10px 12px; text-align:right; font-weight:700; color:${isAllTime ? '#059669' : '#8b5cf6'};">
+                ${isAllTime ? u.amount : u.rank}
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  return `
+    <div class="subpage-head">
+      <div>
+        <h1 style="color:#edf5ff;">Leaderboard</h1>
+        <p style="color:#8fa1b8;">Top performers across the platform.</p>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px; margin-top:10px;">
+      
+      <!-- Top 7 Days -->
+      <div class="leaderboard-card" style="background:#fff; border-radius:16px; padding:20px; box-shadow:0 8px 30px rgba(0,0,0,0.1);">
+        <h3 style="color:#111827; margin:0 0 16px 0; font-size:18px;">Top 7 Days</h3>
+        ${renderTable(top7, false)}
+      </div>
+
+      <!-- Top 30 Days -->
+      <div class="leaderboard-card" style="background:#fff; border-radius:16px; padding:20px; box-shadow:0 8px 30px rgba(0,0,0,0.1);">
+        <h3 style="color:#111827; margin:0 0 16px 0; font-size:18px;">Top 30 days</h3>
+        ${renderTable(top30, false)}
+      </div>
+
+      <!-- All Time -->
+      <div class="leaderboard-card" style="background:#fff; border-radius:16px; padding:20px; box-shadow:0 8px 30px rgba(0,0,0,0.1);">
+        <h3 style="color:#111827; margin:0 0 16px 0; font-size:18px;">All Time</h3>
+        ${renderTable(allTime, true)}
+      </div>
+
+    </div>
+  `;
+}
 function studentPerformance(s){return `<div class="subpage-head"><div><h1>Performance</h1><p style="color:#748195">Your learning and participation summary.</p></div></div><div class="dash-card-grid"><div class="dash-card"><small>Course Progress</small><strong>${s.progress}%</strong><div class="progress" style="margin-top:9px"><i style="width:${s.progress}%"></i></div></div><div class="dash-card"><small>Attendance</small><strong>${s.attendance}%</strong><div class="progress" style="margin-top:9px"><i style="width:${s.attendance}%"></i></div></div><div class="dash-card"><small>Tasks Completed</small><strong>${s.tasksDone}/${s.tasksTotal}</strong><div class="delta">Practical assignments</div></div><div class="dash-card"><small>Trend Participation</small><strong>${s.trendParticipation}</strong><div class="delta">Creator updates completed</div></div></div><div class="dashboard-grid"><div class="panel"><h3>Performance level</h3><h2 style="font-size:44px;margin:18px 0 8px">${esc(s.performance)}</h2><p style="color:#748195">This score combines course progress, attendance, tasks and trend participation.</p></div><div class="panel"><h3>Recommended next step</h3><p style="color:#748195">Complete the next live class, finish any pending tasks and review the latest creator trend tutorial.</p><button class="btn primary" data-dash="trends">Open Trends</button></div></div>`}
 function studentEarnings(s){const rows=state.earnings.filter(e=>e.studentId===s.id).sort((a,b)=>b.date.localeCompare(a.date));const totals=earningSummary(s.id);return `<div class="subpage-head"><div><h1>Earnings</h1><p style="color:#748195">Approved payout credits assigned to your account.</p></div><button class="btn primary" data-dash="withdraw">Withdraw</button></div><div class="dash-card-grid"><div class="dash-card"><small>Available Balance</small><strong style="color:#059669">${money(s.available)}</strong></div><div class="dash-card"><small>Total Paid</small><strong>${money(s.paid)}</strong></div><div class="dash-card"><small>Last 7 Days</small><strong>${money(totals.week)}</strong></div><div class="dash-card"><small>Total Earnings</small><strong>${money(totals.lifetime)}</strong></div></div><div class="panel" style="margin-top:16px"><div class="notice">Dashboard earnings are approved payout credits. See the Earnings & Balance Policy for what this amount means.</div><div class="table-wrap" style="margin-top:13px"><table class="table"><thead><tr><th>Date</th><th>Program</th><th>Amount</th><th>Status</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${niceDate(e.date)}</td><td>${esc(e.program)}</td><td class="amount green">${money(e.amount)}</td><td><span class="tag green">Approved</span></td></tr>`).join('')}</tbody></table></div></div>`}
 function studentWithdraw(s){return `<div class="subpage-head"><div><h1>Withdraw</h1><p style="color:#748195">Request your available approved balance.</p></div></div><div class="dashboard-grid"><form class="panel" id="withdrawForm"><div class="panel-head"><h3>New withdrawal request</h3><span class="tag green">${money(s.available)} available</span></div><div class="field"><label>Amount</label><input required type="number" name="amount" min="0.01" step="0.01" max="${s.available}" value="${Number(s.available).toFixed(2)}" ${s.available<=0?'disabled':''}></div><div class="field"><label>Payout method</label><select name="method" id="payoutMethod"><option>JazzCash</option><option>Easypaisa</option><option>SadaPay</option><option>NayaPay</option><option>Bank Transfer</option></select></div><div class="field"><label>Account / IBAN / mobile number</label><input required name="account" value="${esc(s.payoutAccount||'')}" placeholder="Enter payout account"></div><div class="notice">Only request a payout to an account you control. Your dashboard balance is displayed in USD; local-wallet settlement may be converted during processing. Never share wallet PINs, OTPs or banking passwords.</div><button class="btn primary" style="margin-top:14px;width:100%" type="submit" ${s.available<=0?'disabled':''}>Request Withdrawal</button></form><div class="panel"><h3>Supported methods</h3><div class="bank-grid" style="margin-top:14px"><div class="bank-option"><span class="bank-logo jazz">JC</span><strong>JazzCash</strong></div><div class="bank-option"><span class="bank-logo easy">EP</span><strong>Easypaisa</strong></div><div class="bank-option"><span class="bank-logo sada">SD</span><strong>SadaPay</strong></div><div class="bank-option"><span class="bank-logo naya">NP</span><strong>NayaPay</strong></div><div class="bank-option"><span class="bank-logo bank">PK</span><strong>Bank Transfer</strong></div></div><p style="color:#748195;margin-top:18px">${esc(state.settings.weeklyUpdateText)}</p></div></div>`}
