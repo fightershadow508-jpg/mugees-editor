@@ -468,9 +468,49 @@ document.addEventListener('click', e => {
     return;
   }
 
-  // ── Mobile Menu Auto-Close for all clicks inside it ───────────────────────
-  const mobileMenuClick = e.target.closest('#mobileMenu a, #mobileMenu button');
-  if (mobileMenuClick && !mobileMenuClick.classList.contains('mobile-menu-btn')) {
+  // ── DEDICATED MOBILE NAV BUTTON HANDLER ───────────────────────────────────
+  const mobileNavBtn = e.target.closest('#mobileMenu .mobile-nav-btn');
+  if (mobileNavBtn) {
+    e.preventDefault();
+    const action = mobileNavBtn.dataset.action;
+    const dash = mobileNavBtn.dataset.dash;
+    const admin = mobileNavBtn.dataset.admin;
+
+    // 1. Instantly close the mobile menu
+    const menu = document.getElementById('mobileMenu');
+    if (menu) menu.classList.remove('open');
+
+    // 2. Handle Logout Button
+    if (action === 'logout') {
+      supabase.auth.signOut().then(() => {
+        state.session = null; save(); dashView = 'overview'; adminView = 'overview';
+        location.hash = '#/'; render();
+      });
+      return;
+    }
+
+    // 3. Handle Dashboard Tabs (Dashboard, Notifications, Profile)
+    if (dash) {
+      dashView = dash;
+      if (route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } else { render(); }
+      document.querySelectorAll('.side-nav button, #mobileMenu a, #mobileMenu button').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll(`[data-dash="${dashView}"]`).forEach(el => el.classList.add('active'));
+      return;
+    }
+
+    // 4. Handle Admin Tabs
+    if (admin) {
+      adminView = admin;
+      if (route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
+      document.querySelectorAll('.side-nav button, #mobileMenu a, #mobileMenu button').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll(`[data-admin="${adminView}"]`).forEach(el => el.classList.add('active'));
+      return;
+    }
+  }
+
+  // ── Mobile Menu Auto-Close for regular anchor links inside it ─────────────
+  const mobileMenuClick = e.target.closest('#mobileMenu a');
+  if (mobileMenuClick) {
     const menu = document.getElementById('mobileMenu');
     if (menu) menu.classList.remove('open');
   }
@@ -491,12 +531,9 @@ document.addEventListener('click', e => {
   }
 
   // ── Sidebar / dashboard nav (data-dash) ───────────────────────────────────
-  const dashEl = e.target.closest('[data-dash]');
+  const dashEl = e.target.closest('.side-nav [data-dash], .dash-top [data-dash], .dashboard-page [data-dash]');
   if (dashEl) {
     dashView = dashEl.dataset.dash;
-    const menu = document.getElementById('mobileMenu');
-    if (menu) menu.classList.remove('open');
-    
     if (route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } else { render(); }
     
     // Explicitly update active states across ALL navigation links (Desktop + Mobile)
@@ -510,12 +547,9 @@ document.addEventListener('click', e => {
   }
 
   // ── Admin sidebar nav (data-admin) ────────────────────────────────────────
-  const adminEl = e.target.closest('[data-admin]');
+  const adminEl = e.target.closest('.side-nav [data-admin], .dashboard-page [data-admin]');
   if (adminEl) {
     adminView = adminEl.dataset.admin;
-    const menu = document.getElementById('mobileMenu');
-    if (menu) menu.classList.remove('open');
-    
     if (route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
     
     // Explicitly update active states across ALL navigation links (Desktop + Mobile)
