@@ -393,8 +393,63 @@ function syncHeader(){
    if(mobileMenu) mobileMenu.innerHTML=`<a href="#/" data-route="home">Home</a><a href="#/courses" data-route="courses">Courses</a><a href="#/programs" data-route="programs">Creator Programs</a><a href="#/live" data-route="live">Curriculum</a><a href="#/how-it-works" data-route="how-it-works">How It Works</a><a href="#/faq" data-route="faq">FAQ</a><a href="#/contact" data-route="contact">Contact</a><button class="mobile-nav-btn" data-action="open-login" id="mobileLoginBtn">Login</button><button class="mobile-nav-btn mobile-join-btn" data-action="open-signup" id="mobileJoinBtn">Join Now</button>`;
  }
   // active classes sync moved to render()
+  // Directly bind mobile menu buttons NOW after HTML injection
+  bindMobileMenu();
+}
 
-  // mobile menu toggle is handled by the permanent delegation listener
+// ── DIRECT MOBILE MENU EVENT BINDING ──────────────────────────────────────────
+// Called every time syncHeader() rebuilds the mobile menu HTML.
+// Attaches click AND touchstart directly to each element — no delegation.
+function bindMobileMenu() {
+  var menu = document.getElementById('mobileMenu');
+  if (!menu) return;
+  var allItems = menu.querySelectorAll('a, button');
+  allItems.forEach(function(el) {
+    function handler(evt) {
+      evt.preventDefault();
+      evt.stopPropagation();
+      // Prevent double-fire from touch+click
+      if (el._mobileHandled) return;
+      el._mobileHandled = true;
+      setTimeout(function() { el._mobileHandled = false; }, 400);
+      // Debug alert — remove after confirming it works
+      alert('Mobile tap: ' + (el.textContent || '').trim());
+      // Close the menu immediately
+      menu.classList.remove('open');
+      // Determine what this element should do
+      var dashTarget = el.getAttribute('data-dash');
+      var adminTarget = el.getAttribute('data-admin');
+      var actionTarget = el.getAttribute('data-action');
+      var hrefTarget = el.getAttribute('href');
+      if (dashTarget) {
+        dashView = dashTarget;
+        if (route() !== 'dashboard') { location.hash = '#/dashboard'; }
+        render();
+      } else if (adminTarget) {
+        adminView = adminTarget;
+        if (route() !== 'admin') { location.hash = '#/admin'; }
+        render();
+      } else if (actionTarget === 'logout') {
+        if (window.supabase && supabase.auth) {
+          supabase.auth.signOut().then(function() {
+            state.session = null; save(); dashView = 'overview'; adminView = 'overview';
+            location.hash = '#/'; render();
+          });
+        } else {
+          state.session = null; save(); dashView = 'overview'; adminView = 'overview';
+          location.hash = '#/'; render();
+        }
+      } else if (actionTarget === 'open-login') {
+        openAuth('login');
+      } else if (actionTarget === 'open-signup') {
+        openAuth('signup');
+      } else if (hrefTarget && hrefTarget !== '#') {
+        location.hash = hrefTarget;
+      }
+    }
+    el.addEventListener('click', handler, { passive: false });
+    el.addEventListener('touchstart', handler, { passive: false });
+  });
 }
 function route(){const r=(location.hash||'#/').replace(/^#\//,'').split('?')[0];return r||'home'}
 function render(){syncHeader();const r=route();const app=$('#app');$('#year').textContent=new Date().getFullYear();$('#siteFooter').classList.toggle('hidden',r==='dashboard'||r==='admin');let html='';switch(r){case'home':html=homePage();break;case'courses':html=coursesPage();break;case'programs':html=programsPage();break;case'live':html=livePage();break;case'how-it-works':html=howPage();break;case'faq':html=faqPage();break;case'contact':html=contactPage();break;case'dashboard':html=studentDashboard();break;case'admin':html=adminDashboard();break;case'terms':case'privacy':case'payout-policy':case'refund-policy':case'earnings-policy':case'earnings-disclaimer':case'community-guidelines':html=legalPage(r);break;default:html=`${pageHero('Page not found','The page you requested does not exist.')}<section class="section"><a class="btn primary" href="#/">Back Home</a></section>`}app.innerHTML=html;try{bindGlobal();}catch(e){console.warn('bindGlobal error:',e);}window.scrollTo({top:0,behavior:'instant'});syncActiveLinks();}
