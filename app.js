@@ -59,12 +59,17 @@ const demoState = {
     {id:'PG-2',name:'CapCut Creator Workflow',code:'CC',desc:'Mobile editing, creator layouts and repeatable content systems.',status:'Active'},
     {id:'PG-3',name:'TikTok Growth',code:'TT',desc:'Hooks, filters, lighting, posting and analytics workflows.',status:'Active'}
   ],
-  supportMessages:[],
+  supportMessages:[
+    {id:'SUP-2', studentId:'ST-1048', topic:'Course / Class', message:'Where can I find the recorded CapCut class from last week?', reply:'It is now available in the Curriculum tab under the Upcoming classes section.', date:'2026-09-22', status:'Resolved'},
+    {id:'SUP-1', studentId:'ST-1048', topic:'Earnings / Payout', message:'Hi, my latest Hypic payment is still not showing up?', reply:'', date:'2026-09-24', status:'Pending'}
+  ],
   contactMessages:[],
   admin:{email:'admin@mugheeseditor.pk',password:'',name:'Platform Admin'},
   settings:{brand:'Mughees Edtior',supportEmail:'support@mugheeseditor.pk',supportWhatsApp:'+92 300 0000000',weeklyUpdateText:'Creator earning updates are posted after the latest partner/program report becomes available.'},
-  adminControls:{showLeaderboard:true,showTrends:true,showWithdrawals:true}
+  adminControls:{showLeaderboard:true,showTrends:true,showWithdrawals:true},
+  unreadCounts:{trends: 2, adminSupport: 1}
 };
+let activeSupportTicket = null;
 const SCHEMA_VERSION = 3;
 
 // Merge demo student accounts into saved state, preserving other fields
@@ -310,6 +315,7 @@ function sparkline(values) {
 
 function studentSidebar(s){
   const ac = state.adminControls || { showLeaderboard: true, showTrends: true, showWithdrawals: true };
+  const uc = state.unreadCounts || { trends: 0, adminSupport: 0 };
   let items=[['overview','🏠 Dashboard'],['courses','📚 My Courses'],['live','🎥 Curriculum']];
   if(ac.showTrends) items.push(['trends','🔥 Trends']);
   items.push(['performance','📊 Performance'],['earnings','💰 Earnings']);
@@ -319,7 +325,7 @@ function studentSidebar(s){
   const storedAvatar = localStorage.getItem('userAvatar');
   const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random&color=fff&rounded=true`;
   const avatarImg = storedAvatar || s.avatar || fallbackUrl;
-  return `<aside class="sidebar"><div class="side-profile side-profile-rich"><img id="headerAvatar" src="${esc(avatarImg)}" alt="Profile" style="width:40px;height:40px;border-radius:50%;object-fit:cover;"><div><strong>${esc(s.name)}</strong><div style="margin-top:5px"><span class="role-badge role-student">Student</span></div></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${dashView===id?'active':''}" data-dash="${id}">${l}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`
+  return `<aside class="sidebar"><div class="side-profile side-profile-rich"><img id="headerAvatar" src="${esc(avatarImg)}" alt="Profile" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.1);"><div><strong>${esc(s.name)}</strong><div style="margin-top:5px"><span class="role-badge role-student">Student</span></div></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${dashView===id?'active':''}" data-dash="${id}" style="display:flex;justify-content:space-between;align-items:center;"><span>${l}</span>${id==='trends' && uc.trends>0?`<span class="nav-badge">${uc.trends}</span>`:''}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`
 }
 
 
@@ -484,9 +490,46 @@ function studentProfile(s){
 </div>
 <form class="panel" id="profileForm"><div class="profile-grid"><div class="field"><label>Full name</label><input name="name" value="${esc(s.name)}"></div><div class="field"><label>Email</label><input name="email" value="${esc(s.email)}" disabled></div><div class="field"><label>Phone</label><input name="phone" value="${esc(s.phone)}"></div><div class="field"><label>City</label><input name="city" value="${esc(s.city||'')}"></div><div class="field"><label>Preferred payout method</label><select name="payoutMethod">${['JazzCash','Easypaisa','SadaPay','NayaPay','Bank Transfer'].map(x=>`<option ${s.payoutMethod===x?'selected':''}>${x}</option>`).join('')}</select></div><div class="field"><label>Payout account</label><input name="payoutAccount" value="${esc(s.payoutAccount||'')}"></div></div><div class="field"><label>About</label><textarea name="bio" rows="4">${esc(s.bio||'')}</textarea></div><button class="btn primary" type="submit">Save Profile</button></form>`
 }
-function studentSupport(s=currentStudent()){const tickets=(state.supportMessages||[]).filter(x=>x.studentId===s.id);return `<div class="subpage-head"><div><h1>Support</h1><p style="color:#748195">Get help with your account, classes or payout request.</p></div></div><div class="dashboard-grid"><form class="panel" id="supportForm"><h3>Create Support Ticket</h3><div class="field"><label>Topic</label><select name="topic"><option>Account Help</option><option>Course / Class</option><option>Earnings / Payout</option><option>Technical Issue</option></select></div><div class="field"><label>Message</label><textarea required name="message" rows="5" placeholder="Describe your issue clearly"></textarea></div><button class="btn primary" type="submit">Submit Ticket</button></form><div class="panel"><h3>Support & safety</h3><p style="color:#748195">Email: ${esc(state.settings.supportEmail)}<br>WhatsApp: ${esc(state.settings.supportWhatsApp)}</p><div class="notice">Support will never ask for your JazzCash/Easypaisa PIN, OTP, card CVV or online banking password.</div><div class="list" style="margin-top:14px">${tickets.slice(0,3).map(t=>`<div class="list-item"><div class="meta"><strong>${esc(t.topic)}</strong><small>${niceDate(t.date)}</small></div><span class="tag orange">${esc(t.status)}</span></div>`).join('')||'<div class="empty">No support tickets yet.</div>'}</div></div></div>`}
+function studentSupport(s=currentStudent()){
+  const tickets=(state.supportMessages||[]).filter(x=>x.studentId===s.id).sort((a,b)=>b.date.localeCompare(a.date));
+  return `<div class="subpage-head"><div><h1>Support</h1><p style="color:#748195">Get help with your account, classes or payout request.</p></div></div>
+  <div class="dashboard-grid">
+    <form class="panel" id="supportForm">
+      <h3>Create Support Ticket</h3>
+      <div class="field"><label>Topic</label><select name="topic"><option>Account Help</option><option>Course / Class</option><option>Earnings / Payout</option><option>Technical Issue</option></select></div>
+      <div class="field"><label>Message</label><textarea required name="message" rows="5" placeholder="Describe your issue clearly"></textarea></div>
+      <button class="btn primary" type="submit">Submit Ticket</button>
+    </form>
+    <div>
+      <div class="panel" style="margin-bottom:20px;">
+        <h3>Support & safety</h3>
+        <p style="color:#748195;margin:10px 0;">Email: ${esc(state.settings.supportEmail)}<br>WhatsApp: ${esc(state.settings.supportWhatsApp)}</p>
+        <div class="notice">Support will never ask for your PIN, OTP, CVV or password.</div>
+      </div>
+      <h3 style="margin-bottom:12px; margin-top:24px;">Your Previous Queries</h3>
+      <div class="ticket-list">
+        ${tickets.map(t=>`
+          <div class="ticket-card ${t.status==='Resolved'?'resolved':''}" style="cursor:default">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <strong>${esc(t.topic)}</strong><span class="tag ${t.status==='Resolved'?'green':'orange'}">${esc(t.status)}</span>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);padding:10px;border-radius:6px;font-size:14px;margin-bottom:10px;border-left:3px solid #3b82f6">${esc(t.message)}</div>
+            ${t.reply ? `
+              <small style="color:#8b5cf6;display:block;margin-bottom:4px">Admin Reply</small>
+              <div style="background:rgba(139,92,246,0.1);padding:10px;border-radius:6px;font-size:14px;border-left:3px solid #8b5cf6">${esc(t.reply)}</div>
+            ` : ''}
+          </div>
+        `).join('')||'<div class="empty">No support tickets yet.</div>'}
+      </div>
+    </div>
+  </div>`;
+}
 
-function adminSidebar(){const items=[['overview','🏠 Overview'],['students','👥 Students'],['courses','📚 Courses'],['live','🎥 Curriculum'],['programs','🧩 Programs'],['trends','🔥 Trends'],['earnings','💰 Earnings'],['withdrawals','🏦 Withdrawals'],['notifications','🔔 Notify'],['support','💬 Support'],['settings','⚙️ Settings']];return `<aside class="sidebar"><div class="side-profile"><strong>${esc(state.admin.name)}</strong><div style="margin-top:5px"><span class="role-badge role-admin">Admin</span></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${adminView===id?'active':''}" data-admin="${id}">${l}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`}
+function adminSidebar(){
+  const uc = state.unreadCounts || { trends: 0, adminSupport: 0 };
+  const items=[['overview','🏠 Overview'],['students','👥 Students'],['courses','📚 Courses'],['live','🎥 Curriculum'],['programs','🧩 Programs'],['trends','🔥 Trends'],['earnings','💰 Earnings'],['withdrawals','🏦 Withdrawals'],['notifications','🔔 Notify'],['support','💬 Support'],['settings','⚙️ Settings']];
+  return `<aside class="sidebar"><div class="side-profile"><strong>${esc(state.admin.name)}</strong><div style="margin-top:5px"><span class="role-badge role-admin">Admin</span></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${adminView===id?'active':''}" data-admin="${id}" style="display:flex;justify-content:space-between;align-items:center;"><span>${l}</span>${id==='support' && uc.adminSupport>0?`<span class="nav-badge">${uc.adminSupport}</span>`:''}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`
+}
 function adminDashboard(){if(!state.session||state.session.role!=='admin'){openAuth('login');location.hash='#/';return homePage()}return `<div class="dashboard-page"><div class="dashboard-shell">${adminSidebar()}<section class="dashboard-main" id="adminContent">${adminPanel()}</section></div></div>`}
 function adminPanel(){
  if(adminView==='students') return adminStudents(); if(adminView==='courses') return adminCourses(); if(adminView==='live') return adminLive(); if(adminView==='programs') return adminPrograms(); if(adminView==='trends') return adminTrends(); if(adminView==='earnings') return adminEarnings(); if(adminView==='withdrawals') return adminWithdrawals(); if(adminView==='notifications') return adminNotify(); if(adminView==='support') return adminSupport(); if(adminView==='settings') return adminSettings();
@@ -503,7 +546,49 @@ function adminTrends(){return `<div class="subpage-head"><div><h1>Trend Updates<
 function adminEarnings(){return `<div class="subpage-head"><div><h1>Earnings Management</h1><p style="color:#748195">Add student-visible approved payout credits. Optional source/accounting notes remain Admin-only.</p></div></div><div class="dashboard-grid"><form class="panel" id="addEarningForm"><h3>Add approved earning</h3><div class="field"><label>Student</label><select name="studentId">${state.students.map(s=>`<option value="${s.id}">${esc(s.name)} (${s.id})</option>`).join('')}</select></div><div class="field"><label>Program</label><select name="program"><option>Hypic</option><option>CapCut</option><option>TikTok Creator</option><option>Future App</option></select></div><div class="field"><label>Approved payout credit (student-visible)</label><input required type="number" min="0.01" step="0.01" name="amount" placeholder="25.00"></div><div class="field"><label>Source gross / partner report (Admin-only, optional)</label><input type="number" min="0" step="0.01" name="internalGross" placeholder="Internal record only"></div><div class="field"><label>Internal note</label><textarea name="note" rows="3" placeholder="Weekly creator report"></textarea></div><button class="btn primary" type="submit">Add Earning & Notify Student</button></form><div class="panel"><h3>Recent credits</h3><div class="list" style="margin-top:14px">${state.earnings.slice().reverse().slice(0,8).map(e=>{const s=state.students.find(x=>x.id===e.studentId);return `<div class="list-item"><div class="meta"><strong>${esc(s?.name||e.studentId)} · ${esc(e.program)}</strong><small>${niceDate(e.date)}</small></div><span class="amount green">${money(e.amount)}</span></div>`}).join('')}</div></div></div>`}
 function adminWithdrawals(){const rows=state.withdrawals.slice().sort((a,b)=>b.date.localeCompare(a.date));return `<div class="subpage-head"><div><h1>Withdrawals</h1><p style="color:#748195">Review, pay, reject and record transaction references.</p></div></div><div class="panel"><div class="table-wrap"><table class="table"><thead><tr><th>Student</th><th>Amount</th><th>Method</th><th>Account</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody>${rows.map(w=>{const s=state.students.find(x=>x.id===w.studentId);return `<tr><td>${esc(s?.name||w.studentId)}</td><td>${money(w.amount)}</td><td>${esc(w.method)}</td><td>${esc(w.account)}</td><td>${niceDate(w.date)}</td><td><span class="tag ${w.status==='Paid'?'green':w.status==='Rejected'?'red':'orange'}">${esc(w.status)}</span></td><td>${w.status==='Pending'?`<button class="btn small primary" data-action="pay-withdrawal" data-id="${w.id}">Mark Paid</button> <button class="btn small danger" data-action="reject-withdrawal" data-id="${w.id}">Reject</button>`:'—'}</td></tr>`}).join('')||'<tr><td colspan="7">No withdrawal requests.</td></tr>'}</tbody></table></div></div>`}
 function adminNotify(){return `<div class="subpage-head"><div><h1>Send Notification</h1><p style="color:#748195">Message one student or all students.</p></div></div><form class="panel" id="notifyForm"><div class="field"><label>Recipient</label><select name="studentId"><option value="all">All Students</option>${state.students.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select></div><div class="field"><label>Title</label><input required name="title" placeholder="New trend added"></div><div class="field"><label>Message</label><textarea required name="body" rows="4" placeholder="Your message"></textarea></div><button class="btn primary" type="submit">Send Notification</button></form>`}
-function adminSupport(){const rows=(state.supportMessages||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));return `<div class="subpage-head"><div><h1>Support Inbox</h1><p style="color:#748195">Review student support tickets.</p></div></div><div class="panel"><div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Student</th><th>Topic</th><th>Message</th><th>Status</th><th>Action</th></tr></thead><tbody>${rows.map(t=>{const st=state.students.find(s=>s.id===t.studentId);return `<tr><td>${niceDate(t.date)}</td><td>${esc(st?.name||t.studentId)}</td><td>${esc(t.topic)}</td><td style="max-width:360px;white-space:normal">${esc(t.message)}</td><td><span class="tag ${t.status==='Resolved'?'green':'orange'function adminSettings(){
+function adminSupport(){
+  const rows=(state.supportMessages||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  let selected = rows.find(x => x.id === activeSupportTicket) || rows[0];
+  if(!selected && rows.length > 0) { selected = rows[0]; activeSupportTicket = selected.id; }
+  return `<div class="subpage-head"><div><h1>Support Inbox</h1><p style="color:#748195">Review and reply to student support tickets.</p></div></div>
+  <div class="support-layout">
+    <div class="ticket-list">
+      ${rows.map(t=>{
+        const st=state.students.find(s=>s.id===t.studentId);
+        return `<div class="ticket-card ${t.id===selected?.id?'active':''} ${t.status==='Resolved'?'resolved':''}" data-action="select-ticket" data-id="${t.id}">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px"><strong>${esc(st?.name||t.studentId)}</strong><span class="tag ${t.status==='Resolved'?'green':'orange'}">${esc(t.status)}</span></div>
+          <small style="color:#a0aec0;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.topic)} - ${esc(t.message)}</small>
+        </div>`;
+      }).join('')||'<div class="empty">No support tickets.</div>'}
+    </div>
+    <div class="panel ticket-detail">
+      ${selected ? `
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:12px;margin-bottom:12px;">
+          <h3 style="margin:0">${esc(selected.topic)}</h3>
+          ${selected.status !== 'Resolved' ? `<button class="btn small primary" data-action="resolve-ticket" data-id="${selected.id}">Mark as Resolved</button>` : `<span class="tag green">Resolved</span>`}
+        </div>
+        <div style="margin-bottom:20px;">
+          <small style="color:#a0aec0;display:block;margin-bottom:4px">${esc(state.students.find(s=>s.id===selected.studentId)?.name||'Student')} • ${niceDate(selected.date)}</small>
+          <div style="background:rgba(255,255,255,0.03);padding:12px;border-radius:8px;border-left:3px solid #3b82f6;">${esc(selected.message)}</div>
+        </div>
+        ${selected.reply ? `
+        <div style="margin-bottom:20px;">
+          <small style="color:#8b5cf6;display:block;margin-bottom:4px;text-align:right">Admin Reply</small>
+          <div style="background:rgba(139,92,246,0.1);padding:12px;border-radius:8px;border-right:3px solid #8b5cf6;text-align:right;">${esc(selected.reply)}</div>
+        </div>
+        ` : ''}
+        ${selected.status !== 'Resolved' ? `
+        <form id="replySupportForm" style="margin-top:20px;">
+          <input type="hidden" name="ticketId" value="${selected.id}">
+          <textarea required name="replyText" rows="4" placeholder="Type your reply here..." style="margin-bottom:10px"></textarea>
+          <button class="btn primary" type="submit">Send Reply</button>
+        </form>
+        ` : '<p style="color:#a0aec0;text-align:center;font-style:italic">This ticket has been resolved. No further replies can be added.</p>'}
+      ` : '<div class="empty">Select a ticket to view details.</div>'}
+    </div>
+  </div>`;
+}
+function adminSettings(){
   const ac = state.adminControls || { showLeaderboard: true, showTrends: true, showWithdrawals: true };
   return `<div class="subpage-head"><div><h1>Settings</h1><p style="color:#748195">Manage brand and support settings.</p></div><button class="btn danger" data-action="reset-demo">Reset Local Data</button></div>
 <form class="panel" id="settingsForm"><div class="field"><label>Brand name</label><input name="brand" value="${esc(state.settings.brand)}"></div><div class="field"><label>Support email</label><input name="supportEmail" value="${esc(state.settings.supportEmail)}"></div><div class="field"><label>Support WhatsApp</label><input name="supportWhatsApp" value="${esc(state.settings.supportWhatsApp)}"></div><div class="field"><label>Weekly update wording</label><textarea name="weeklyUpdateText" rows="3">${esc(state.settings.weeklyUpdateText)}</textarea></div><button class="btn primary" type="submit">Save Settings</button><p class="micro" style="margin-top:12px;color:#748195">Sensitive settings should be protected with role-based access and audit logging in the live deployment.</p></form>
@@ -556,7 +641,8 @@ function bindForms(){
  const sf=$('#settingsForm');if(sf)sf.onsubmit=e=>{e.preventDefault();const fd=new FormData(sf);['brand','supportEmail','supportWhatsApp','weeklyUpdateText'].forEach(k=>state.settings[k]=String(fd.get(k)||''));save();toast('Settings saved.');};
  const acf=$('#adminControlsForm');if(acf)acf.onsubmit=e=>{e.preventDefault();const fd=new FormData(acf);state.adminControls={showLeaderboard:fd.get('showLeaderboard')==='on',showTrends:fd.get('showTrends')==='on',showWithdrawals:fd.get('showWithdrawals')==='on'};save();toast('Platform settings saved.');};
  const euf=$('#editUserForm');if(euf)euf.onsubmit=e=>{e.preventDefault();const fd=new FormData(euf),s=state.students.find(x=>x.id===String(fd.get('id')));if(s){s.name=String(fd.get('name')).trim();s.email=String(fd.get('email')).trim();s.program=String(fd.get('program')).trim();save();closeModals();render();toast('User updated.');}};
- const sup=$('#supportForm');if(sup)sup.onsubmit=e=>{e.preventDefault();const fd=new FormData(sup),st=currentStudent();state.supportMessages=state.supportMessages||[];state.supportMessages.unshift({id:uid('SUP'),studentId:st.id,topic:String(fd.get('topic')),message:String(fd.get('message')),date:todayISO(),status:'Open'});save();render();toast('Support ticket submitted.');};
+ const sup=$('#supportForm');if(sup)sup.onsubmit=e=>{e.preventDefault();const fd=new FormData(sup),st=currentStudent();state.supportMessages=state.supportMessages||[];state.supportMessages.unshift({id:uid('SUP'),studentId:st.id,topic:String(fd.get('topic')),message:String(fd.get('message')),reply:'',date:todayISO(),status:'Pending'});state.unreadCounts=state.unreadCounts||{trends:0,adminSupport:0};state.unreadCounts.adminSupport++;save();render();toast('Support ticket submitted.');};
+ const rsf=$('#replySupportForm');if(rsf)rsf.onsubmit=e=>{e.preventDefault();const fd=new FormData(rsf),id=String(fd.get('ticketId')),t=(state.supportMessages||[]).find(x=>x.id===id);if(t){t.reply=String(fd.get('replyText'));t.status='Resolved';save();render();toast('Reply sent and ticket resolved.');}};
  const cef=$('#courseEditForm');if(cef)cef.onsubmit=e=>{e.preventDefault();const fd=new FormData(cef),c=state.courses.find(x=>x.id===String(fd.get('id')));if(!c)return;c.title=String(fd.get('title')).trim();c.desc=String(fd.get('desc')).trim();c.modules=String(fd.get('modules')).split('\n').map(x=>x.trim()).filter(Boolean);c.lessons=c.modules.length;save();closeModals();render();toast('Course updated.');};
  const cf=$('#classForm');if(cf)cf.onsubmit=e=>{e.preventDefault();const fd=new FormData(cf);state.classes.unshift({id:uid('CL'),title:String(fd.get('title')),trainer:String(fd.get('trainer')),date:String(fd.get('date')),time:String(fd.get('time')),batch:String(fd.get('batch')),status:'Upcoming',link:String(fd.get('link')||'#')});state.students.forEach(s=>notify(s.id,'New live class scheduled',`${String(fd.get('title'))} is scheduled for ${niceDate(String(fd.get('date')))}.`));save();closeModals();render();toast('Class added and students notified.');};
  const tf=$('#trendForm');if(tf)tf.onsubmit=e=>{e.preventDefault();const fd=new FormData(tf),t={id:uid('TR'),program:String(fd.get('program')),title:String(fd.get('title')),added:todayISO(),difficulty:String(fd.get('difficulty')),status:'New'};state.trends.unshift(t);state.students.forEach(s=>notify(s.id,'New creator trend',`${t.program}: ${t.title}`));save();closeModals();render();toast('Trend published and students notified.');};
@@ -802,7 +888,9 @@ document.addEventListener('click', e => {
   // ── Sidebar / dashboard nav (data-dash) ───────────────────────────────────
   const dashEl = e.target.closest('.side-nav [data-dash], .dash-top [data-dash], .dashboard-page [data-dash], #mobileMenu [data-dash], .mobile-menu [data-dash]');
   if (dashEl) {
-    dashView = dashEl.dataset.dash;
+    const d = dashEl.dataset.dash;
+    if (d === 'trends' && state.unreadCounts?.trends > 0) { state.unreadCounts.trends = 0; save(); }
+    dashView = d;
     const mm = document.getElementById('mobileMenu');
     if (mm) mm.classList.remove('open');
     if (route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } else { render(); }
@@ -812,7 +900,9 @@ document.addEventListener('click', e => {
   // ── Admin sidebar nav (data-admin) ────────────────────────────────────────
   const adminEl = e.target.closest('.side-nav [data-admin], .dashboard-page [data-admin], #mobileMenu [data-admin], .mobile-menu [data-admin]');
   if (adminEl) {
-    adminView = adminEl.dataset.admin;
+    const d = adminEl.dataset.admin;
+    if (d === 'support' && state.unreadCounts?.adminSupport > 0) { state.unreadCounts.adminSupport = 0; save(); }
+    adminView = d;
     const mm = document.getElementById('mobileMenu');
     if (mm) mm.classList.remove('open');
     if (route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
@@ -873,6 +963,7 @@ document.addEventListener('click', e => {
     if (a === 'pay-withdrawal')     { payWithdrawal(id); return; }
     if (a === 'reject-withdrawal')  { rejectWithdrawal(id); return; }
     if (a === 'resolve-ticket')     { resolveTicket(id); return; }
+    if (a === 'select-ticket')      { activeSupportTicket = id; render(); return; }
     if (a === 'class-detail')       { showClassDetail(id); return; }
     if (a === 'course-detail')      { showCourseDetail(id); return; }
     if (a === 'trend-detail')       { showTrendDetail(id); return; }

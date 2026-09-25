@@ -696,5 +696,50 @@ h1,h2,h3,.brand-copy strong,.dash-card strong,.stat strong{font-family:"Montserr
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .3s; border-radius: 24px; }
 .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: #a0aec0; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-input:checked + .slider { background-color: #8b5cf6; }
 input:checked + .slider:before { transform: translateX(18px); background-color: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+
+/* Sidebar Nav Badges */
+.nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  background-color: #ef4444;
+  color: #fff;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: auto;
+  padding: 0 6px;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+/* Support Layout */
+.support-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 768px) {
+  .support-layout {
+    grid-template-columns: 1fr;
+  }
+}
+.ticket-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ticket-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ticket-card:hover { background: rgba(255, 255, 255, 0.06); }
+.ticket-card.active { border-color: #8b5cf6; background: rgba(139, 92, 246, 0.1); }
+.ticket-card.resolved { opacity: 0.6; }
