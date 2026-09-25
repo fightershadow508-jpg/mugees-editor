@@ -590,3 +590,5 @@ h1,h2,h3,.brand-copy strong,.dash-card strong,.stat strong{font-family:"Montserr
   .premium-stats .stat { border-bottom: 1px solid #e5e7eb !important; }
   .premium-stats .stat:last-child { border-bottom: 0 !important; }
 }
+
+#chartTabs button { cursor: pointer; transition: all 0.2s; }

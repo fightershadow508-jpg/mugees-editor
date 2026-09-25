@@ -274,7 +274,23 @@ function sparkline(values){const w=620,h=220,p=18,max=Math.max(...values),min=Ma
 
 function studentSidebar(s){const items=[['overview','🏠 Dashboard'],['courses','📚 My Courses'],['live','🎥 Curriculum'],['trends','🔥 Trends'],['performance','📊 Performance'],['earnings','💰 Earnings'],['withdraw','🏦 Withdraw'],['payments','🧾 Payments'],['notifications','🔔 Notifications'],['profile','👤 Profile'],['support','💬 Support']];return `<aside class="sidebar"><div class="side-profile side-profile-rich">${s.avatar?`<img src="${esc(s.avatar)}" alt="">`:`<span class="side-avatar-fallback">${esc(s.name.split(' ').map(x=>x[0]).join('').slice(0,2))}</span>`}<div><strong>${esc(s.name)}</strong><div style="margin-top:5px"><span class="role-badge role-student">Student</span></div></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${dashView===id?'active':''}" data-dash="${id}">${l}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`}
 
-function studentDashboard(){if(!state.session||state.session.role!=='student'){openAuth('login');location.hash='#/';return homePage()}const s=currentStudent();return `<div class="dashboard-page"><div class="dashboard-shell">${studentSidebar(s)}<section class="dashboard-main" id="dashContent">${studentView(s)}</section></div></div>`}
+
+window.loadEarnings = async function(sId) {
+  try {
+    const { data, error } = await supabase.from('earnings').select('*').eq('student_id', sId);
+    if (!error && data) {
+      const fetched = data.map(d => ({ amount: Number(d.amount), date: d.date || (d.created_at ? d.created_at.split('T')[0] : todayISO()), program: d.program || 'Creator Program', studentId: sId }));
+      state.earnings = state.earnings.filter(e => e.studentId !== sId).concat(fetched);
+      save();
+      if (route() === 'dashboard' && currentStudent()?.id === sId) {
+         const dashContent = document.getElementById('dashContent');
+         if(dashContent) { dashContent.innerHTML = studentView(currentStudent()); bindGlobal(); }
+      }
+    }
+  } catch(e) { console.error('Earnings fetch error:', e); }
+};
+
+function studentDashboard(){if(!state.session||state.session.role!=='student'){openAuth('login');location.hash='#/';return homePage()}const s=currentStudent(); loadEarnings(s.id); return `<div class="dashboard-page"><div class="dashboard-shell">${studentSidebar(s)}<section class="dashboard-main" id="dashContent">${studentView(s)}</section></div></div>`}
 function studentView(s){
  if(dashView==='courses') return studentCourses(s);
  if(dashView==='live') return studentLive(s);
@@ -287,10 +303,10 @@ function studentView(s){
  if(dashView==='profile') return studentProfile(s);
  if(dashView==='support') return studentSupport(s);
  const myE=state.earnings.filter(e=>e.studentId===s.id).slice(0,4);const myN=state.notifications.filter(n=>n.studentId===s.id).filter(n=>!n.read).length;const totals=earningSummary(s.id);
- return `<div class="dash-top"><div><h1>Welcome back, ${esc(s.name.split(' ')[0])} 👋</h1><p style="display:flex;align-items:center;gap:8px;margin:6px 0 0"><span class="role-badge role-student">Student</span> <span style="color:#8fa1b8">${esc(s.email)} · ${esc(s.program)}</span></p></div><div class="dash-actions"><button class="btn light" data-dash="notifications">🔔 ${myN}</button><button class="btn primary" data-dash="withdraw">Withdraw</button></div></div>
+ return `<div class="dash-top"><div><h1>Welcome back, ${esc(s.name.split(' ')[0])} 👋</h1><p style="display:flex;align-items:center;gap:8px;margin:6px 0 0"><span class="role-badge role-student">Student</span> <span style="color:#8fa1b8">${esc(s.program)}</span></p></div><div class="dash-actions"><button class="btn light" data-dash="notifications">🔔 ${myN}</button><button class="btn primary" data-dash="withdraw">Withdraw</button></div></div>
  <div class="dash-card-grid"><div class="dash-card"><small>Today's Earnings</small><strong>${money(totals.today)}</strong><div class="delta">Approved payout credit</div></div><div class="dash-card"><small>Last 7 Days</small><strong>${money(totals.week)}</strong><div class="delta">Recent activity</div></div><div class="dash-card"><small>Last 30 Days</small><strong>${money(totals.month)}</strong><div class="delta">Rolling total</div></div><div class="dash-card"><small>Total Earnings</small><strong>${money(totals.lifetime)}</strong><div class="delta">Approved history</div></div></div>
  <div class="dash-card-grid" style="margin-top:14px"><div class="dash-card"><small>Available Balance</small><strong style="color:#059669">${money(s.available)}</strong><div class="delta">Available to request</div></div><div class="dash-card"><small>Total Paid</small><strong>${money(s.paid)}</strong><div class="delta">Completed payouts</div></div><div class="dash-card"><small>Course Progress</small><strong>${s.progress}%</strong><div class="progress" style="margin-top:9px"><i style="width:${s.progress}%"></i></div></div><div class="dash-card"><small>Performance</small><strong>${esc(s.performance)}</strong><div class="delta">Attendance ${s.attendance}%</div></div></div>
- <div class="dashboard-grid"><div class="panel"><div class="panel-head"><h3>Earning activity</h3><div class="tabs"><button>1W</button><button class="active">1M</button><button>3M</button><button>1Y</button></div></div>${sparkline([12,20,15,31,28,41,36,56,49,62,58,71])}</div><div class="panel"><div class="panel-head"><h3>Next live class</h3><span class="tag orange">Upcoming</span></div>${nextClassCard()}</div></div>
+ <div class="dashboard-grid"><div class="panel"><div class="panel-head"><h3>Earning activity</h3><div class="tabs" id="chartTabs"><button data-range="1W">1W</button><button class="active" data-range="1M">1M</button><button data-range="3M">3M</button><button data-range="1Y">1Y</button></div></div><div id="chartContainer">${sparkline([12,20,15,31,28,41,36,56,49,62,58,71])}</div></div><div class="panel"><div class="panel-head"><h3>Next live class</h3><span class="tag orange">Upcoming</span></div>${nextClassCard()}</div></div>
  <div class="dashboard-grid"><div class="panel"><div class="panel-head"><h3>Recent earnings</h3><button class="btn small light" data-dash="earnings">View all</button></div><div class="list">${myE.map(e=>`<div class="list-item"><div class="meta"><strong>${esc(e.program)}</strong><small>${niceDate(e.date)}</small></div><span class="amount green">+ ${money(e.amount)}</span></div>`).join('')||'<div class="empty">No earnings yet.</div>'}</div></div><div class="panel"><div class="panel-head"><h3>Latest trends</h3><button class="btn small light" data-dash="trends">View</button></div><div class="list">${state.trends.slice(0,3).map(t=>`<div class="list-item"><div class="meta"><strong>${esc(t.program)}</strong><small>${esc(t.title)}</small></div><span class="tag ${t.status==='New'?'green':''}">${esc(t.status)}</span></div>`).join('')}</div></div></div>`
 }
 function nextClassCard(){const c=state.classes.find(x=>x.status==='Upcoming')||state.classes[0];return `<h3 style="margin:6px 0">${esc(c.title)}</h3><p style="color:#728096">${niceDate(c.date)} · ${esc(c.time)}<br>${esc(c.trainer)} · ${esc(c.batch)}</p><button class="btn primary" data-action="class-detail" data-id="${c.id}">Open Class</button>`}
@@ -358,6 +374,20 @@ const rp=$('#resetPasswordForm');if(rp)rp.onsubmit=async e=>{e.preventDefault();
 }
 
 function bindGlobal(){
+
+  $('#chartTabs button').forEach(b => {
+    b.onclick = () => {
+      $('#chartTabs button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      const r = b.dataset.range;
+      const data = r==='1W' ? [12,15,14,20,18,25,28] :
+                   r==='3M' ? [20,30,25,40,45,60,55,70,85,80,95,110] :
+                   r==='1Y' ? [50,60,45,80,95,120,110,140,160,180,170,210] :
+                   [12,20,15,31,28,41,36,56,49,62,58,71];
+      const cc = document.getElementById('chartContainer');
+      if(cc) cc.innerHTML = sparkline(data);
+    };
+  });
  $$('[data-action]').forEach(el=>el.onclick=e=>{const a=el.dataset.action,id=el.dataset.id;if(a==='open-login')openAuth('login');else if(a==='open-signup')openAuth('signup');else if(a==='open-forgot-password')openForgotPassword();else if(a==='toggle-eye'){var t=document.getElementById(el.dataset.target);if(t)t.type=t.type==='password'?'text':'password';}else if(a==='close-modal')closeModals();else if(a==='logout'){state.session=null;save();dashView='overview';adminView='overview';$('#mobileMenu').classList.remove('open');location.hash='#/';render();}else if(a==='mark-notifications'){const s=currentStudent();state.notifications.forEach(n=>{if(n.studentId===s.id)n.read=true});save();render();}else if(a==='view-student')showStudentModal(id);else if(a==='add-class')addClassModal();else if(a==='add-trend')addTrendModal();else if(a==='add-program')addProgramModal();else if(a==='pay-withdrawal')payWithdrawal(id);else if(a==='reject-withdrawal')rejectWithdrawal(id);else if(a==='resolve-ticket')resolveTicket(id);else if(a==='reset-demo'){if(confirm('Reset all local data?'))resetDemo();}else if(a==='class-detail')showClassDetail(id);else if(a==='course-detail')showCourseDetail(id);else if(a==='trend-detail')showTrendDetail(id);else if(a==='edit-course')editCourseModal(id);});
  $$('[data-dash]').forEach(el=>el.onclick=()=>{
   dashView=el.dataset.dash;
@@ -375,10 +405,10 @@ function syncHeader(){
  const mobileMenu=$('#mobileMenu');
  if(state.session?.role==='student'){
    actions.innerHTML=`<button class="icon-btn mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false">☰</button><a class="btn ghost" href="#/dashboard" id="headerDashBtn">Dashboard</a><button class="btn primary" data-action="logout" id="headerLogoutBtn">Logout</button>`;
-   if(mobileMenu) mobileMenu.innerHTML=`<a href="#/" data-route="home">Home</a><a href="#/courses" data-route="courses">Courses</a><a href="#/programs" data-route="programs">Creator Programs</a><a href="#/live" data-route="live">Curriculum</a><a href="#/dashboard" id="mobileDashBtn">Dashboard</a><a href="#/how-it-works" data-route="how-it-works">How It Works</a><a href="#/faq" data-route="faq">FAQ</a><button class="mobile-nav-btn" data-dash="notifications" id="mobileNotifBtn">🔔 Notifications</button><button class="mobile-nav-btn" data-dash="profile" id="mobileProfileBtn">👤 Profile</button><button class="mobile-nav-btn mobile-logout-btn" data-action="logout" id="mobileLogoutBtn">↩ Logout</button>`;
+   if(mobileMenu) mobileMenu.innerHTML=`<a href="#/" data-route="home">Home</a><a href="#/courses" data-route="courses">Courses</a><a href="#/programs" data-route="programs">Creator Programs</a><a href="#/live" data-route="live">Curriculum</a><button class="mobile-nav-btn" data-dash="overview" id="mobileDashBtn">Dashboard</button><a href="#/how-it-works" data-route="how-it-works">How It Works</a><a href="#/faq" data-route="faq">FAQ</a><button class="mobile-nav-btn" data-dash="notifications" id="mobileNotifBtn">🔔 Notifications</button><button class="mobile-nav-btn" data-dash="profile" id="mobileProfileBtn">👤 Profile</button><button class="mobile-nav-btn mobile-logout-btn" data-action="logout" id="mobileLogoutBtn">↩ Logout</button>`;
  }else if(state.session?.role==='admin'){
    actions.innerHTML=`<button class="icon-btn mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false">☰</button><a class="btn ghost" href="#/admin" id="headerAdminBtn">Admin Dashboard</a><button class="btn primary" data-action="logout" id="headerLogoutBtn">Logout</button>`;
-   if(mobileMenu) mobileMenu.innerHTML=`<a href="#/" data-route="home">Home</a><a href="#/courses" data-route="courses">Courses</a><a href="#/programs" data-route="programs">Creator Programs</a><a href="#/live" data-route="live">Curriculum</a><a href="#/admin" id="mobileAdminBtn">Admin Dashboard</a><a href="#/how-it-works" data-route="how-it-works">How It Works</a><a href="#/faq" data-route="faq">FAQ</a><a href="#/contact" data-route="contact">Contact</a><button class="mobile-nav-btn mobile-logout-btn" data-action="logout" id="mobileAdminLogoutBtn">↩ Logout</button>`;
+   if(mobileMenu) mobileMenu.innerHTML=`<a href="#/" data-route="home">Home</a><a href="#/courses" data-route="courses">Courses</a><a href="#/programs" data-route="programs">Creator Programs</a><a href="#/live" data-route="live">Curriculum</a><button class="mobile-nav-btn" data-admin="overview" id="mobileAdminBtn">Admin Dashboard</button><a href="#/how-it-works" data-route="how-it-works">How It Works</a><a href="#/faq" data-route="faq">FAQ</a><a href="#/contact" data-route="contact">Contact</a><button class="mobile-nav-btn mobile-logout-btn" data-action="logout" id="mobileAdminLogoutBtn">↩ Logout</button>`;
  }else{
    actions.innerHTML=`<button class="icon-btn mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu" aria-expanded="false">☰</button><button class="btn ghost" data-action="open-login" id="headerLoginBtn">Login</button><button class="btn primary" data-action="open-signup" id="headerJoinBtn">Join Now</button>`;
    if(mobileMenu) mobileMenu.innerHTML=`<a href="#/" data-route="home">Home</a><a href="#/courses" data-route="courses">Courses</a><a href="#/programs" data-route="programs">Creator Programs</a><a href="#/live" data-route="live">Curriculum</a><a href="#/how-it-works" data-route="how-it-works">How It Works</a><a href="#/faq" data-route="faq">FAQ</a><a href="#/contact" data-route="contact">Contact</a><button class="mobile-nav-btn" data-action="open-login" id="mobileLoginBtn">Login</button><button class="mobile-nav-btn mobile-join-btn" data-action="open-signup" id="mobileJoinBtn">Join Now</button>`;
