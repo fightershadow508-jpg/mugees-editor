@@ -307,7 +307,13 @@ function sparkline(values) {
   </svg>`;
 }
 
-function studentSidebar(s){const items=[['overview','🏠 Dashboard'],['courses','📚 My Courses'],['live','🎥 Curriculum'],['trends','🔥 Trends'],['performance','📊 Performance'],['earnings','💰 Earnings'],['leaderboard','🏆 Leaderboard'],['withdraw','🏦 Withdraw'],['payments','🧾 Payments'],['notifications','🔔 Notifications'],['profile','👤 Profile'],['support','💬 Support']];return `<aside class="sidebar"><div class="side-profile side-profile-rich">${s.avatar?`<img src="${esc(s.avatar)}" alt="">`:`<span class="side-avatar-fallback">${esc(s.name.split(' ').map(x=>x[0]).join('').slice(0,2))}</span>`}<div><strong>${esc(s.name)}</strong><div style="margin-top:5px"><span class="role-badge role-student">Student</span></div></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${dashView===id?'active':''}" data-dash="${id}">${l}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`}
+function studentSidebar(s){
+  const items=[['overview','🏠 Dashboard'],['courses','📚 My Courses'],['live','🎥 Curriculum'],['trends','🔥 Trends'],['performance','📊 Performance'],['earnings','💰 Earnings'],['leaderboard','🏆 Leaderboard'],['withdraw','🏦 Withdraw'],['payments','🧾 Payments'],['notifications','🔔 Notifications'],['profile','👤 Profile'],['support','💬 Support']];
+  const storedAvatar = localStorage.getItem('userAvatar');
+  const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random&color=fff&rounded=true`;
+  const avatarImg = storedAvatar || s.avatar || fallbackUrl;
+  return `<aside class="sidebar"><div class="side-profile side-profile-rich"><img src="${esc(avatarImg)}" alt="Profile" style="width:40px;height:40px;border-radius:50%;object-fit:cover;"><div><strong>${esc(s.name)}</strong><div style="margin-top:5px"><span class="role-badge role-student">Student</span></div></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${dashView===id?'active':''}" data-dash="${id}">${l}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`
+}
 
 
 window.loadEarnings = async function(sId) {
@@ -350,21 +356,27 @@ function studentCourses(s){return `<div class="subpage-head"><div><h1>My Courses
 function studentLive(){return `<div class="subpage-head"><div><h1>Curriculum</h1><p style="color:#748195">Upcoming sessions and previous recordings.</p></div></div><div class="live-grid">${state.classes.map(c=>`<div class="live-card"><span class="tag ${c.status==='Upcoming'?'orange':'green'}">${esc(c.status)}</span><h3 style="margin-top:14px">${esc(c.title)}</h3><p style="color:#748195">${niceDate(c.date)} · ${esc(c.time)}<br>${esc(c.trainer)} · ${esc(c.batch)}</p><button class="btn primary" data-action="class-detail" data-id="${c.id}">${c.status==='Upcoming'?'Join Class':'Watch Recording'}</button></div>`).join('')}</div>`}
 function studentTrends(){return `<div class="subpage-head"><div><h1>Trend Updates</h1><p style="color:#748195">New creator trends published by Admin.</p></div></div><div class="cards">${state.trends.map(t=>`<div class="card"><div style="display:flex;justify-content:space-between"><span class="pill">${esc(t.program)}</span><span class="tag ${t.status==='New'?'green':''}">${esc(t.status)}</span></div><h3 style="margin-top:16px">${esc(t.title)}</h3><p>Difficulty: ${esc(t.difficulty)} · Added ${niceDate(t.added)}</p><button class="btn primary" data-action="trend-detail" data-id="${t.id}">View Tutorial</button></div>`).join('')}</div>`}
 
-function getMockLeaderboard() {
+function getMockLeaderboard(s) {
   const users = [
     { name: 'Ahmad Raza',   rank: 'TOP 1', amount: 'Rs11,873,137' },
     { name: 'Zainab Bibi',  rank: 'TOP 2', amount: 'Rs9,441,280'  },
     { name: 'Usman Ali',    rank: 'TOP 3', amount: 'Rs7,820,500'  },
-    { name: 'Fatima Noor',  rank: 'TOP 4', amount: 'Rs6,155,900'  },
+    { name: s ? s.name : 'Fatima Noor',  rank: 'TOP 4', amount: 'Rs6,155,900'  },
     { name: 'Ali Hassan',   rank: 'TOP 5', amount: 'Rs4,932,640'  },
     { name: 'Aisha Khan',   rank: 'TOP 6', amount: 'Rs3,710,000'  },
     { name: 'Bilal Tariq',  rank: 'TOP 7', amount: 'Rs2,490,800'  },
   ];
-  return users.map((u) => ({ ...u, avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random&color=fff&rounded=true` }));
+  return users.map((u) => {
+    let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random&color=fff&rounded=true`;
+    if (s && u.name === s.name) {
+      avatarUrl = localStorage.getItem('userAvatar') || s.avatar || avatarUrl;
+    }
+    return { ...u, avatar: avatarUrl };
+  });
 }
 
 function studentLeaderboard(s) {
-  const all  = getMockLeaderboard();
+  const all  = getMockLeaderboard(s);
   const top7  = all.slice(0, 5);
   const top30 = all.slice(0, 5);
   const allTime = all.slice(0, 7);
@@ -386,7 +398,7 @@ function studentLeaderboard(s) {
           ${data.map((u,i) => `
             <tr style="border-bottom:1px solid rgba(255,255,255,0.05); transition:background .15s;" onmouseover="this.style.background='rgba(139,92,246,0.07)'" onmouseout="this.style.background='transparent'">
               <td style="padding:10px 14px;">
-                <img src="${u.avatar}" alt="${u.name}" style="width:38px; height:38px; border-radius:50%; display:block; border:2px solid rgba(139,92,246,0.4);">
+                <img src="${u.avatar}" alt="${u.name}" style="width:38px; height:38px; border-radius:50%; display:block; border:2px solid rgba(139,92,246,0.4); object-fit:cover;">
               </td>
               <td style="padding:10px 14px; color:#e2e8f0; font-weight:600; font-size:14px;">
                 ${i<3?medal[i]+' ':''}${esc(u.name)}
@@ -401,27 +413,12 @@ function studentLeaderboard(s) {
     </div>
   `;
 
-  const currentAvatar = s.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name || 'Admin')}&background=random&color=fff&rounded=true`;
-
   return `
     <div class="subpage-head">
       <div>
         <h1 style="color:#edf5ff;">🏆 Leaderboard</h1>
         <p style="color:#8fa1b8;">Top performers across the platform.</p>
       </div>
-    </div>
-
-    <!-- Avatar Upload Banner -->
-    <div style="background:linear-gradient(135deg,rgba(139,92,246,0.18),rgba(34,211,238,0.1)); border:1px solid rgba(139,92,246,0.25); border-radius:18px; padding:22px 26px; margin-bottom:24px; display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
-      <img id="lbAvatarPreview" src="${currentAvatar}" alt="Your avatar" style="width:64px; height:64px; border-radius:50%; border:3px solid rgba(139,92,246,0.5); object-fit:cover; flex-shrink:0;">
-      <div style="flex:1; min-width:180px;">
-        <div style="color:#e2e8f0; font-weight:700; font-size:15px; margin-bottom:4px;">Update Your Avatar</div>
-        <div style="color:#8fa1b8; font-size:13px;">Upload a photo to personalise your leaderboard profile.</div>
-      </div>
-      <label for="lbAvatarInput" style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; background:linear-gradient(135deg,#7c3aed,#22d3ee); color:#fff; font-weight:700; font-size:13px; padding:10px 20px; border-radius:999px; box-shadow:0 4px 18px rgba(124,58,237,0.4); transition:opacity .2s; white-space:nowrap;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-        📤 Upload Photo
-        <input type="file" id="lbAvatarInput" accept="image/*" style="display:none;" onchange="const file=this.files[0]; if(file) { const reader=new FileReader(); reader.onload=e=>document.getElementById('lbAvatarPreview').src=e.target.result; reader.readAsDataURL(file); }">
-      </label>
     </div>
 
     <!-- 3-Column Leaderboard Grid -->
@@ -459,7 +456,26 @@ function studentEarnings(s){const rows=state.earnings.filter(e=>e.studentId===s.
 function studentWithdraw(s){return `<div class="subpage-head"><div><h1>Withdraw</h1><p style="color:#748195">Request your available approved balance.</p></div></div><div class="dashboard-grid"><form class="panel" id="withdrawForm"><div class="panel-head"><h3>New withdrawal request</h3><span class="tag green">${money(s.available)} available</span></div><div class="field"><label>Amount</label><input required type="number" name="amount" min="0.01" step="0.01" max="${s.available}" value="${Number(s.available).toFixed(2)}" ${s.available<=0?'disabled':''}></div><div class="field"><label>Payout method</label><select name="method" id="payoutMethod"><option>JazzCash</option><option>Easypaisa</option><option>SadaPay</option><option>NayaPay</option><option>Bank Transfer</option></select></div><div class="field"><label>Account / IBAN / mobile number</label><input required name="account" value="${esc(s.payoutAccount||'')}" placeholder="Enter payout account"></div><div class="notice">Only request a payout to an account you control. Your dashboard balance is displayed in USD; local-wallet settlement may be converted during processing. Never share wallet PINs, OTPs or banking passwords.</div><button class="btn primary" style="margin-top:14px;width:100%" type="submit" ${s.available<=0?'disabled':''}>Request Withdrawal</button></form><div class="panel"><h3>Supported methods</h3><div class="bank-grid" style="margin-top:14px"><div class="bank-option"><span class="bank-logo jazz">JC</span><strong>JazzCash</strong></div><div class="bank-option"><span class="bank-logo easy">EP</span><strong>Easypaisa</strong></div><div class="bank-option"><span class="bank-logo sada">SD</span><strong>SadaPay</strong></div><div class="bank-option"><span class="bank-logo naya">NP</span><strong>NayaPay</strong></div><div class="bank-option"><span class="bank-logo bank">PK</span><strong>Bank Transfer</strong></div></div><p style="color:#748195;margin-top:18px">${esc(state.settings.weeklyUpdateText)}</p></div></div>`}
 function studentPayments(s){const rows=state.withdrawals.filter(w=>w.studentId===s.id).sort((a,b)=>b.date.localeCompare(a.date));return `<div class="subpage-head"><div><h1>Payment History</h1><p style="color:#748195">Withdrawal requests and completed payments.</p></div></div><div class="panel"><div class="table-wrap"><table class="table"><thead><tr><th>ID</th><th>Request Date</th><th>Amount</th><th>Method</th><th>Status</th><th>Reference</th></tr></thead><tbody>${rows.map(w=>`<tr><td>${esc(w.id)}</td><td>${niceDate(w.date)}</td><td>${money(w.amount)}</td><td>${esc(w.method)}</td><td><span class="tag ${w.status==='Paid'?'green':w.status==='Rejected'?'red':'orange'}">${esc(w.status)}</span></td><td>${esc(w.reference||'—')}</td></tr>`).join('')||'<tr><td colspan="6">No payment history.</td></tr>'}</tbody></table></div></div>`}
 function studentNotifications(s){const rows=state.notifications.filter(n=>n.studentId===s.id).sort((a,b)=>b.date.localeCompare(a.date));return `<div class="subpage-head"><div><h1>Notifications</h1><p style="color:#748195">Earnings, trends, classes and payment updates.</p></div><button class="btn light" data-action="mark-notifications">Mark all read</button></div><div class="list">${rows.map(n=>`<div class="list-item" style="background:${n.read?'#fff':'#f5f3ff'}"><div class="meta"><strong>${esc(n.title)}</strong><small>${niceDate(n.date)} · ${esc(n.body)}</small></div>${n.read?'':'<span class="tag green">New</span>'}</div>`).join('')||'<div class="empty">No notifications.</div>'}</div>`}
-function studentProfile(s){return `<div class="subpage-head"><div><h1>Profile</h1><p style="color:#748195">Your account and payout details.</p></div></div><form class="panel" id="profileForm"><div class="profile-grid"><div class="field"><label>Full name</label><input name="name" value="${esc(s.name)}"></div><div class="field"><label>Email</label><input name="email" value="${esc(s.email)}" disabled></div><div class="field"><label>Phone</label><input name="phone" value="${esc(s.phone)}"></div><div class="field"><label>City</label><input name="city" value="${esc(s.city||'')}"></div><div class="field"><label>Preferred payout method</label><select name="payoutMethod">${['JazzCash','Easypaisa','SadaPay','NayaPay','Bank Transfer'].map(x=>`<option ${s.payoutMethod===x?'selected':''}>${x}</option>`).join('')}</select></div><div class="field"><label>Payout account</label><input name="payoutAccount" value="${esc(s.payoutAccount||'')}"></div></div><div class="field"><label>About</label><textarea name="bio" rows="4">${esc(s.bio||'')}</textarea></div><button class="btn primary" type="submit">Save Profile</button></form>`}
+function studentProfile(s){
+  const storedAvatar = localStorage.getItem('userAvatar');
+  const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random&color=fff&rounded=true`;
+  const currentAvatar = storedAvatar || s.avatar || fallbackUrl;
+  return `<div class="subpage-head"><div><h1>Profile</h1><p style="color:#748195">Your account and payout details.</p></div></div>
+<div class="panel" style="margin-bottom:20px;">
+  <h3 style="margin-bottom:15px; color:#edf5ff;">Profile Picture</h3>
+  <div style="display:flex; align-items:center; gap:20px;">
+    <img id="profileAvatarPreview" src="${currentAvatar}" alt="Your avatar" style="width:72px; height:72px; border-radius:50%; border:3px solid rgba(139,92,246,0.5); object-fit:cover; flex-shrink:0;">
+    <div>
+      <label for="profileAvatarInput" style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; background:linear-gradient(135deg,#7c3aed,#22d3ee); color:#fff; font-weight:700; font-size:13px; padding:10px 20px; border-radius:999px; box-shadow:0 4px 18px rgba(124,58,237,0.4); transition:opacity .2s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+        📤 Upload Photo
+        <input type="file" id="profileAvatarInput" accept="image/*" style="display:none;" onchange="const file=this.files[0]; if(file) { const reader=new FileReader(); reader.onload=e=>{ const dataUrl = e.target.result; localStorage.setItem('userAvatar', dataUrl); document.getElementById('profileAvatarPreview').src=dataUrl; if(typeof render==='function')render(); }; reader.readAsDataURL(file); }">
+      </label>
+      <p style="color:#8fa1b8; font-size:12px; margin-top:8px;">Recommended: Square image, max 2MB.</p>
+    </div>
+  </div>
+</div>
+<form class="panel" id="profileForm"><div class="profile-grid"><div class="field"><label>Full name</label><input name="name" value="${esc(s.name)}"></div><div class="field"><label>Email</label><input name="email" value="${esc(s.email)}" disabled></div><div class="field"><label>Phone</label><input name="phone" value="${esc(s.phone)}"></div><div class="field"><label>City</label><input name="city" value="${esc(s.city||'')}"></div><div class="field"><label>Preferred payout method</label><select name="payoutMethod">${['JazzCash','Easypaisa','SadaPay','NayaPay','Bank Transfer'].map(x=>`<option ${s.payoutMethod===x?'selected':''}>${x}</option>`).join('')}</select></div><div class="field"><label>Payout account</label><input name="payoutAccount" value="${esc(s.payoutAccount||'')}"></div></div><div class="field"><label>About</label><textarea name="bio" rows="4">${esc(s.bio||'')}</textarea></div><button class="btn primary" type="submit">Save Profile</button></form>`
+}
 function studentSupport(s=currentStudent()){const tickets=(state.supportMessages||[]).filter(x=>x.studentId===s.id);return `<div class="subpage-head"><div><h1>Support</h1><p style="color:#748195">Get help with your account, classes or payout request.</p></div></div><div class="dashboard-grid"><form class="panel" id="supportForm"><h3>Create Support Ticket</h3><div class="field"><label>Topic</label><select name="topic"><option>Account Help</option><option>Course / Class</option><option>Earnings / Payout</option><option>Technical Issue</option></select></div><div class="field"><label>Message</label><textarea required name="message" rows="5" placeholder="Describe your issue clearly"></textarea></div><button class="btn primary" type="submit">Submit Ticket</button></form><div class="panel"><h3>Support & safety</h3><p style="color:#748195">Email: ${esc(state.settings.supportEmail)}<br>WhatsApp: ${esc(state.settings.supportWhatsApp)}</p><div class="notice">Support will never ask for your JazzCash/Easypaisa PIN, OTP, card CVV or online banking password.</div><div class="list" style="margin-top:14px">${tickets.slice(0,3).map(t=>`<div class="list-item"><div class="meta"><strong>${esc(t.topic)}</strong><small>${niceDate(t.date)}</small></div><span class="tag orange">${esc(t.status)}</span></div>`).join('')||'<div class="empty">No support tickets yet.</div>'}</div></div></div>`}
 
 function adminSidebar(){const items=[['overview','🏠 Overview'],['students','👥 Students'],['courses','📚 Courses'],['live','🎥 Curriculum'],['programs','🧩 Programs'],['trends','🔥 Trends'],['earnings','💰 Earnings'],['withdrawals','🏦 Withdrawals'],['notifications','🔔 Notify'],['support','💬 Support'],['settings','⚙️ Settings']];return `<aside class="sidebar"><div class="side-profile"><strong>${esc(state.admin.name)}</strong><div style="margin-top:5px"><span class="role-badge role-admin">Admin</span></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${adminView===id?'active':''}" data-admin="${id}">${l}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`}
