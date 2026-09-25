@@ -592,3 +592,19 @@ h1,h2,h3,.brand-copy strong,.dash-card strong,.stat strong{font-family:"Montserr
 }
 
 #chartTabs button { cursor: pointer; transition: all 0.2s; }
+/* Graph Tabs Active State */
+#chartTabs button.active {
+    background: #8b5cf6 !important;
+    color: #ffffff !important;
+    border-color: #8b5cf6 !important;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+}
+
+/* Mobile Menu Active State */
+.mobile-menu a.active, .mobile-menu button.active {
+    color: #8b5cf6 !important;
+    background: rgba(139, 92, 246, 0.05);
+    border-left: 3px solid #8b5cf6;
+    padding-left: 17px;
+    font-weight: 600;
+}
