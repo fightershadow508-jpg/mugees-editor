@@ -479,6 +479,50 @@ function bindPasswordStrength(inputId, indicatorId) {
 // Attached ONCE to document — survives all DOM re-renders caused by render().
 document.addEventListener('click', e => {
 
+  // ── 1. BULLETPROOF MOBILE NAV PRIORITY HANDLER ────────────────────────────
+  const mobileBtn = e.target.closest('#mobileMenu button, #mobileMenu a, .mobile-nav-btn');
+  // Exclude the hamburger toggle button itself from this block
+  if (mobileBtn && !e.target.closest('.mobile-menu-btn')) {
+    e.preventDefault(); // Stop default behavior
+    
+    // Close the menu immediately
+    const menuContainer = document.getElementById('mobileMenu');
+    if(menuContainer) menuContainer.classList.remove('open');
+    
+    // Execute the action (route or dashView change)
+    const dashTarget = mobileBtn.getAttribute('data-dash');
+    const adminTarget = mobileBtn.getAttribute('data-admin');
+    const hrefTarget = mobileBtn.getAttribute('href');
+    const actionTarget = mobileBtn.getAttribute('data-action');
+    
+    if (dashTarget) {
+      dashView = dashTarget;
+      if (route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } else { render(); }
+    } else if (adminTarget) {
+      adminView = adminTarget;
+      if (route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
+    } else if (actionTarget === 'logout' || mobileBtn.innerText.toLowerCase().includes('logout')) {
+      if (window.supabase && supabase.auth) {
+        supabase.auth.signOut().then(() => {
+          state.session = null; save(); dashView = 'overview'; adminView = 'overview';
+          location.hash = '#/'; render();
+        });
+      } else {
+        state.session = null; save(); dashView = 'overview'; adminView = 'overview';
+        location.hash = '#/'; render();
+      }
+    } else if (actionTarget === 'open-login') {
+      $('#authModal').classList.add('open');
+      openAuth('login');
+    } else if (actionTarget === 'open-signup') {
+      $('#authModal').classList.add('open');
+      openAuth('signup');
+    } else if (hrefTarget && hrefTarget !== '#') {
+      window.location.hash = hrefTarget;
+    }
+    return; // Stop further execution
+  }
+
   // ── Mobile menu toggle ────────────────────────────────────────────────────
   const menuBtn = e.target.closest('.mobile-menu-btn');
   if (menuBtn) {
@@ -488,58 +532,6 @@ document.addEventListener('click', e => {
       menuBtn.setAttribute('aria-expanded', String(open));
     }
     return;
-  }
-  // Close mobile menu for any click inside it (buttons, links, etc.) before handling actions
-  if (e.target.closest('#mobileMenu')) {
-    const menu = document.getElementById('mobileMenu');
-    if (menu) menu.classList.remove('open');
-  }
-
-  // ── DEDICATED MOBILE NAV BUTTON HANDLER ───────────────────────────────────
-  const mobileNavBtn = e.target.closest('#mobileMenu .mobile-nav-btn');
-  if (mobileNavBtn) {
-    e.preventDefault();
-    const action = mobileNavBtn.dataset.action;
-    const dash = mobileNavBtn.dataset.dash;
-    const admin = mobileNavBtn.dataset.admin;
-
-    // 1. Instantly close the mobile menu
-    const menu = document.getElementById('mobileMenu');
-    if (menu) menu.classList.remove('open');
-
-    // 2. Handle Logout Button
-    if (action === 'logout') {
-      supabase.auth.signOut().then(() => {
-        state.session = null; save(); dashView = 'overview'; adminView = 'overview';
-        location.hash = '#/'; render();
-      });
-      return;
-    }
-
-    // 3. Handle Dashboard Tabs (Dashboard, Notifications, Profile)
-    if (dash) {
-      dashView = dash;
-      if (route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } else { render(); }
-      
-      
-      return;
-    }
-
-    // 4. Handle Admin Tabs
-    if (admin) {
-      adminView = admin;
-      if (route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
-      
-      
-      return;
-    }
-  }
-
-  // ── Mobile Menu Auto-Close for regular anchor links inside it ─────────────
-  const mobileMenuClick = e.target.closest('#mobileMenu a');
-  if (mobileMenuClick) {
-    const menu = document.getElementById('mobileMenu');
-    if (menu) menu.classList.remove('open');
   }
 
   // ── Chart filter tabs ─────────────────────────────────────────────────────

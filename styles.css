@@ -617,3 +617,9 @@ h1,h2,h3,.brand-copy strong,.dash-card strong,.stat strong{font-family:"Montserr
     font-weight: 800;
     padding-left: 16px;
 }
+
+/* Ensure mobile menu and links are always clickable and above everything */
+.mobile-menu, .mobile-menu a, .mobile-menu button, .mobile-menu .mobile-nav-btn {
+  pointer-events: auto !important;
+  z-index: 99999 !important;
+}
