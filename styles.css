@@ -37,7 +37,7 @@ h1,h2,h3,.brand-copy strong,.dash-card strong,.stat strong{font-family:"Montserr
 
 /* Mobile nav buttons for logged-in state */
 .mobile-menu .mobile-nav-btn{display:block;width:100%;text-align:left;border:0;background:transparent;padding:12px 4px;color:#d7e2f1;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
-.mobile-menu .mobile-nav-btn:hover{color:#fff}
+.mobile-menu .mobile-nav-btn:hover{color:#fff}.mobile-menu a.active, .mobile-menu .mobile-nav-btn.active{background:rgba(255,255,255,.05);border-left:4px solid #3b82f6;color:#fff;font-weight:800;padding-left:12px;}
 .mobile-menu .mobile-logout-btn{color:#fb7185;margin-top:8px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)}
 .mobile-menu .mobile-join-btn{color:#a7f3ff}
 
