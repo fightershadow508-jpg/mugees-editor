@@ -463,3 +463,40 @@ h1,h2,h3,.brand-copy strong,.dash-card strong,.stat strong{font-family:"Montserr
     padding: 18px 16px !important; /* Optimized spacing */
   }
 }
+
+/* Mobile Hero Fixes: Prevent overlap and enable floating badges */
+@media (max-width: 768px) {
+  .hero-visual {
+    min-height: auto !important;
+    margin-top: 24px;
+  }
+  .creator-photo-card {
+    position: relative !important;
+    width: 100% !important;
+    height: 380px !important;
+    margin-bottom: 24px !important;
+  }
+  .hero-platform-stats {
+    position: static !important;
+    margin-top: 0 !important;
+    width: 100% !important;
+  }
+  
+  /* Show floating badges on mobile & resize */
+  .floating-badge {
+    display: flex !important;
+    padding: 8px 12px !important;
+    gap: 8px !important;
+  }
+  .floating-badge svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  .fb-col strong { font-size: 12px !important; }
+  .fb-col small { font-size: 10px !important; }
+
+  /* Mobile positioning for badges */
+  .badge-tl { top: -10px !important; left: -10px !important; }
+  .badge-tr { top: 20px !important; right: -10px !important; }
+  .badge-br { bottom: -10px !important; right: -10px !important; left: auto !important; }
+}

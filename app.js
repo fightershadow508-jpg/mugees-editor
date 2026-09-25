@@ -145,8 +145,7 @@ function headerHero(){return `
           <img src="assets/images/hero-creator.webp" alt="Young creator editing content in a professional studio workspace" style="width:100%; height:100%; object-fit:cover;">
           <div class="photo-gradient"></div>
           <div class="mentor-label"><span class="live-dot"></span><div><strong>Learn with a clear system</strong><small>Classes, tasks, trends &amp; progress in one place</small></div></div>
-        </div>
-        
+        </div>\n
         <div class="floating-badge badge-tl">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path></svg>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><polygon points="12 12 16 16 12 20 8 16 12 12"></polygon></svg>
@@ -164,6 +163,7 @@ function headerHero(){return `
             <small>Earnings</small>
           </div>
         </div>
+        
       </div>
       <div class="hero-platform-stats">
         <div class="hps-card hps-wide">
