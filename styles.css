@@ -743,3 +743,224 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
 .ticket-card:hover { background: rgba(255, 255, 255, 0.06); }
 .ticket-card.active { border-color: #8b5cf6; background: rgba(139, 92, 246, 0.1); }
 .ticket-card.resolved { opacity: 0.6; }
+
+/* ── Withdrawal Verification Cards ──────────────────────────────────────── */
+.wd-verify-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 20px;
+}
+.wd-verify-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 0;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+.wd-verify-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+.wd-verify-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(217, 119, 6, 0.06);
+}
+.wd-verify-id {
+  font-size: 12px;
+  color: #8fa1b8;
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+.wd-verify-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  gap: 16px;
+}
+.wd-verify-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+.wd-verify-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(139, 92, 246, 0.5);
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.2);
+}
+.wd-verify-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.wd-verify-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #edf5ff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wd-verify-detail {
+  font-size: 12px;
+  color: #8fa1b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wd-verify-amount-box {
+  text-align: right;
+  flex-shrink: 0;
+  background: rgba(217, 119, 6, 0.1);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+.wd-verify-amount-box small {
+  display: block;
+  font-size: 11px;
+  color: #d97706;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.wd-verify-amount {
+  font-size: 22px;
+  font-weight: 800;
+  color: #fbbf24;
+  display: block;
+}
+.wd-verify-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: rgba(255, 255, 255, 0.04);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.wd-verify-detail-item {
+  padding: 12px 20px;
+  background: rgba(13, 25, 42, 0.6);
+}
+.wd-verify-detail-item small {
+  display: block;
+  font-size: 11px;
+  color: #728096;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.wd-verify-detail-item strong {
+  display: block;
+  font-size: 14px;
+  color: #c5d3e5;
+  font-weight: 600;
+}
+.wd-verify-actions {
+  display: flex;
+  gap: 10px;
+  padding: 16px 20px;
+}
+.wd-verify-actions .btn {
+  flex: 1;
+  text-align: center;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 16px;
+}
+
+/* ── Bank Grid (Withdraw page) ──────────────────────────────────────── */
+.bank-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+}
+.bank-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+.bank-option:hover {
+  background: rgba(139, 92, 246, 0.08);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+.bank-option strong {
+  font-size: 12px;
+  color: #c5d3e5;
+  text-align: center;
+}
+.bank-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+  color: #fff;
+}
+.bank-logo.jazz { background: linear-gradient(135deg, #e4002b, #ff4d6d); }
+.bank-logo.easy { background: linear-gradient(135deg, #34a853, #66bb6a); }
+.bank-logo.sada { background: linear-gradient(135deg, #8b5cf6, #a78bfa); }
+.bank-logo.naya { background: linear-gradient(135deg, #0ea5e9, #38bdf8); }
+.bank-logo.bank { background: linear-gradient(135deg, #64748b, #94a3b8); }
+
+/* ── Button: danger & orange ──────────────────────────────────────── */
+.btn.danger {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  color: #fff;
+  border: none;
+}
+.btn.danger:hover {
+  background: linear-gradient(135deg, #b91c1c, #dc2626);
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+}
+.btn.orange {
+  background: linear-gradient(135deg, #d97706, #f59e0b);
+  color: #fff;
+  border: none;
+}
+
+@media (max-width: 640px) {
+  .wd-verify-grid {
+    grid-template-columns: 1fr;
+  }
+  .wd-verify-body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .wd-verify-amount-box {
+    text-align: center;
+  }
+  .wd-verify-details {
+    grid-template-columns: 1fr;
+  }
+  .wd-verify-actions {
+    flex-direction: column;
+  }
+  .bank-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
