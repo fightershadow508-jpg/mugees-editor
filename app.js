@@ -636,26 +636,26 @@ function adminKYC(){
         <thead><tr><th>Student</th><th>Document Info</th><th>Action</th></tr></thead>
         <tbody>
           ${pending.map(s => {
-            const avatarImg = s.avatar || \`https://ui-avatars.com/api/?name=\${encodeURIComponent(s.name)}&background=random&color=fff&rounded=true\`;
-            const shortId = '@' + s.name.toLowerCase().replace(/\\s+/g, '') + s.id.slice(-3);
-            return \`<tr>
+            const avatarImg = s.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random&color=fff&rounded=true`;
+            const shortId = '@' + s.name.toLowerCase().replace(/\s+/g, '') + s.id.slice(-3);
+            return `<tr>
               <td>
                 <div style="display:flex;align-items:center;gap:12px;">
-                  <img src="\${avatarImg}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
-                  <div><strong>\${esc(s.name)}</strong><br><small style="color:#8fa1b8">\${shortId}</small></div>
+                  <img src="${avatarImg}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+                  <div><strong>${esc(s.name)}</strong><br><small style="color:#8fa1b8">${shortId}</small></div>
                 </div>
               </td>
               <td>
-                <div style="font-size:13px; margin-bottom:6px;"><strong>Doc #:</strong> \${esc(s.kyc.docNumber)}</div>
-                <a href="\${s.kyc.docUrl}" target="_blank" style="display:inline-block; border:1px solid rgba(255,255,255,0.1); border-radius:6px; overflow:hidden;">
-                  <img src="\${s.kyc.docUrl}" style="height:60px; object-fit:cover; display:block;">
+                <div style="font-size:13px; margin-bottom:6px;"><strong>Doc #:</strong> ${esc(s.kyc.docNumber)}</div>
+                <a href="${s.kyc.docUrl}" target="_blank" style="display:inline-block; border:1px solid rgba(255,255,255,0.1); border-radius:6px; overflow:hidden;">
+                  <img src="${s.kyc.docUrl}" style="height:60px; object-fit:cover; display:block;">
                 </a>
               </td>
               <td>
-                <button class="btn small green" data-action="approve-kyc" data-id="\${s.id}">Approve</button>
-                <button class="btn small red" data-action="reject-kyc" data-id="\${s.id}" style="margin-top:6px;">Reject</button>
+                <button class="btn small green" data-action="approve-kyc" data-id="${s.id}">Approve</button>
+                <button class="btn small red" data-action="reject-kyc" data-id="${s.id}" style="margin-top:6px;">Reject</button>
               </td>
-            </tr>\`;
+            </tr>`;
           }).join('')}
         </tbody>
       </table>
