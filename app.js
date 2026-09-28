@@ -116,7 +116,7 @@ function earningSummary(studentId){
   const today=rows.filter(e=>e.date===todayISO()).reduce((a,e)=>a+Number(e.amount||0),0);
   return {today,week:sumSince(7),month:sumSince(30),lifetime:rows.reduce((a,e)=>a+Number(e.amount||0),0)};
 }
-function notify(studentId,title,body){state.notifications.unshift({id:uid('N'),studentId,date:todayISO(),title,body,read:false});save();}
+function notify(studentId,title,body){state.notifications.unshift({id:uid('N'),studentId,date:todayISO(),title,body,read:false});const s=state.students.find(x=>x.id===studentId);if(s){if(!s.unreadCounts)s.unreadCounts={studentAlerts:0};s.unreadCounts.studentAlerts=(s.unreadCounts.studentAlerts||0)+1;}save();}
 function toast(msg){const el=document.createElement('div');el.className='toast';el.textContent=msg;$('#toastRoot').append(el);setTimeout(()=>el.remove(),3200);}
 
 // ── EMAIL NOTIFICATION ALERT (Anti-Scam Record) ─────────────────────────────
@@ -353,7 +353,8 @@ function studentSidebar(s){
   const storedAvatar = localStorage.getItem('userAvatar');
   const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random&color=fff&rounded=true`;
   const avatarImg = storedAvatar || s.avatar || fallbackUrl;
-  return `<aside class="sidebar"><div class="side-profile side-profile-rich"><img id="headerAvatar" src="${esc(avatarImg)}" alt="Profile" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.1);"><div><strong>${esc(s.name)}</strong><div style="margin-top:5px"><span class="role-badge role-student">Student</span></div></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${dashView===id?'active':''}" data-dash="${id}" style="display:flex;justify-content:space-between;align-items:center;"><span>${l}</span>${id==='trends' && uc.trends>0?`<span class="nav-badge">${uc.trends}</span>`:''}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`
+  const alerts = s.unreadCounts?.studentAlerts || 0;
+  return `<aside class="sidebar"><div class="side-profile side-profile-rich"><img id="headerAvatar" src="${esc(avatarImg)}" alt="Profile" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.1);"><div><strong>${esc(s.name)}</strong><div style="margin-top:5px"><span class="role-badge role-student">Student</span></div></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${dashView===id?'active':''}" data-dash="${id}" style="display:flex;justify-content:space-between;align-items:center;"><span>${l}</span>${id==='trends' && uc.trends>0?`<span class="nav-badge">${uc.trends}</span>`:id==='notifications' && alerts>0?`<span class="nav-badge">${alerts}</span>`:''}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`
 }
 
 
@@ -581,9 +582,10 @@ function studentSupport(s=currentStudent()){
 }
 
 function adminSidebar(){
-  const uc = state.unreadCounts || { trends: 0, adminSupport: 0, withdrawals: 0 };
+  if(!state.unreadCounts) state.unreadCounts = { trends: 0, adminSupport: 0, withdrawals: 0, kyc: 0 };
+  const uc = state.unreadCounts;
   const items=[['overview','🏠 Overview'],['students','👥 Students'],['kyc','🆔 KYC Approvals'],['courses','📚 Courses'],['live','🎥 Curriculum'],['programs','🧩 Programs'],['trends','🔥 Trends'],['earnings','💰 Earnings'],['withdrawals','🏦 Withdrawals'],['notifications','🔔 Notify'],['support','💬 Support'],['settings','⚙️ Settings']];
-  return `<aside class="sidebar"><div class="side-profile"><strong>${esc(state.admin.name)}</strong><div style="margin-top:5px"><span class="role-badge role-admin">Admin</span></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${adminView===id?'active':''}" data-admin="${id}" style="display:flex;justify-content:space-between;align-items:center;"><span>${l}</span>${id==='support' && uc.adminSupport>0?`<span class="nav-badge">${uc.adminSupport}</span>`:id==='withdrawals' && uc.withdrawals>0?`<span class="nav-badge">${uc.withdrawals}</span>`:''}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`
+  return `<aside class="sidebar"><div class="side-profile"><strong>${esc(state.admin.name)}</strong><div style="margin-top:5px"><span class="role-badge role-admin">Admin</span></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${adminView===id?'active':''}" data-admin="${id}" style="display:flex;justify-content:space-between;align-items:center;"><span>${l}</span>${id==='support' && uc.adminSupport>0?`<span class="nav-badge">${uc.adminSupport}</span>`:id==='withdrawals' && uc.withdrawals>0?`<span class="nav-badge">${uc.withdrawals}</span>`:id==='kyc' && uc.kyc>0?`<span class="nav-badge">${uc.kyc}</span>`:''}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`
 }
 function adminDashboard(){if(!state.session||state.session.role!=='admin'){openAuth('login');location.hash='#/';return homePage()}return `<div class="dashboard-page"><div class="dashboard-shell">${adminSidebar()}<section class="dashboard-main" id="adminContent">${adminPanel()}</section></div></div>`}
 function adminPanel(){
@@ -647,7 +649,7 @@ function adminKYC(){
                 </div>
               </td>
               <td>
-                <div style="display:flex;align-items:center;gap:6px;font-size:13px; margin-bottom:6px;"><strong>Doc #:</strong> ${esc(s.kyc.docNumber)} <span title="Strictly Confidential - End-to-End Encrypted" style="color:#10b981;cursor:help;font-size:13px;">🛡️</span></div>
+                <div style="display:flex;align-items:center;gap:6px;font-size:13px; margin-bottom:6px;"><strong>ID Card #:</strong> ${esc(s.kyc.docNumber)} <span title="Strictly Confidential - End-to-End Encrypted" style="color:#10b981;cursor:help;font-size:13px;">🛡️</span></div>
                 <div data-action="view-kyc-doc" data-url="${s.kyc.docUrl}" style="display:inline-block; border:1px solid rgba(255,255,255,0.1); border-radius:6px; overflow:hidden; cursor:zoom-in;">
                   <img src="${s.kyc.docUrl}" style="height:60px; width:90px; object-fit:cover; display:block;">
                 </div>
@@ -846,7 +848,7 @@ function bindForms(){
  const signup=$('#signupForm'); if(signup)signup.onsubmit=async e=>{e.preventDefault();const fd=new FormData(signup),email=String(fd.get('email')).trim().toLowerCase(),pw=String(fd.get('password')); if(state.students.some(x=>x.email.toLowerCase()===email)){toast('An account with this email already exists.');return} const {data,error}=await supabase.auth.signUp({email,password:pw}); if(error||!data){toast('Signup failed.');return} await supabase.from('profiles').insert([{ id: data.user?.id || uid('ST'), email: email, name: String(fd.get('name')).trim(), role: 'student', phone: String(fd.get('phone')).trim() }]); const s={id:data.user?.id || uid('ST'),name:String(fd.get('name')).trim(),avatar:'',email,password:'',phone:String(fd.get('phone')).trim(),status:'Active Student',program:String(fd.get('program')),joinDate:todayISO(),today:0,week:0,month:0,lifetime:650.00,available:500.00,pending:0,paid:150.00,attendance:100,progress:0,tasksDone:0,tasksTotal:20,trendParticipation:0,performance:'New',payoutMethod:'JazzCash',payoutAccount:'',city:'',bio:''}; state.students.push(s); state.session={role:'student',studentId:s.id}; save(); closeModals(); location.hash='#/dashboard'; render(); toast('Student account created.'); };
  const w=$('#withdrawForm'); if(w)w.onsubmit=e=>{e.preventDefault();const s=currentStudent(),fd=new FormData(w),amt=Number(fd.get('amount')),method=String(fd.get('method')),accountName=String(fd.get('accountName')).trim(),account=String(fd.get('account')).trim();if(!amt||amt<50){toast('Minimum withdrawal amount is $50.');return}if(s.kyc?.status!=='Verified'){toast('Complete KYC identity verification before withdrawing.');return}if(amt>s.available){toast('Requested amount exceeds your available balance.');return}if(!accountName){toast('Enter account holder name.');return}if(!account){toast('Enter your payout account.');return}s.available=Math.round((s.available-amt)*100)/100;s.pending=Math.round(((s.pending||0)+amt)*100)/100;s.accountName=accountName;s.payoutMethod=method;s.payoutAccount=account;state.withdrawals.unshift({id:uid('WD'),studentId:s.id,date:todayISO(),amount:amt,method,accountName,account,status:'Pending',paidDate:'',reference:''});if(!state.unreadCounts)state.unreadCounts={trends:0,adminSupport:0,withdrawals:0};state.unreadCounts.withdrawals=(state.unreadCounts.withdrawals||0)+1;notify(s.id,'Withdrawal submitted',`${money(amt)} withdrawal request is pending admin review. Amount moved to pending balance.`);sendWithdrawalEmailAlert(s,amt);save();dashView='payments';render();toast('Withdrawal request submitted. Amount moved to pending balance.');};
  const pf=$('#profileForm');if(pf)pf.onsubmit=e=>{e.preventDefault();const s=currentStudent(),fd=new FormData(pf);['name','phone','city','payoutMethod','payoutAccount','bio'].forEach(k=>s[k]=String(fd.get(k)||''));save();toast('Profile saved.');render();};
- const kycForm=$('#kycForm'); if(kycForm)kycForm.onsubmit=e=>{e.preventDefault();const s=currentStudent(),fd=new FormData(kycForm),docNumber=String(fd.get('docNumber')).trim();const fileInput=document.getElementById('kycDoc');if(!docNumber){toast('Enter document number.');return;}if(!fileInput.files[0]){toast('Upload an ID photo.');return;}const reader=new FileReader();reader.onload=function(event){s.kyc={status:'Pending',docUrl:event.target.result,docNumber};save();toast('KYC document submitted for review.');render();};reader.readAsDataURL(fileInput.files[0]);};
+ const kycForm=$('#kycForm'); if(kycForm)kycForm.onsubmit=e=>{e.preventDefault();const s=currentStudent(),fd=new FormData(kycForm),docNumber=String(fd.get('docNumber')).trim();const fileInput=document.getElementById('kycDoc');if(!/^\d{13}$/.test(docNumber)){toast('Please enter exactly 13 digits for your ID Card Number (without dashes).');return;}if(!fileInput.files[0]){toast('Upload an ID photo.');return;}const reader=new FileReader();reader.onload=function(event){s.kyc={status:'Pending',docUrl:event.target.result,docNumber};if(!state.unreadCounts)state.unreadCounts={trends:0,adminSupport:0,withdrawals:0,kyc:0};state.unreadCounts.kyc=(state.unreadCounts.kyc||0)+1;save();toast('KYC document submitted for review.');render();};reader.readAsDataURL(fileInput.files[0]);};
  const uploadInput=document.getElementById('avatarUpload');const previewImg=document.getElementById('profilePreview');if(uploadInput&&previewImg){uploadInput.addEventListener('change',function(e){const file=e.target.files[0];if(file){const reader=new FileReader();reader.onload=function(event){const dataUrl=event.target.result;previewImg.src=dataUrl;localStorage.setItem('userAvatar',dataUrl);const headerAvatar=document.getElementById('headerAvatar');if(headerAvatar)headerAvatar.src=dataUrl;};reader.readAsDataURL(file);}});}
  const ef=$('#addEarningForm');if(ef)ef.onsubmit=e=>{e.preventDefault();const fd=new FormData(ef),sid=String(fd.get('studentId')),amt=Number(fd.get('amount')),program=String(fd.get('program')),s=state.students.find(x=>x.id===sid);if(!s||!amt)return;state.earnings.unshift({id:uid('E'),studentId:sid,date:todayISO(),program,amount:amt,note:String(fd.get('note')||''),internalGross:Number(fd.get('internalGross')||0)});s.lifetime=Number(s.lifetime||0)+amt;s.available+=amt;notify(sid,'New earnings added',`${money(amt)} has been added to your approved account balance.`);save();render();toast('Earning added and student notified.');};
  const nf=$('#notifyForm');if(nf)nf.onsubmit=e=>{e.preventDefault();const fd=new FormData(nf),sid=String(fd.get('studentId')),title=String(fd.get('title')),body=String(fd.get('body'));if(sid==='all')state.students.forEach(s=>notify(s.id,title,body));else notify(sid,title,body);save();toast('Notification sent.');nf.reset();};
@@ -1102,6 +1104,7 @@ document.addEventListener('click', e => {
   if (dashEl) {
     const d = dashEl.dataset.dash;
     if (d === 'trends' && state.unreadCounts?.trends > 0) { state.unreadCounts.trends = 0; save(); }
+    if (d === 'notifications' && state.session?.role === 'student') { const s = currentStudent(); if(s.unreadCounts?.studentAlerts > 0) { s.unreadCounts.studentAlerts = 0; save(); } }
     dashView = d;
     const mm = document.getElementById('mobileMenu');
     if (mm) mm.classList.remove('open');
@@ -1115,6 +1118,7 @@ document.addEventListener('click', e => {
     const d = adminEl.dataset.admin;
     if (d === 'support' && state.unreadCounts?.adminSupport > 0) { state.unreadCounts.adminSupport = 0; save(); }
     if (d === 'withdrawals' && state.unreadCounts?.withdrawals > 0) { state.unreadCounts.withdrawals = 0; save(); }
+    if (d === 'kyc' && state.unreadCounts?.kyc > 0) { state.unreadCounts.kyc = 0; save(); }
     adminView = d;
     const mm = document.getElementById('mobileMenu');
     if (mm) mm.classList.remove('open');
