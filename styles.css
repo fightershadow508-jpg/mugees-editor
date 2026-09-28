@@ -963,3 +963,8 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
   }
 }
 
+
+/* KYC Styles */
+.kyc-preview { height:60px; object-fit:cover; display:block; border-radius:6px; }
+.kyc-upload-input { background:rgba(0,0,0,0.2); padding:10px; border-radius:8px; width:100%; color:#e2e8f0; font-size:13px; border:1px solid rgba(255,255,255,0.1); }
+
