@@ -636,24 +636,27 @@ function adminKYC(){
         <thead><tr><th>Student</th><th>Document Info</th><th>Action</th></tr></thead>
         <tbody>
           ${pending.map(s => {
-            const avatarImg = s.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random&color=fff&rounded=true`;
+            const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random&color=fff&rounded=true`;
+            const avatarImg = s.avatar || fallbackUrl;
             const shortId = '@' + s.name.toLowerCase().replace(/\s+/g, '') + s.id.slice(-3);
             return `<tr>
               <td>
                 <div style="display:flex;align-items:center;gap:12px;">
-                  <img src="${avatarImg}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+                  <img src="${avatarImg}" onerror="this.onerror=null; this.src='${fallbackUrl}';" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.1);">
                   <div><strong>${esc(s.name)}</strong><br><small style="color:#8fa1b8">${shortId}</small></div>
                 </div>
               </td>
               <td>
-                <div style="font-size:13px; margin-bottom:6px;"><strong>Doc #:</strong> ${esc(s.kyc.docNumber)}</div>
-                <a href="${s.kyc.docUrl}" target="_blank" style="display:inline-block; border:1px solid rgba(255,255,255,0.1); border-radius:6px; overflow:hidden;">
-                  <img src="${s.kyc.docUrl}" style="height:60px; object-fit:cover; display:block;">
-                </a>
+                <div style="display:flex;align-items:center;gap:6px;font-size:13px; margin-bottom:6px;"><strong>Doc #:</strong> ${esc(s.kyc.docNumber)} <span title="Strictly Confidential - End-to-End Encrypted" style="color:#10b981;cursor:help;font-size:13px;">🛡️</span></div>
+                <div data-action="view-kyc-doc" data-url="${s.kyc.docUrl}" style="display:inline-block; border:1px solid rgba(255,255,255,0.1); border-radius:6px; overflow:hidden; cursor:zoom-in;">
+                  <img src="${s.kyc.docUrl}" style="height:60px; width:90px; object-fit:cover; display:block;">
+                </div>
               </td>
               <td>
-                <button class="btn small green" data-action="approve-kyc" data-id="${s.id}">Approve</button>
-                <button class="btn small red" data-action="reject-kyc" data-id="${s.id}" style="margin-top:6px;">Reject</button>
+                <div style="display:flex; flex-direction:column; gap:6px;">
+                  <button class="btn small kyc-approve" data-action="approve-kyc" data-id="${s.id}">Approve</button>
+                  <button class="btn small kyc-reject" data-action="reject-kyc" data-id="${s.id}">Reject</button>
+                </div>
               </td>
             </tr>`;
           }).join('')}
@@ -1174,6 +1177,7 @@ document.addEventListener('click', e => {
     if (a === 'reject-withdrawal')  { rejectWithdrawal(id); return; }
     if (a === 'approve-kyc')        { approveKYC(id); return; }
     if (a === 'reject-kyc')         { rejectKYC(id); return; }
+    if (a === 'view-kyc-doc')       { $('#genericModalBody').innerHTML = `<button class="modal-close" data-action="close-modal" aria-label="Close">×</button><img src="${actionEl.dataset.url}" style="width:100%;max-height:85vh;object-fit:contain;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.5);">`; $('#genericModal').classList.add('open'); return; }
     if (a === 'resolve-ticket')     { resolveTicket(id); return; }
     if (a === 'select-ticket')      { activeSupportTicket = id; render(); return; }
     if (a === 'class-detail')       { showClassDetail(id); return; }
