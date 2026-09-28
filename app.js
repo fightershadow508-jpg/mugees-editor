@@ -535,7 +535,7 @@ function studentProfile(s){
     <form id="kycForm">
       <div class="field">
         <label>Official Document Number</label>
-        <input required name="docNumber" id="kycDocNumber" value="${esc(s.kyc?.docNumber||'')}" placeholder="e.g. 1234512345671" maxlength="13" oninput="this.value=this.value.replace(/[^0-9]/g, '').slice(0, 13);">
+        <input required name="docNumber" id="kycDocNumber" value="${esc(s.kyc?.docNumber||'')}" placeholder="e.g., 33100-1234567-1" maxlength="15" oninput="let v=this.value.replace(/[^0-9]/g,''); if(v.length>5)v=v.slice(0,5)+'-'+v.slice(5); if(v.length>13)v=v.slice(0,13)+'-'+v.slice(13); this.value=v.slice(0,15);">
       </div>
       <div class="field">
         <label>Upload ID Photo</label>
