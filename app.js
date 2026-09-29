@@ -395,7 +395,71 @@ function studentView(s){
  <div class="dashboard-grid"><div class="panel"><div class="panel-head"><h3>Recent earnings</h3><button class="btn small light" data-dash="earnings">View all</button></div><div class="list">${myE.map(e=>`<div class="list-item"><div class="meta"><strong>${esc(e.program)}</strong><small>${niceDate(e.date)}</small></div><span class="amount green">+ ${money(e.amount)}</span></div>`).join('')||'<div class="empty">No earnings yet.</div>'}</div></div>${ac.showTrends?`<div class="panel"><div class="panel-head"><h3>Latest trends</h3><button class="btn small light" data-dash="trends">View</button></div><div class="list">${state.trends.slice(0,3).map(t=>`<div class="list-item"><div class="meta"><strong>${esc(t.program)}</strong><small>${esc(t.title)}</small></div><span class="tag ${t.status==='New'?'green':''}">${esc(t.status)}</span></div>`).join('')}</div></div>`:''}</div>`
 }
 function nextClassCard(){const c=state.classes.find(x=>x.status==='Upcoming')||state.classes[0];return `<h3 style="margin:6px 0">${esc(c.title)}</h3><p style="color:#728096">${niceDate(c.date)} · ${esc(c.time)}<br>${esc(c.trainer)} · ${esc(c.batch)}</p><button class="btn primary" data-action="class-detail" data-id="${c.id}">Open Class</button>`}
-function studentCourses(s){return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">Assigned training and course progress.</p></div></div><div class="cards">${state.courses.map(c=>{const p=c.progressBy[s.id]??0;return `<div class="card"><span class="pill">${esc(c.type)}</span><h3 style="margin-top:14px">${esc(c.title)}</h3><p>${esc(c.desc)}</p><div style="display:flex;justify-content:space-between;font-size:12px;margin:18px 0 7px"><span>Progress</span><strong>${p}%</strong></div><div class="progress"><i style="width:${p}%"></i></div><ul class="feature-list">${c.modules.slice(0,5).map(m=>`<li>${esc(m)}</li>`).join('')}</ul><button class="btn primary" data-action="course-detail" data-id="${c.id}">Continue Learning</button></div>`}).join('')}</div>`}
+window.playLesson = function(id) {
+  state.currentLessonId = id;
+  render();
+};
+window.saveNotes = function(id) {
+  if(!state.studentNotes) state.studentNotes = {};
+  state.studentNotes[id] = document.getElementById('lessonNotes').value;
+  save();
+  toast('✅ Notes Saved!');
+};
+
+function studentCourses(s){
+  if(!state.curriculum || state.curriculum.length === 0) {
+    return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">No video lessons available yet.</p></div></div>`;
+  }
+  if(!state.studentNotes) state.studentNotes = {};
+  if(!s.completedLessons) s.completedLessons = [];
+  
+  const playingId = state.currentLessonId || state.curriculum[0].id;
+  const current = state.curriculum.find(l=>l.id===playingId) || state.curriculum[0];
+  const notes = state.studentNotes[current.id] || '';
+  const isCompleted = s.completedLessons.includes(current.id);
+  const total = state.curriculum.length;
+  const comp = s.completedLessons.length;
+  const progress = Math.round((comp/total)*100) || 0;
+
+  return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">Progress: ${progress}% complete</p></div></div>
+  <div style="display:flex; gap:20px; flex-wrap:wrap;">
+    <div style="flex: 1 1 600px; display:flex; flex-direction:column; gap:16px;">
+       <div style="background:#000; border-radius:12px; overflow:hidden; aspect-ratio:16/9;">
+         <iframe src="${current.url}" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>
+       </div>
+       <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
+         <div>
+           <h2 style="margin:0; font-size:20px; color:#edf5ff;">${esc(current.title)}</h2>
+           <p style="margin:4px 0 0; color:#8fa1b8; font-size:14px;">${esc(current.module)}</p>
+         </div>
+         <button class="btn ${isCompleted ? 'light' : 'primary'}" data-action="toggle-complete-lesson" data-id="${current.id}">
+            ${isCompleted ? '✅ Completed' : 'Mark as Complete'}
+         </button>
+       </div>
+       <div style="background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
+         <h3 style="margin:0 0 12px; color:#edf5ff; font-size:16px;">📝 My Notes</h3>
+         <textarea id="lessonNotes" placeholder="Type your notes for this lesson here..." style="width:100%; height:120px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:12px; color:#e2e8f0; font-family:inherit; resize:vertical; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">${esc(notes)}</textarea>
+         <button class="btn primary" style="margin-top:12px;" onclick="saveNotes('${current.id}')">Save Notes</button>
+       </div>
+    </div>
+    <div style="flex: 0 0 300px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:16px; height:fit-content; max-height:800px; overflow-y:auto;">
+       <h3 style="margin:0 0 16px; color:#edf5ff;">Curriculum</h3>
+       <div style="display:flex; flex-direction:column; gap:8px;">
+         ${state.curriculum.map(l=>{
+           const active = l.id === current.id;
+           const done = s.completedLessons.includes(l.id);
+           return `<div onclick="playLesson('${l.id}')" style="cursor:pointer; padding:12px; border-radius:8px; background:${active?'rgba(139,92,246,0.15)':'rgba(255,255,255,0.02)'}; border:1px solid ${active?'#8b5cf6':'rgba(255,255,255,0.05)'}; transition:background 0.2s;">
+             <div style="display:flex; justify-content:space-between; align-items:center;">
+               <strong style="color:${active?'#c4b5fd':'#e2e8f0'}; font-size:14px;">${esc(l.title)}</strong>
+               ${done?'<span style="color:#34d399; font-size:12px;">✅</span>':''}
+             </div>
+             <p style="margin:4px 0 0; font-size:12px; color:#8fa1b8;">${esc(l.module)} · ${esc(l.duration)}</p>
+           </div>`;
+         }).join('')}
+       </div>
+    </div>
+  </div>`;
+}
 function studentLive(){return `<div class="subpage-head"><div><h1>Curriculum</h1><p style="color:#748195">Upcoming sessions and previous recordings.</p></div></div><div class="live-grid">${state.classes.map(c=>`<div class="live-card"><span class="tag ${c.status==='Upcoming'?'orange':'green'}">${esc(c.status)}</span><h3 style="margin-top:14px">${esc(c.title)}</h3><p style="color:#748195">${niceDate(c.date)} · ${esc(c.time)}<br>${esc(c.trainer)} · ${esc(c.batch)}</p><button class="btn primary" data-action="class-detail" data-id="${c.id}">${c.status==='Upcoming'?'Join Class':'Watch Recording'}</button></div>`).join('')}</div>`}
 function studentTrends(){return `<div class="subpage-head"><div><h1>Trend Updates</h1><p style="color:#748195">New creator trends published by Admin.</p></div></div><div class="cards">${state.trends.map(t=>`<div class="card"><div style="display:flex;justify-content:space-between"><span class="pill">${esc(t.program)}</span><span class="tag ${t.status==='New'?'green':''}">${esc(t.status)}</span></div><h3 style="margin-top:16px">${esc(t.title)}</h3><p>Difficulty: ${esc(t.difficulty)} · Added ${niceDate(t.added)}</p><button class="btn primary" data-action="trend-detail" data-id="${t.id}">View Tutorial</button></div>`).join('')}</div>`}
 
@@ -584,12 +648,12 @@ function studentSupport(s=currentStudent()){
 function adminSidebar(){
   if(!state.unreadCounts) state.unreadCounts = { trends: 0, adminSupport: 0, withdrawals: 0, kyc: 0 };
   const uc = state.unreadCounts;
-  const items=[['overview','🏠 Overview'],['students','👥 Students'],['kyc','🆔 KYC Approvals'],['courses','📚 Courses'],['live','🎥 Curriculum'],['programs','🧩 Programs'],['trends','🔥 Trends'],['earnings','💰 Earnings'],['withdrawals','🏦 Withdrawals'],['notifications','🔔 Notify'],['support','💬 Support'],['settings','⚙️ Settings']];
+  const items=[['overview','🏠 Overview'],['students','👥 Students'],['kyc','🆔 KYC Approvals'],['curriculum','🎬 Course Manager'],['courses','📚 Courses'],['live','🎥 Curriculum'],['programs','🧩 Programs'],['trends','🔥 Trends'],['earnings','💰 Earnings'],['withdrawals','🏦 Withdrawals'],['notifications','🔔 Notify'],['support','💬 Support'],['settings','⚙️ Settings']];
   return `<aside class="sidebar"><div class="side-profile"><strong>${esc(state.admin.name)}</strong><div style="margin-top:5px"><span class="role-badge role-admin">Admin</span></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${adminView===id?'active':''}" data-admin="${id}" style="display:flex;justify-content:space-between;align-items:center;"><span>${l}</span>${id==='support' && uc.adminSupport>0?`<span class="nav-badge">${uc.adminSupport}</span>`:id==='withdrawals' && uc.withdrawals>0?`<span class="nav-badge">${uc.withdrawals}</span>`:id==='kyc' && uc.kyc>0?`<span class="nav-badge">${uc.kyc}</span>`:''}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`
 }
 function adminDashboard(){if(!state.session||state.session.role!=='admin'){openAuth('login');location.hash='#/';return homePage()}return `<div class="dashboard-page"><div class="dashboard-shell">${adminSidebar()}<section class="dashboard-main" id="adminContent">${adminPanel()}</section></div></div>`}
 function adminPanel(){
- if(adminView==='students') return adminStudents(); if(adminView==='kyc') return adminKYC(); if(adminView==='courses') return adminCourses(); if(adminView==='live') return adminLive(); if(adminView==='programs') return adminPrograms(); if(adminView==='trends') return adminTrends(); if(adminView==='earnings') return adminEarnings(); if(adminView==='withdrawals') return adminWithdrawals(); if(adminView==='notifications') return adminNotify(); if(adminView==='support') return adminSupport(); if(adminView==='settings') return adminSettings();
+ if(adminView==='students') return adminStudents(); if(adminView==='kyc') return adminKYC(); if(adminView==='curriculum') return adminCurriculum(); if(adminView==='courses') return adminCourses(); if(adminView==='live') return adminLive(); if(adminView==='programs') return adminPrograms(); if(adminView==='trends') return adminTrends(); if(adminView==='earnings') return adminEarnings(); if(adminView==='withdrawals') return adminWithdrawals(); if(adminView==='notifications') return adminNotify(); if(adminView==='support') return adminSupport(); if(adminView==='settings') return adminSettings();
  const pending=state.withdrawals.filter(w=>w.status==='Pending').length,totalPaid=state.withdrawals.filter(w=>w.status==='Paid').reduce((a,b)=>a+b.amount,0);
  const totalRevenue = state.students.reduce((sum, s) => sum + (Number(s.lifetime) || 0), 0);
  const activeSubs = state.students.filter(s => s.status !== 'Suspended').length;
@@ -666,6 +730,26 @@ function adminKYC(){
       </table>
     </div>
     `}
+  </div>`;
+}
+function adminCurriculum(){
+  if(!state.curriculum) state.curriculum = [];
+  return `<div class="subpage-head"><div><h1>Course Manager</h1><p style="color:#748195">Upload and manage video lessons.</p></div></div>
+  <div class="panel">
+    <div class="panel-head"><h3>Add New Video Lesson</h3></div>
+    <form id="addLessonForm" style="display:flex; flex-direction:column; gap:12px; padding:20px;">
+       <div class="field"><label>Lesson Title</label><input name="title" required placeholder="e.g. Intro to Video Editing"></div>
+       <div class="field"><label>Module / Chapter Name</label><input name="module" required placeholder="e.g. Module 1: Basics"></div>
+       <div class="field"><label>Video URL (YouTube/Vimeo embed)</label><input name="url" required placeholder="https://www.youtube.com/embed/..."></div>
+       <div class="field"><label>Duration</label><input name="duration" required placeholder="e.g. 10:00"></div>
+       <button class="btn primary" type="submit">Add Lesson</button>
+    </form>
+  </div>
+  <div class="panel" style="margin-top:20px;">
+    <div class="panel-head"><h3>Existing Lessons</h3></div>
+    <div class="list">
+       ${state.curriculum.length===0?'<div class="empty" style="padding:20px;">No lessons uploaded yet.</div>' : state.curriculum.map(l=>`<div class="list-item" style="justify-content:space-between"><div class="meta"><strong>${esc(l.title)}</strong><small>${esc(l.module)} · ${esc(l.duration)}</small></div><button class="btn small light" data-action="delete-lesson" data-id="${l.id}" style="color:#ef4444; border-color:#ef4444;">Delete</button></div>`).join('')}
+    </div>
   </div>`;
 }
 function adminCourses(){return `<div class="subpage-head"><div><h1>Courses</h1><p style="color:#748195">Manage curriculum, modules and student learning paths.</p></div></div><div class="cards">${state.courses.map(c=>`<div class="card"><span class="pill">${c.lessons} modules</span><h3 style="margin-top:14px">${esc(c.title)}</h3><p>${esc(c.desc)}</p><ul class="feature-list">${c.modules.map(m=>`<li>${esc(m)}</li>`).join('')}</ul><button class="btn light" data-action="edit-course" data-id="${c.id}">Edit Course</button></div>`).join('')}</div>`}
@@ -1212,6 +1296,19 @@ document.addEventListener('click', e => {
     if (a === 'trend-detail')       { showTrendDetail(id); return; }
     if (a === 'edit-course')        { editCourseModal(id); return; }
     if (a === 'reset-demo')         { if (confirm('Reset all local data?')) resetDemo(); return; }
+    if (a === 'delete-lesson')      { if(confirm('Delete this lesson?')) { state.curriculum = state.curriculum.filter(l => l.id !== id); save(); render(); toast('Lesson deleted.'); } return; }
+    if (a === 'toggle-complete-lesson') {
+      const s = currentStudent();
+      if(!s.completedLessons) s.completedLessons = [];
+      if(s.completedLessons.includes(id)) {
+        s.completedLessons = s.completedLessons.filter(x=>x!==id);
+        toast('Marked as incomplete.');
+      } else {
+        s.completedLessons.push(id);
+        toast('✅ Lesson completed!');
+      }
+      save(); render(); return;
+    }
   }
 });
 
