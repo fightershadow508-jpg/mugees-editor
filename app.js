@@ -399,6 +399,9 @@ window.playLesson = function(id) {
   state.currentLessonId = id;
   render();
 };
+window.setSpeed=function(r,btn){const v=document.getElementById('lessonVideo');if(v)v.playbackRate=r;document.querySelectorAll('[data-speed]').forEach(b=>{const on=parseFloat(b.getAttribute('data-speed'))===r;b.classList.toggle('primary',on);b.classList.toggle('light',!on);});};
+window.toggleFullscreen=function(){const v=document.getElementById('lessonVideo');if(!v)return;if(document.fullscreenElement){document.exitFullscreen();}else if(v.requestFullscreen)v.requestFullscreen();else if(v.webkitEnterFullscreen)v.webkitEnterFullscreen();};
+window.videoEnded=function(id){toast('🎬 Video finished! Tap "Mark as Complete" below.');const b=document.querySelector('[data-action="toggle-complete-lesson"]');if(b){b.style.boxShadow='0 0 0 3px rgba(139,92,246,.5)';b.scrollIntoView({behavior:'smooth',block:'nearest'});}};
 window.saveNotes = function(id) {
   if(!state.studentNotes) state.studentNotes = {};
   state.studentNotes[id] = document.getElementById('lessonNotes').value;
@@ -425,7 +428,14 @@ function studentCourses(s){
   <div style="display:flex; gap:20px; flex-wrap:wrap;">
     <div style="flex: 1 1 600px; display:flex; flex-direction:column; gap:16px;">
        <div style="background:#000; border-radius:12px; overflow:hidden; aspect-ratio:16/9;">
-         ${current.kind==='file'?`<video src="${current.url}" controls playsinline style="width:100%;height:100%;background:#000;"></video>`:`<iframe src="${current.url}" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>`}
+         ${current.kind==='file'
+         ?`<video id="lessonVideo" src="${current.url}" controls playsinline onended="videoEnded('${current.id}')" style="width:100%;height:100%;background:#000;"></video>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">
+              <span style="color:#8fa1b8;font-size:13px;">▶ Speed:</span>
+              ${[0.5,0.75,1,1.25,1.5,2].map(r=>`<button class="btn small ${r===1?'primary':'light'}" data-speed="${r}" onclick="setSpeed(${r},this)">${r}x</button>`).join('')}
+              <button class="btn small light" onclick="toggleFullscreen()" style="margin-left:auto;">⛶ Fullscreen</button>
+            </div>`
+         :`<iframe src="${current.url}" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>`}
        </div>
        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
          <div>
