@@ -407,17 +407,17 @@ window.saveNotes = function(id) {
 };
 
 function studentCourses(s){
-  if(!state.curriculum || state.curriculum.length === 0) {
+  const _lessons=(typeof dbLessons!=='undefined'&&dbLessons!==null)?dbLessons:(state.curriculum||[]); if(_lessons.length === 0) {
     return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">No video lessons available yet.</p></div></div>`;
   }
   if(!state.studentNotes) state.studentNotes = {};
   if(!s.completedLessons) s.completedLessons = [];
   
-  const playingId = state.currentLessonId || state.curriculum[0].id;
-  const current = state.curriculum.find(l=>l.id===playingId) || state.curriculum[0];
+  const playingId = state.currentLessonId || _lessons[0].id;
+  const current = _lessons.find(l=>l.id===playingId) || _lessons[0];
   const notes = state.studentNotes[current.id] || '';
   const isCompleted = s.completedLessons.includes(current.id);
-  const total = state.curriculum.length;
+  const total = _lessons.length;
   const comp = s.completedLessons.length;
   const progress = Math.round((comp/total)*100) || 0;
 
@@ -425,7 +425,7 @@ function studentCourses(s){
   <div style="display:flex; gap:20px; flex-wrap:wrap;">
     <div style="flex: 1 1 600px; display:flex; flex-direction:column; gap:16px;">
        <div style="background:#000; border-radius:12px; overflow:hidden; aspect-ratio:16/9;">
-         <iframe src="${current.url}" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>
+         ${current.kind==='file'?`<video src="${current.url}" controls playsinline style="width:100%;height:100%;background:#000;"></video>`:`<iframe src="${current.url}" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>`}
        </div>
        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
          <div>
@@ -445,7 +445,7 @@ function studentCourses(s){
     <div style="flex: 0 0 300px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:16px; height:fit-content; max-height:800px; overflow-y:auto;">
        <h3 style="margin:0 0 16px; color:#edf5ff;">Curriculum</h3>
        <div style="display:flex; flex-direction:column; gap:8px;">
-         ${state.curriculum.map(l=>{
+         ${_lessons.map(l=>{
            const active = l.id === current.id;
            const done = s.completedLessons.includes(l.id);
            return `<div onclick="playLesson('${l.id}')" style="cursor:pointer; padding:12px; border-radius:8px; background:${active?'rgba(139,92,246,0.15)':'rgba(255,255,255,0.02)'}; border:1px solid ${active?'#8b5cf6':'rgba(255,255,255,0.05)'}; transition:background 0.2s;">
@@ -736,15 +736,19 @@ function adminKYC(){
     `}
   </div>`;
 }
+let dbLessons=null;
+async function loadLessons(){try{const{data,error}=await supabase.from('lessons').select('*').order('created_at',{ascending:false});if(!error)dbLessons=data||[];}catch(e){if(dbLessons===null)dbLessons=[];}
+ if(adminView==='curriculum'){const c=$('#adminContent');if(c){c.innerHTML=adminCurriculum();bindForms();}}
+ if(typeof dashView!=='undefined'&&dashView==='courses'&&route()==='dashboard'){const d=$('#dashContent');if(d){try{d.innerHTML=studentView(currentStudent());bindGlobal();}catch(e){}}}}
 function adminCurriculum(){
   if(!state.curriculum) state.curriculum = [];
   return `<div class="subpage-head"><div><h1>Course Manager</h1><p style="color:#748195">Upload and manage video lessons.</p></div></div>
   <div class="panel">
-    <div class="panel-head"><h3>Add New Video Lesson</h3></div>
+    <div class="panel-head"><h3>Add New Video Lesson</h3></div><p class="micro" style="padding:0 20px;color:#748195;">Upload a recording or paste a YouTube/Vimeo link — lessons appear for all students instantly.</p>
     <form id="addLessonForm" style="display:flex; flex-direction:column; gap:12px; padding:20px;">
        <div class="field"><label>Lesson Title</label><input name="title" required placeholder="e.g. Intro to Video Editing"></div>
        <div class="field"><label>Module / Chapter Name</label><input name="module" required placeholder="e.g. Module 1: Basics"></div>
-       <div class="field"><label>Video URL (YouTube/Vimeo embed)</label><input name="url" required placeholder="https://www.youtube.com/embed/..."></div>
+       <div class="field"><label>Option A — Upload recording (video file)</label><input type="file" name="videofile" id="lesson_videofile" accept="video/*"><p class="micro" style="color:#748195;margin-top:6px;">MP4 recommended. If you choose a file, the URL field below is ignored.</p></div><div class="field"><label>Option B — Video URL (YouTube/Vimeo embed)</label><input name="url" id="lesson_url" placeholder="https://www.youtube.com/embed/..."></div>
        <div class="field"><label>Duration</label><input name="duration" required placeholder="e.g. 10:00"></div>
        <button class="btn primary" type="submit">Add Lesson</button>
     </form>
@@ -752,7 +756,7 @@ function adminCurriculum(){
   <div class="panel" style="margin-top:20px;">
     <div class="panel-head"><h3>Existing Lessons</h3></div>
     <div class="list">
-       ${state.curriculum.length===0?'<div class="empty" style="padding:20px;">No lessons uploaded yet.</div>' : state.curriculum.map(l=>`<div class="list-item" style="justify-content:space-between"><div class="meta"><strong>${esc(l.title)}</strong><small>${esc(l.module)} · ${esc(l.duration)}</small></div><button class="btn small light" data-action="delete-lesson" data-id="${l.id}" style="color:#ef4444; border-color:#ef4444;">Delete</button></div>`).join('')}
+       ${(dbLessons!==null?dbLessons:state.curriculum).length===0?'<div class="empty" style="padding:20px;">No lessons uploaded yet.</div>' : (dbLessons!==null?dbLessons:state.curriculum).map(l=>`<div class="list-item" style="justify-content:space-between"><div class="meta"><strong>${esc(l.title)}</strong><small>${esc(l.module)} · ${esc(l.duration||'')} ${l.kind==='file'?'· 📤':'· 🔗'}</small></div><button class="btn small light" data-action="delete-lesson" data-id="${l.id}" style="color:#ef4444; border-color:#ef4444;">Delete</button></div>`).join('')}
     </div>
   </div>`;
 }
@@ -933,7 +937,7 @@ function bindForms(){
  bindPasswordStrength("rp_pw", "rp_strength");
  const sav=$('#signup_avatar'); if(sav)sav.onchange=()=>{const f=sav.files[0],pv=$('#signup_avatar_preview'); if(!f||!pv)return; if(f.size>2*1024*1024){toast('Photo must be under 2MB.');sav.value='';return;} const r=new FileReader(); r.onload=()=>{pv.src=r.result;pv.style.display='block';}; r.readAsDataURL(f);};
 
- const login=$('#loginForm'); if(login)login.onsubmit=async e=>{e.preventDefault();const fd=new FormData(login),email=String(fd.get('email')).trim(),pw=String(fd.get('password')); const {data,error}=await supabase.auth.signInWithPassword({email,password:pw}); if(error){toast('Invalid email or password.');return;} if(!data.session){toast('Please check your email to confirm your account, then login.');return;} const { data: prof, error: profErr } = await supabase.from('profiles').select('*').ilike('email', email).single(); if(profErr || !prof){toast('Student record not found. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;} if(prof.status==='pending'){toast('⏳ Your account is pending admin approval.');await supabase.auth.signOut();return;} if(prof.status==='suspended'){toast('Your account has been suspended. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;} if(prof.status==='rejected'){toast('Your signup request was not approved. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;} if(prof.role==='admin' || email.toLowerCase()===state.admin.email.toLowerCase()){state.session={role:'admin'}; save(); closeModals(); location.hash='#/admin'; render(); loadApprovals(); return;} let s=state.students.find(x=>x.email.toLowerCase()===email.toLowerCase()); if(!s){s={id:prof.id||uid('ST'),name:prof.name||prof.full_name||email.split('@')[0],avatar:prof.avatar_url||'',email:email.toLowerCase(),password:'',phone:prof.phone||'',status:'Active Student',program:'Creator Program',joinDate:todayISO(),today:0,week:0,month:0,lifetime:650.00,available:500.00,pending:0,paid:150.00,attendance:100,progress:0,tasksDone:0,tasksTotal:20,trendParticipation:0,performance:'New',payoutMethod:'JazzCash',payoutAccount:'',city:'',bio:''}; state.students.push(s);} state.session={role:'student',studentId:s.id}; save(); closeModals(); location.hash='#/dashboard'; render(); };
+ const login=$('#loginForm'); if(login)login.onsubmit=async e=>{e.preventDefault();const fd=new FormData(login),email=String(fd.get('email')).trim(),pw=String(fd.get('password')); const {data,error}=await supabase.auth.signInWithPassword({email,password:pw}); if(error){toast('Invalid email or password.');return;} if(!data.session){toast('Please check your email to confirm your account, then login.');return;} const { data: prof, error: profErr } = await supabase.from('profiles').select('*').ilike('email', email).single(); if(profErr || !prof){toast('Student record not found. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;} if(prof.status==='pending'){toast('⏳ Your account is pending admin approval.');await supabase.auth.signOut();return;} if(prof.status==='suspended'){toast('Your account has been suspended. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;} if(prof.status==='rejected'){toast('Your signup request was not approved. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;} if(prof.role==='admin' || email.toLowerCase()===state.admin.email.toLowerCase()){state.session={role:'admin'}; save(); closeModals(); location.hash='#/admin'; render(); loadApprovals(); loadLessons(); return;} let s=state.students.find(x=>x.email.toLowerCase()===email.toLowerCase()); if(!s){s={id:prof.id||uid('ST'),name:prof.name||prof.full_name||email.split('@')[0],avatar:prof.avatar_url||'',email:email.toLowerCase(),password:'',phone:prof.phone||'',status:'Active Student',program:'Creator Program',joinDate:todayISO(),today:0,week:0,month:0,lifetime:650.00,available:500.00,pending:0,paid:150.00,attendance:100,progress:0,tasksDone:0,tasksTotal:20,trendParticipation:0,performance:'New',payoutMethod:'JazzCash',payoutAccount:'',city:'',bio:''}; state.students.push(s);} state.session={role:'student',studentId:s.id}; save(); closeModals(); location.hash='#/dashboard'; render(); loadLessons(); };
  const signup=$('#signupForm'); if(signup)signup.onsubmit=async e=>{e.preventDefault();const fd=new FormData(signup),email=String(fd.get('email')).trim().toLowerCase(),pw=String(fd.get('password')),phone=String(fd.get('phone')).trim(),network=String(fd.get('network')).trim(); const emailRx=/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/; if(!emailRx.test(email)){toast('❌ Invalid email format. Please use a valid email address.');const el=document.getElementById('signup_email');if(el){el.style.borderColor='#ef4444';el.focus();}return;} if(phone.length!==11||!/^[0-9]{11}$/.test(phone)){toast('❌ Phone number must be exactly 11 digits (e.g. 03001234567).');const el=document.getElementById('signup_phone');if(el){el.style.borderColor='#ef4444';el.focus();}return;} if(!network||network==='Select Network'){toast('❌ Please select your Network Provider.');return;} if(checkPasswordStrength(pw)!=='strong'){toast('❌ Password too weak. Use 8+ chars with uppercase, number, and special character (@$!%*?&).');return;} if(state.students.some(x=>x.email.toLowerCase()===email)){toast('An account with this email already exists.');return;} const {data,error}=await supabase.auth.signUp({email,password:pw}); if(error){toast('Signup failed: '+(error.message||'Unknown error'));return;} if(!data.user){toast('Please check your email to confirm your account, then login.');closeModals();openAuth('login');return;} let avatar_url=null; const avatarFile=fd.get('avatar'); if(avatarFile&&avatarFile.size>0){const ext=(String(avatarFile.name).split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; const apath=data.user.id+'.'+ext; const {error:upErr}=await supabase.storage.from('avatars').upload(apath,avatarFile,{upsert:true,contentType:avatarFile.type}); if(upErr){toast('Photo upload failed: '+upErr.message+'. Continuing without photo.');} else {avatar_url=supabase.storage.from('avatars').getPublicUrl(apath).data.publicUrl;}} const {error:profErr}=await supabase.from('profiles').upsert([{id:data.user.id,email,name:String(fd.get('name')).trim(),role:'student',status:'pending',phone,network,cnic:String(fd.get('cnic')).trim(),avatar_url}],{onConflict:'id'}); if(profErr){toast('Account created but profile save failed: '+profErr.message+'. Contact support: '+state.settings.supportEmail+'.');return;} notifyEmail('new_signup',data.user.id); await supabase.auth.signOut(); closeModals(); location.hash='#/'; render(); toast('✅ Account created! Your account is pending admin approval.'); };
  const w=$('#withdrawForm'); if(w)w.onsubmit=e=>{e.preventDefault();const s=currentStudent(),fd=new FormData(w),amt=Number(fd.get('amount')),method=String(fd.get('method')),accountName=String(fd.get('accountName')).trim(),account=String(fd.get('account')).trim();if(!amt||amt<50){toast('Minimum withdrawal amount is $50.');return}if(s.kyc?.status!=='Verified'){toast('Complete KYC identity verification before withdrawing.');return}if(amt>s.available){toast('Requested amount exceeds your available balance.');return}if(!accountName){toast('Enter account holder name.');return}if(!account){toast('Enter your payout account.');return}s.available=Math.round((s.available-amt)*100)/100;s.pending=Math.round(((s.pending||0)+amt)*100)/100;s.accountName=accountName;s.payoutMethod=method;s.payoutAccount=account;state.withdrawals.unshift({id:uid('WD'),studentId:s.id,date:todayISO(),amount:amt,method,accountName,account,status:'Pending',paidDate:'',reference:''});if(!state.unreadCounts)state.unreadCounts={trends:0,adminSupport:0,withdrawals:0};state.unreadCounts.withdrawals=(state.unreadCounts.withdrawals||0)+1;notify(s.id,'Withdrawal submitted',`${money(amt)} withdrawal request is pending admin review. Amount moved to pending balance.`);sendWithdrawalEmailAlert(s,amt);save();dashView='payments';render();toast('Withdrawal request submitted. Amount moved to pending balance.');};
  const pf=$('#profileForm');if(pf)pf.onsubmit=e=>{e.preventDefault();const s=currentStudent(),fd=new FormData(pf);['name','phone','city','payoutMethod','payoutAccount','bio'].forEach(k=>s[k]=String(fd.get(k)||''));save();toast('Profile saved.');render();};
@@ -950,7 +954,11 @@ function bindForms(){
  const cf=$('#classForm');if(cf)cf.onsubmit=e=>{e.preventDefault();const fd=new FormData(cf);state.classes.unshift({id:uid('CL'),title:String(fd.get('title')),trainer:String(fd.get('trainer')),date:String(fd.get('date')),time:String(fd.get('time')),batch:String(fd.get('batch')),status:'Upcoming',link:String(fd.get('link')||'#')});state.students.forEach(s=>notify(s.id,'New live class scheduled',`${String(fd.get('title'))} is scheduled for ${niceDate(String(fd.get('date')))}.`));save();closeModals();render();toast('Class added and students notified.');};
  const tf=$('#trendForm');if(tf)tf.onsubmit=e=>{e.preventDefault();const fd=new FormData(tf),t={id:uid('TR'),program:String(fd.get('program')),title:String(fd.get('title')),added:todayISO(),difficulty:String(fd.get('difficulty')),status:'New'};state.trends.unshift(t);state.students.forEach(s=>notify(s.id,'New creator trend',`${t.program}: ${t.title}`));save();closeModals();render();toast('Trend published and students notified.');};
  const prf=$('#programForm');if(prf)prf.onsubmit=e=>{e.preventDefault();const fd=new FormData(prf),name=String(fd.get('name')).trim(),desc=String(fd.get('desc')).trim();state.programs=state.programs||[];state.programs.push({id:uid('PG'),name,desc,code:name.slice(0,2).toUpperCase(),status:'Active'});save();closeModals();render();toast('Program added.');};
- const alf=$('#addLessonForm');if(alf)alf.onsubmit=e=>{e.preventDefault();const fd=new FormData(alf);if(!state.curriculum)state.curriculum=[];state.curriculum.push({id:uid('LSN'),title:String(fd.get('title')),module:String(fd.get('module')),url:String(fd.get('url')),duration:String(fd.get('duration'))});save();render();toast('Lesson added.');};
+ const alf=$('#addLessonForm');if(alf)alf.onsubmit=async e=>{e.preventDefault();const fd=new FormData(alf);const title=String(fd.get('title')).trim(),module=String(fd.get('module')).trim(),duration=String(fd.get('duration')).trim();const vf=fd.get('videofile');let url=String(fd.get('url')||'').trim(),kind='embed';
+ if(vf&&vf.size>0){if(vf.size>500*1024*1024){toast('Video must be under 500MB.');return;} toast('⏳ Uploading video, please wait...');const ext=(String(vf.name).split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'')||'mp4';const fpath=Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;const {error:upErr}=await supabase.storage.from('lesson-videos').upload(fpath,vf,{contentType:vf.type||'video/mp4'}); if(upErr){toast('Upload failed: '+upErr.message);return;} url=supabase.storage.from('lesson-videos').getPublicUrl(fpath).data.publicUrl; kind='file';}
+ if(!url){toast('Please upload a video file or paste a video URL.');return;}
+ const {error:insErr}=await supabase.from('lessons').insert([{title,module,url,kind,duration}]); if(insErr){toast('Could not save lesson: '+insErr.message);return;}
+ toast('✅ Lesson published for all students!'); loadLessons();};
  const contact=$('#contactForm');if(contact)contact.onsubmit=e=>{e.preventDefault();const fd=new FormData(contact);state.contactMessages=state.contactMessages||[];state.contactMessages.unshift({id:uid('MSG'),name:String(fd.get('name')),email:String(fd.get('email')),message:String(fd.get('message')),date:todayISO()});save();contact.reset();toast('Message submitted to support.');};
 const fp=$('#forgotPasswordForm');if(fp)fp.onsubmit=async e=>{e.preventDefault();const fd=new FormData(fp),email=String(fd.get('email')).trim().toLowerCase();const {data,error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:'https://mugees-editor.vercel.app/?reset=1'});if(error){toast(error.message||'Failed to send reset email');}else{toast('Password reset email sent');closeModals();}};
 const rp=$('#resetPasswordForm');if(rp)rp.onsubmit=async e=>{e.preventDefault();const fd=new FormData(rp),pw=String(fd.get('password')),cp=String(fd.get('confirm'));if(pw.length<8){var er=document.getElementById('rp_err');if(er)er.textContent='Password must be at least 8 characters.';toast('Password must be at least 8 characters.');return;}if(pw!==cp){var er=document.getElementById('rp_err');if(er)er.textContent='Passwords do not match.';toast('Passwords do not match.');return;}var er=document.getElementById('rp_err');if(er)er.textContent='';const {data,error}=await supabase.auth.updateUser({password:pw});if(error){toast(error.message||'Failed to reset password');}else{toast('Password updated');closeModals();openAuth('login');}};
@@ -1024,6 +1032,7 @@ function bindMobileMenu() {
       var hrefTarget = el.getAttribute('href');
       if (dashTarget) {
         dashView = dashTarget;
+        if(dashTarget==='courses')loadLessons();
         if (route() !== 'dashboard') { location.hash = '#/dashboard'; }
         render();
       } else if (adminTarget) {
@@ -1234,6 +1243,7 @@ document.addEventListener('click', async e => {
     if (d === 'kyc' && state.unreadCounts?.kyc > 0) { state.unreadCounts.kyc = 0; save(); }
     adminView = d;
     if(d==='approvals')loadApprovals();
+    if(d==='curriculum')loadLessons();
     const mm = document.getElementById('mobileMenu');
     if (mm) mm.classList.remove('open');
     if (route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
@@ -1307,7 +1317,7 @@ document.addEventListener('click', async e => {
     if (a === 'trend-detail')       { showTrendDetail(id); return; }
     if (a === 'edit-course')        { editCourseModal(id); return; }
     if (a === 'reset-demo')         { if (confirm('Reset all local data?')) resetDemo(); return; }
-    if (a === 'delete-lesson')      { if(confirm('Delete this lesson?')) { state.curriculum = state.curriculum.filter(l => l.id !== id); save(); render(); toast('Lesson deleted.'); } return; }
+    if (a === 'delete-lesson')      { if(!confirm('Delete this lesson?'))return; const {error:delErr}=await supabase.from('lessons').delete().eq('id',id); if(delErr){toast('Delete failed: '+delErr.message);return;} toast('Lesson deleted.'); loadLessons(); return; }
     if (a === 'toggle-complete-lesson') {
       const s = currentStudent();
       if(!s.completedLessons) s.completedLessons = [];
