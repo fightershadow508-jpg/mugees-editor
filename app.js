@@ -403,6 +403,7 @@ window.playLesson = function(id) {
 };
 window.setSpeed=function(r,btn){const v=document.getElementById('lessonVideo');if(v)v.playbackRate=r;document.querySelectorAll('[data-speed]').forEach(b=>{const on=parseFloat(b.getAttribute('data-speed'))===r;b.classList.toggle('primary',on);b.classList.toggle('light',!on);});};
 window.toggleFullscreen=function(){const v=document.getElementById('lessonVideo');if(!v)return;if(document.fullscreenElement){document.exitFullscreen();}else if(v.requestFullscreen)v.requestFullscreen();else if(v.webkitEnterFullscreen)v.webkitEnterFullscreen();};
+window.videoError=function(v){var c=v.error?v.error.code:'?';var msgs={1:'aborted',2:'network',3:'decode',4:'src not supported / blocked'};var t=document.getElementById('videoErr');if(t){t.style.display='block';t.textContent='⚠️ Video failed to load (error '+c+': '+(msgs[c]||'unknown')+'). Try the fullscreen button or contact support.';}console.error('Video error',c,v.src);};
 window.videoEnded=function(id){toast('🎬 Video finished! Tap "Mark as Complete" below.');const b=document.querySelector('[data-action="toggle-complete-lesson"]');if(b){b.style.boxShadow='0 0 0 3px rgba(139,92,246,.5)';b.scrollIntoView({behavior:'smooth',block:'nearest'});}};
 window.saveNotes = async function(id) {
   const ta=document.getElementById('lessonNotes'); const val=ta?ta.value:'';
@@ -457,7 +458,7 @@ function studentCourses(s){
   </aside>`;
 
   const player = current.kind==='file'
-    ?`<video id="lessonVideo" src="${current.url}" controls playsinline preload="metadata" onended="videoEnded('${current.id}')" style="width:100%;height:100%;background:#000;"></video>
+    ?`<video id="lessonVideo" src="${current.url}" controls playsinline preload="metadata" onerror="videoError(this)" onended="videoEnded('${current.id}')" style="width:100%;height:100%;background:#000;"></video>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">
         <span style="color:#8fa1b8;font-size:13px;">▶ Speed:</span>
         ${[0.5,0.75,1,1.25,1.5,2].map(r=>`<button class="btn small ${r===1?'primary':'light'}" data-speed="${r}" onclick="setSpeed(${r},this)">${r}x</button>`).join('')}
@@ -471,7 +472,7 @@ function studentCourses(s){
   <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
     ${sidebar}
     <div style="flex:1 1 500px;display:flex;flex-direction:column;gap:16px;min-width:0;">
-      <div style="background:#000;border-radius:12px;overflow:hidden;aspect-ratio:16/9;">${player}</div>
+      <div style="background:#000;border-radius:12px;overflow:hidden;aspect-ratio:16/9;">${player}</div><div id="videoErr" style="display:none;color:#f87171;font-size:13px;margin-top:8px;"></div>
       <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);">
         <h3 style="margin:0 0 12px;color:#edf5ff;font-size:16px;">📝 My Notes <small style="color:#748195;font-weight:normal;">— saved for this lesson</small></h3>
         <textarea id="lessonNotes" data-lesson="${current.id}" placeholder="Is lesson ke notes yahan likhen… ye isi lesson mein save rahenge." style="width:100%;height:120px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px;color:#e2e8f0;font-family:inherit;resize:vertical;outline:none;">Loading…</textarea>
