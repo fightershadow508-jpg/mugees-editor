@@ -399,10 +399,18 @@ function nextClassCard(){const c=state.classes.find(x=>x.status==='Upcoming')||s
 window.playLesson = function(id) {
   state.currentLessonId = id;
   render();
-  setTimeout(function(){ loadLessonNotes(id); }, 60);
+  setTimeout(function(){ loadLessonNotes(id); loadVideoBlob(); }, 60);
 };
 window.setSpeed=function(r,btn){const v=document.getElementById('lessonVideo');if(v)v.playbackRate=r;document.querySelectorAll('[data-speed]').forEach(b=>{const on=parseFloat(b.getAttribute('data-speed'))===r;b.classList.toggle('primary',on);b.classList.toggle('light',!on);});};
 window.toggleFullscreen=function(){const v=document.getElementById('lessonVideo');if(!v)return;if(document.fullscreenElement){document.exitFullscreen();}else if(v.requestFullscreen)v.requestFullscreen();else if(v.webkitEnterFullscreen)v.webkitEnterFullscreen();};
+window.loadVideoBlob=function(){
+  var v=document.getElementById('lessonVideo'); if(!v||v.src&&v.src.indexOf('blob:')===0)return;
+  var url=v.getAttribute('data-url'); if(!url)return;
+  var st=document.getElementById('videoErr'); if(st){st.style.display='block';st.style.color='#8fa1b8';st.textContent='⏳ Loading video…';}
+  fetch(url).then(function(r){ if(!r.ok)throw new Error('HTTP '+r.status); return r.blob(); }).then(function(b){
+    var bu=URL.createObjectURL(b); var vv=document.getElementById('lessonVideo'); if(vv){vv.src=bu; if(st)st.style.display='none';}
+  }).catch(function(e){ if(st){st.style.display='block';st.style.color='#f87171';st.textContent='⚠️ Could not load video. Please check connection.';} });
+};
 window.videoError=function(v){var c=v.error?v.error.code:'?';var msgs={1:'aborted',2:'network',3:'decode',4:'src not supported / blocked'};var t=document.getElementById('videoErr');if(t){t.style.display='block';t.textContent='⚠️ Video failed to load (error '+c+': '+(msgs[c]||'unknown')+'). Try the fullscreen button or contact support.';}console.error('Video error',c,v.src);};
 window.videoEnded=function(id){toast('🎬 Video finished! Tap "Mark as Complete" below.');const b=document.querySelector('[data-action="toggle-complete-lesson"]');if(b){b.style.boxShadow='0 0 0 3px rgba(139,92,246,.5)';b.scrollIntoView({behavior:'smooth',block:'nearest'});}};
 window.saveNotes = async function(id) {
@@ -458,7 +466,7 @@ function studentCourses(s){
   </aside>`;
 
   const player = current.kind==='file'
-    ?`<video id="lessonVideo" src="${current.url}" controls playsinline preload="metadata" onerror="videoError(this)" onended="videoEnded('${current.id}')" style="width:100%;height:100%;background:#000;"></video>
+    ?`<video id="lessonVideo" data-url="${current.url}" controls playsinline preload="metadata" onerror="videoError(this)" onended="videoEnded('${current.id}')" style="width:100%;height:100%;background:#000;"></video>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">
         <span style="color:#8fa1b8;font-size:13px;">▶ Speed:</span>
         ${[0.5,0.75,1,1.25,1.5,2].map(r=>`<button class="btn small ${r===1?'primary':'light'}" data-speed="${r}" onclick="setSpeed(${r},this)">${r}x</button>`).join('')}
@@ -1064,7 +1072,7 @@ function bindMobileMenu() {
         if(dashTarget==='courses')loadLessons();
         if (route() !== 'dashboard') { location.hash = '#/dashboard'; }
         render();
-        if(dashTarget==='courses'){ setTimeout(function(){ var _ls=(typeof dbLessons!=='undefined'&&dbLessons)?dbLessons:[]; var cid=(state&&state.currentLessonId)||(_ls[0]&&_ls[0].id); if(cid)loadLessonNotes(cid); }, 400); }
+        if(dashTarget==='courses'){ setTimeout(function(){ var _ls=(typeof dbLessons!=='undefined'&&dbLessons)?dbLessons:[]; var cid=(state&&state.currentLessonId)||(_ls[0]&&_ls[0].id); if(cid)loadLessonNotes(cid); loadVideoBlob(); }, 400); }
       } else if (adminTarget) {
         adminView = adminTarget;
         if (route() !== 'admin') { location.hash = '#/admin'; }
