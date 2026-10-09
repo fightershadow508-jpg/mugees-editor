@@ -1,4 +1,5 @@
 import { supabase } from './supabase-client.js';
+let dbLessons=null; // shared lesson cache (Supabase). null=not loaded yet
 const $ = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 const esc = (v='') => String(v).replace(/[&<>'"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
@@ -410,7 +411,7 @@ window.saveNotes = function(id) {
 };
 
 function studentCourses(s){
-  const _lessons=(typeof dbLessons!=='undefined'&&dbLessons!==null)?dbLessons:(state.curriculum||[]); if(_lessons.length === 0) {
+  if(dbLessons===null){loadLessons();return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">Loading lessons…</p></div></div>`;} const _lessons=(dbLessons!==null)?dbLessons:(state.curriculum||[]); if(_lessons.length === 0) {
     return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">No video lessons available yet.</p></div></div>`;
   }
   if(!state.studentNotes) state.studentNotes = {};
@@ -429,7 +430,7 @@ function studentCourses(s){
     <div style="flex: 1 1 600px; display:flex; flex-direction:column; gap:16px;">
        <div style="background:#000; border-radius:12px; overflow:hidden; aspect-ratio:16/9;">
          ${current.kind==='file'
-         ?`<video id="lessonVideo" src="${current.url}" controls playsinline onended="videoEnded('${current.id}')" style="width:100%;height:100%;background:#000;"></video>
+         ?`<video id="lessonVideo" src="${current.url}" controls playsinline preload="metadata" onended="videoEnded('${current.id}')" style="width:100%;height:100%;background:#000;"></video>
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">
               <span style="color:#8fa1b8;font-size:13px;">▶ Speed:</span>
               ${[0.5,0.75,1,1.25,1.5,2].map(r=>`<button class="btn small ${r===1?'primary':'light'}" data-speed="${r}" onclick="setSpeed(${r},this)">${r}x</button>`).join('')}
@@ -746,7 +747,6 @@ function adminKYC(){
     `}
   </div>`;
 }
-let dbLessons=null;
 async function loadLessons(){try{const{data,error}=await supabase.from('lessons').select('*').order('created_at',{ascending:false});if(!error)dbLessons=(data||[]).map(l=>({id:l.id,title:l.title,module:l.description||'',url:l.video_url,kind:l.kind||'embed',duration:l.duration_minutes?l.duration_minutes+' min':''}));}catch(e){if(dbLessons===null)dbLessons=[];}
  if(adminView==='curriculum'){const c=$('#adminContent');if(c){c.innerHTML=adminCurriculum();bindForms();}}
  if(typeof dashView!=='undefined'&&dashView==='courses'&&route()==='dashboard'){const d=$('#dashContent');if(d){try{d.innerHTML=studentView(currentStudent());bindGlobal();}catch(e){}}}}
