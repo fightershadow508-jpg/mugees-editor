@@ -737,7 +737,7 @@ function adminKYC(){
   </div>`;
 }
 let dbLessons=null;
-async function loadLessons(){try{const{data,error}=await supabase.from('lessons').select('*').order('created_at',{ascending:false});if(!error)dbLessons=data||[];}catch(e){if(dbLessons===null)dbLessons=[];}
+async function loadLessons(){try{const{data,error}=await supabase.from('lessons').select('*').order('created_at',{ascending:false});if(!error)dbLessons=(data||[]).map(l=>({id:l.id,title:l.title,module:l.description||'',url:l.video_url,kind:l.kind||'embed',duration:l.duration_minutes?l.duration_minutes+' min':''}));}catch(e){if(dbLessons===null)dbLessons=[];}
  if(adminView==='curriculum'){const c=$('#adminContent');if(c){c.innerHTML=adminCurriculum();bindForms();}}
  if(typeof dashView!=='undefined'&&dashView==='courses'&&route()==='dashboard'){const d=$('#dashContent');if(d){try{d.innerHTML=studentView(currentStudent());bindGlobal();}catch(e){}}}}
 function adminCurriculum(){
@@ -749,7 +749,7 @@ function adminCurriculum(){
        <div class="field"><label>Lesson Title</label><input name="title" required placeholder="e.g. Intro to Video Editing"></div>
        <div class="field"><label>Module / Chapter Name</label><input name="module" required placeholder="e.g. Module 1: Basics"></div>
        <div class="field"><label>Option A — Upload recording (video file)</label><input type="file" name="videofile" id="lesson_videofile" accept="video/*"><p class="micro" style="color:#748195;margin-top:6px;">MP4 recommended. If you choose a file, the URL field below is ignored.</p></div><div class="field"><label>Option B — Video URL (YouTube/Vimeo embed)</label><input name="url" id="lesson_url" placeholder="https://www.youtube.com/embed/..."></div>
-       <div class="field"><label>Duration</label><input name="duration" required placeholder="e.g. 10:00"></div>
+       <div class="field"><label>Duration (minutes)</label><input name="duration" required inputmode="numeric" placeholder="e.g. 10"></div>
        <button class="btn primary" type="submit">Add Lesson</button>
     </form>
   </div>
@@ -957,7 +957,7 @@ function bindForms(){
  const alf=$('#addLessonForm');if(alf)alf.onsubmit=async e=>{e.preventDefault();const fd=new FormData(alf);const title=String(fd.get('title')).trim(),module=String(fd.get('module')).trim(),duration=String(fd.get('duration')).trim();const vf=fd.get('videofile');let url=String(fd.get('url')||'').trim(),kind='embed';
  if(vf&&vf.size>0){if(vf.size>500*1024*1024){toast('Video must be under 500MB.');return;} toast('⏳ Uploading video, please wait...');const ext=(String(vf.name).split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'')||'mp4';const fpath=Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;const {error:upErr}=await supabase.storage.from('lesson-videos').upload(fpath,vf,{contentType:vf.type||'video/mp4'}); if(upErr){toast('Upload failed: '+upErr.message);return;} url=supabase.storage.from('lesson-videos').getPublicUrl(fpath).data.publicUrl; kind='file';}
  if(!url){toast('Please upload a video file or paste a video URL.');return;}
- const {error:insErr}=await supabase.from('lessons').insert([{title,module,url,kind,duration}]); if(insErr){toast('Could not save lesson: '+insErr.message);return;}
+ const mins=parseInt(String(duration).replace(/[^0-9]/g,''))||0; const {error:insErr}=await supabase.from('lessons').insert([{title,description:module,video_url:url,kind,duration_minutes:mins,status:'published'}]); if(insErr){toast('Could not save lesson: '+insErr.message);return;}
  toast('✅ Lesson published for all students!'); loadLessons();};
  const contact=$('#contactForm');if(contact)contact.onsubmit=e=>{e.preventDefault();const fd=new FormData(contact);state.contactMessages=state.contactMessages||[];state.contactMessages.unshift({id:uid('MSG'),name:String(fd.get('name')),email:String(fd.get('email')),message:String(fd.get('message')),date:todayISO()});save();contact.reset();toast('Message submitted to support.');};
 const fp=$('#forgotPasswordForm');if(fp)fp.onsubmit=async e=>{e.preventDefault();const fd=new FormData(fp),email=String(fd.get('email')).trim().toLowerCase();const {data,error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:'https://mugees-editor.vercel.app/?reset=1'});if(error){toast(error.message||'Failed to send reset email');}else{toast('Password reset email sent');closeModals();}};
