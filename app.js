@@ -648,7 +648,7 @@ function studentSupport(s=currentStudent()){
 function adminSidebar(){
   if(!state.unreadCounts) state.unreadCounts = { trends: 0, adminSupport: 0, withdrawals: 0, kyc: 0, approvals: 0 };
   const uc = state.unreadCounts;
-  const items=[['overview','🏠 Overview'],['students','👥 Students'],['approvals','✅ Approvals'],['kyc','🆔 KYC Approvals'],['curriculum','🎬 Course Manager'],['courses','📚 Courses'],['live','🎥 Curriculum'],['programs','🧩 Programs'],['trends','🔥 Trends'],['earnings','💰 Earnings'],['withdrawals','🏦 Withdrawals'],['notifications','🔔 Notify'],['support','💬 Support'],['settings','⚙️ Settings']];
+  const items=[['overview','🏠 Overview'],['students','👥 Students'],['approvals','✅ Approvals'],['kyc','🆔 KYC Approvals'],['curriculum','📤 Video Upload'],['courses','📚 Courses'],['live','🎥 Curriculum'],['programs','🧩 Programs'],['trends','🔥 Trends'],['earnings','💰 Earnings'],['withdrawals','🏦 Withdrawals'],['notifications','🔔 Notify'],['support','💬 Support'],['settings','⚙️ Settings']];
   return `<aside class="sidebar"><div class="side-profile"><strong>${esc(state.admin.name)}</strong><div style="margin-top:5px"><span class="role-badge role-admin">Admin</span></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${adminView===id?'active':''}" data-admin="${id}" style="display:flex;justify-content:space-between;align-items:center;"><span>${l}</span>${id==='support' && uc.adminSupport>0?`<span class="nav-badge">${uc.adminSupport}</span>`:id==='withdrawals' && uc.withdrawals>0?`<span class="nav-badge">${uc.withdrawals}</span>`:id==='kyc' && uc.kyc>0?`<span class="nav-badge">${uc.kyc}</span>`:id==='approvals' && uc.approvals>0?`<span class="nav-badge">${uc.approvals}</span>`:''}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`
 }
 function adminDashboard(){if(!state.session||state.session.role!=='admin'){openAuth('login');location.hash='#/';return homePage()}return `<div class="dashboard-page"><div class="dashboard-shell">${adminSidebar()}<section class="dashboard-main" id="adminContent">${adminPanel()}</section></div></div>`}
@@ -742,7 +742,7 @@ async function loadLessons(){try{const{data,error}=await supabase.from('lessons'
  if(typeof dashView!=='undefined'&&dashView==='courses'&&route()==='dashboard'){const d=$('#dashContent');if(d){try{d.innerHTML=studentView(currentStudent());bindGlobal();}catch(e){}}}}
 function adminCurriculum(){
   if(!state.curriculum) state.curriculum = [];
-  return `<div class="subpage-head"><div><h1>Course Manager</h1><p style="color:#748195">Upload and manage video lessons.</p></div></div>
+  return `<div class="subpage-head"><div><h1>Video Upload</h1><p style="color:#748195">Upload recordings or add YouTube/Vimeo links — lessons appear for all students.</p></div></div>
   <div class="panel">
     <div class="panel-head"><h3>Add New Video Lesson</h3></div><p class="micro" style="padding:0 20px;color:#748195;">Upload a recording or paste a YouTube/Vimeo link — lessons appear for all students instantly.</p>
     <form id="addLessonForm" style="display:flex; flex-direction:column; gap:12px; padding:20px;">
