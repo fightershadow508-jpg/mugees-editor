@@ -399,79 +399,97 @@ function nextClassCard(){const c=state.classes.find(x=>x.status==='Upcoming')||s
 window.playLesson = function(id) {
   state.currentLessonId = id;
   render();
+  setTimeout(function(){ loadLessonNotes(id); }, 60);
 };
 window.setSpeed=function(r,btn){const v=document.getElementById('lessonVideo');if(v)v.playbackRate=r;document.querySelectorAll('[data-speed]').forEach(b=>{const on=parseFloat(b.getAttribute('data-speed'))===r;b.classList.toggle('primary',on);b.classList.toggle('light',!on);});};
 window.toggleFullscreen=function(){const v=document.getElementById('lessonVideo');if(!v)return;if(document.fullscreenElement){document.exitFullscreen();}else if(v.requestFullscreen)v.requestFullscreen();else if(v.webkitEnterFullscreen)v.webkitEnterFullscreen();};
 window.videoEnded=function(id){toast('🎬 Video finished! Tap "Mark as Complete" below.');const b=document.querySelector('[data-action="toggle-complete-lesson"]');if(b){b.style.boxShadow='0 0 0 3px rgba(139,92,246,.5)';b.scrollIntoView({behavior:'smooth',block:'nearest'});}};
-window.saveNotes = function(id) {
-  if(!state.studentNotes) state.studentNotes = {};
-  state.studentNotes[id] = document.getElementById('lessonNotes').value;
-  save();
-  toast('✅ Notes Saved!');
+window.saveNotes = async function(id) {
+  const ta=document.getElementById('lessonNotes'); const val=ta?ta.value:'';
+  if(!state.studentNotes) state.studentNotes={}; state.studentNotes[id]=val; save();
+  const st=document.getElementById('notesStatus'); const say=t=>{if(st)st.textContent=t;};
+  try{const uid=await getUid(); if(!uid)throw new Error('no session');
+    const{error}=await supabase.from('lesson_notes').upsert({student_id:uid,lesson_id:id,notes:val,updated_at:new Date().toISOString()},{onConflict:'student_id,lesson_id'});
+    if(error)throw error; say('✅ Saved — ye notes isi lesson mein rahenge.'); toast('✅ Notes Saved!');
+  }catch(e){ say('⚠️ Locally saved (login required for cloud).'); toast('✅ Notes Saved!'); }
 };
 
 function studentCourses(s){
-  if(dbLessons===null){loadLessons();return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">Loading lessons…</p></div></div>`;} const _lessons=(dbLessons!==null)?dbLessons:(state.curriculum||[]); if(_lessons.length === 0) {
+  if(dbLessons===null){loadLessons();return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">Loading lessons…</p></div></div>`;}
+  const _lessons=dbLessons;
+  if(_lessons.length === 0) {
     return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">No video lessons available yet.</p></div></div>`;
   }
-  if(!state.studentNotes) state.studentNotes = {};
   if(!s.completedLessons) s.completedLessons = [];
-  
+  if(!state.expandedModules) state.expandedModules = {};
+
   const playingId = state.currentLessonId || _lessons[0].id;
   const current = _lessons.find(l=>l.id===playingId) || _lessons[0];
-  const notes = state.studentNotes[current.id] || '';
   const isCompleted = s.completedLessons.includes(current.id);
   const total = _lessons.length;
-  const comp = s.completedLessons.length;
+  const comp = _lessons.filter(l=>s.completedLessons.includes(l.id)).length;
   const progress = Math.round((comp/total)*100) || 0;
 
-  return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">Progress: ${progress}% complete</p></div></div>
-  <div style="display:flex; gap:20px; flex-wrap:wrap;">
-    <div style="flex: 1 1 600px; display:flex; flex-direction:column; gap:16px;">
-       <div style="background:#000; border-radius:12px; overflow:hidden; aspect-ratio:16/9;">
-         ${current.kind==='file'
-         ?`<video id="lessonVideo" src="${current.url}" controls playsinline preload="metadata" onended="videoEnded('${current.id}')" style="width:100%;height:100%;background:#000;"></video>
-            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">
-              <span style="color:#8fa1b8;font-size:13px;">▶ Speed:</span>
-              ${[0.5,0.75,1,1.25,1.5,2].map(r=>`<button class="btn small ${r===1?'primary':'light'}" data-speed="${r}" onclick="setSpeed(${r},this)">${r}x</button>`).join('')}
-              <button class="btn small light" onclick="toggleFullscreen()" style="margin-left:auto;">⛶ Fullscreen</button>
-            </div>`
-         :`<iframe src="${current.url}" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>`}
-       </div>
-       <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
-         <div>
-           <h2 style="margin:0; font-size:20px; color:#edf5ff;">${esc(current.title)}</h2>
-           <p style="margin:4px 0 0; color:#8fa1b8; font-size:14px;">${esc(current.module)}</p>
-         </div>
-         <button class="btn ${isCompleted ? 'light' : 'primary'}" data-action="toggle-complete-lesson" data-id="${current.id}">
-            ${isCompleted ? '✅ Completed' : 'Mark as Complete'}
-         </button>
-       </div>
-       <div style="background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
-         <h3 style="margin:0 0 12px; color:#edf5ff; font-size:16px;">📝 My Notes</h3>
-         <textarea id="lessonNotes" placeholder="Type your notes for this lesson here..." style="width:100%; height:120px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:12px; color:#e2e8f0; font-family:inherit; resize:vertical; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">${esc(notes)}</textarea>
-         <button class="btn primary" style="margin-top:12px;" onclick="saveNotes('${current.id}')">Save Notes</button>
-       </div>
+  // group by module
+  const groups = {};
+  _lessons.forEach(l=>{ const k=l.module||'General'; (groups[k]=groups[k]||[]).push(l); });
+  const modNames = Object.keys(groups);
+
+  const sidebar = `<aside style="flex:0 0 300px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;height:fit-content;max-height:820px;overflow-y:auto;">
+    <div style="padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.08);"><strong style="color:#edf5ff;font-size:15px;">Course Content</strong></div>
+    ${modNames.map(mn=>{
+      const ls = groups[mn];
+      const done = ls.filter(l=>s.completedLessons.includes(l.id)).length;
+      const open = state.expandedModules[mn]!==false;
+      return `<div style="border-bottom:1px solid rgba(255,255,255,0.05);">
+        <div onclick="toggleModule('${esc(mn).replace(/'/g,"\\'")}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;">
+          <strong style="color:#e2e8f0;font-size:13.5px;">${esc(mn)}</strong>
+          <span style="display:flex;align-items:center;gap:8px;"><small style="color:#8fa1b8;">${done}/${ls.length}</small><span style="color:#8fa1b8;font-size:12px;">${open?'▾':'▸'}</span></span>
+        </div>
+        ${open?`<div>${ls.map(l=>{
+          const active=l.id===current.id, d=s.completedLessons.includes(l.id);
+          return `<div onclick="playLesson('${l.id}')" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 16px 10px 20px;background:${active?'rgba(139,92,246,0.15)':'transparent'};border-left:3px solid ${active?'#8b5cf6':'transparent'};">
+            <span style="color:${d?'#34d399':'#5b6b82'};font-size:14px;">${d?'✅':'⭕'}</span>
+            <div><div style="color:${active?'#c4b5fd':'#dbe4f0'};font-size:13px;">${esc(l.title)}</div>
+            <small style="color:#748195;">${esc(l.duration||'')} ${l.kind==='file'?'· 📤':'· 🔗'}</small></div>
+          </div>`;}).join('')}</div>`:''}
+      </div>`;}).join('')}
+  </aside>`;
+
+  const player = current.kind==='file'
+    ?`<video id="lessonVideo" src="${current.url}" controls playsinline preload="metadata" onended="videoEnded('${current.id}')" style="width:100%;height:100%;background:#000;"></video>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">
+        <span style="color:#8fa1b8;font-size:13px;">▶ Speed:</span>
+        ${[0.5,0.75,1,1.25,1.5,2].map(r=>`<button class="btn small ${r===1?'primary':'light'}" data-speed="${r}" onclick="setSpeed(${r},this)">${r}x</button>`).join('')}
+        <button class="btn small light" onclick="toggleFullscreen()" style="margin-left:auto;">⛶ Fullscreen</button>
+      </div>`
+    :`<iframe src="${current.url}" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>`;
+
+  return `<div class="subpage-head" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;"><div><h1 style="margin:0;">${esc(current.title)}</h1><p style="color:#748195;margin:4px 0 0;">${esc(current.module||'')}</p></div>
+    <div style="display:flex;align-items:center;gap:12px;"><span style="color:#a5b4c9;font-size:14px;">Your Progress: <strong style="color:#edf5ff;">${comp} of ${total} (${progress}%)</strong></span>
+    <button class="btn ${isCompleted?'light':'primary'}" data-action="toggle-complete-lesson" data-id="${current.id}">${isCompleted?'✅ Completed':'✓ Mark as Complete'}</button></div></div>
+  <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+    ${sidebar}
+    <div style="flex:1 1 500px;display:flex;flex-direction:column;gap:16px;min-width:0;">
+      <div style="background:#000;border-radius:12px;overflow:hidden;aspect-ratio:16/9;">${player}</div>
+      <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);">
+        <h3 style="margin:0 0 12px;color:#edf5ff;font-size:16px;">📝 My Notes <small style="color:#748195;font-weight:normal;">— saved for this lesson</small></h3>
+        <textarea id="lessonNotes" data-lesson="${current.id}" placeholder="Is lesson ke notes yahan likhen… ye isi lesson mein save rahenge." style="width:100%;height:120px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px;color:#e2e8f0;font-family:inherit;resize:vertical;outline:none;">Loading…</textarea>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:12px;"><button class="btn primary" onclick="saveNotes('${current.id}')">💾 Save Notes</button><small id="notesStatus" style="color:#748195;"></small></div>
+      </div>
     </div>
-    <div style="flex: 0 0 300px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:16px; height:fit-content; max-height:800px; overflow-y:auto;">
-       <h3 style="margin:0 0 16px; color:#edf5ff;">Curriculum</h3>
-       <div style="display:flex; flex-direction:column; gap:8px;">
-         ${_lessons.map(l=>{
-           const active = l.id === current.id;
-           const done = s.completedLessons.includes(l.id);
-           return `<div onclick="playLesson('${l.id}')" style="cursor:pointer; padding:12px; border-radius:8px; background:${active?'rgba(139,92,246,0.15)':'rgba(255,255,255,0.02)'}; border:1px solid ${active?'#8b5cf6':'rgba(255,255,255,0.05)'}; transition:background 0.2s;">
-             <div style="display:flex; justify-content:space-between; align-items:center;">
-               <strong style="color:${active?'#c4b5fd':'#e2e8f0'}; font-size:14px;">${esc(l.title)}</strong>
-               ${done?'<span style="color:#34d399; font-size:12px;">✅</span>':''}
-             </div>
-             <p style="margin:4px 0 0; font-size:12px; color:#8fa1b8;">${esc(l.module)} · ${esc(l.duration)}</p>
-           </div>`;
-         }).join('')}
-       </div>
-    </div>
-  </div>`;
+  </div>
+`;
 }
-function studentLive(){return `<div class="subpage-head"><div><h1>Curriculum</h1><p style="color:#748195">Upcoming sessions and previous recordings.</p></div></div><div class="live-grid">${state.classes.map(c=>`<div class="live-card"><span class="tag ${c.status==='Upcoming'?'orange':'green'}">${esc(c.status)}</span><h3 style="margin-top:14px">${esc(c.title)}</h3><p style="color:#748195">${niceDate(c.date)} · ${esc(c.time)}<br>${esc(c.trainer)} · ${esc(c.batch)}</p><button class="btn primary" data-action="class-detail" data-id="${c.id}">${c.status==='Upcoming'?'Join Class':'Watch Recording'}</button></div>`).join('')}</div>`}
+async function getUid(){try{const{data}=await supabase.auth.getUser();return data&&data.user?data.user.id:null;}catch(e){return null;}}
+async function loadLessonNotes(lessonId){
+  const ta=document.getElementById('lessonNotes'); if(!ta||ta.getAttribute('data-lesson')!==lessonId)return;
+  let txt='';
+  try{const uid=await getUid(); if(uid){const{data}=await supabase.from('lesson_notes').select('notes').eq('student_id',uid).eq('lesson_id',lessonId).maybeSingle(); if(data&&data.notes)txt=data.notes;}}catch(e){}
+  if(!txt&&state.studentNotes&&state.studentNotes[lessonId])txt=state.studentNotes[lessonId];
+  const cur=document.getElementById('lessonNotes'); if(cur&&cur.getAttribute('data-lesson')===lessonId)cur.value=txt;
+}
+window.toggleModule=function(mn){ if(!state.expandedModules)state.expandedModules={}; state.expandedModules[mn]=state.expandedModules[mn]===false?true:false; save(); const d=document.getElementById('dashContent'); if(d){d.innerHTML=studentView(currentStudent());bindGlobal();} };function studentLive(){return `<div class="subpage-head"><div><h1>Curriculum</h1><p style="color:#748195">Upcoming sessions and previous recordings.</p></div></div><div class="live-grid">${state.classes.map(c=>`<div class="live-card"><span class="tag ${c.status==='Upcoming'?'orange':'green'}">${esc(c.status)}</span><h3 style="margin-top:14px">${esc(c.title)}</h3><p style="color:#748195">${niceDate(c.date)} · ${esc(c.time)}<br>${esc(c.trainer)} · ${esc(c.batch)}</p><button class="btn primary" data-action="class-detail" data-id="${c.id}">${c.status==='Upcoming'?'Join Class':'Watch Recording'}</button></div>`).join('')}</div>`}
 function studentTrends(){return `<div class="subpage-head"><div><h1>Trend Updates</h1><p style="color:#748195">New creator trends published by Admin.</p></div></div><div class="cards">${state.trends.map(t=>`<div class="card"><div style="display:flex;justify-content:space-between"><span class="pill">${esc(t.program)}</span><span class="tag ${t.status==='New'?'green':''}">${esc(t.status)}</span></div><h3 style="margin-top:16px">${esc(t.title)}</h3><p>Difficulty: ${esc(t.difficulty)} · Added ${niceDate(t.added)}</p><button class="btn primary" data-action="trend-detail" data-id="${t.id}">View Tutorial</button></div>`).join('')}</div>`}
 
 function getMockLeaderboard(s) {
@@ -1045,6 +1063,7 @@ function bindMobileMenu() {
         if(dashTarget==='courses')loadLessons();
         if (route() !== 'dashboard') { location.hash = '#/dashboard'; }
         render();
+        if(dashTarget==='courses'){ setTimeout(function(){ var _ls=(typeof dbLessons!=='undefined'&&dbLessons)?dbLessons:[]; var cid=(state&&state.currentLessonId)||(_ls[0]&&_ls[0].id); if(cid)loadLessonNotes(cid); }, 400); }
       } else if (adminTarget) {
         adminView = adminTarget;
         if (route() !== 'admin') { location.hash = '#/admin'; }
