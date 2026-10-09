@@ -772,7 +772,7 @@ function adminKYC(){
     `}
   </div>`;
 }
-async function loadLessons(){try{const{data,error}=await supabase.from('lessons').select('*').order('created_at',{ascending:false});if(!error)dbLessons=(data||[]).map(l=>({id:l.id,title:l.title,module:l.description||'',url:l.video_url,kind:l.kind||'embed',duration:l.duration_minutes?l.duration_minutes+' min':''}));}catch(e){if(dbLessons===null)dbLessons=[];}
+async function loadLessons(){try{const{data,error}=await supabase.from('lessons').select('*').order('created_at',{ascending:false});if(!error)dbLessons=(data||[]).map(l=>{var u=l.video_url||'';if(u.indexOf('/storage/v1/object/public/lesson-videos/')>-1)u='/video/'+u.split('/lesson-videos/').pop();return{id:l.id,title:l.title,module:l.description||'',url:u,kind:l.kind||'embed',duration:l.duration_minutes?l.duration_minutes+' min':''};});}catch(e){if(dbLessons===null)dbLessons=[];}
  if(adminView==='curriculum'){const c=$('#adminContent');if(c){c.innerHTML=adminCurriculum();bindForms();}}
  if(typeof dashView!=='undefined'&&dashView==='courses'&&route()==='dashboard'){const d=$('#dashContent');if(d){try{d.innerHTML=studentView(currentStudent());bindGlobal();}catch(e){}}}}
 function adminCurriculum(){
