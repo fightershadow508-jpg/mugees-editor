@@ -406,6 +406,9 @@ window.toggleFullscreen=function(){const v=document.getElementById('lessonVideo'
 window.loadVideoBlob=function(){
   var v=document.getElementById('lessonVideo'); if(!v||v.src&&v.src.indexOf('blob:')===0)return;
   var url=v.getAttribute('data-url'); if(!url)return;
+  var lid=v.getAttribute('data-lesson');
+  v.onerror=function(){ videoError(v); };
+  v.onended=function(){ if(lid)videoEnded(lid); };
   var st=document.getElementById('videoErr'); if(st){st.style.display='block';st.style.color='#8fa1b8';st.textContent='⏳ Loading video…';}
   fetch(url).then(function(r){ if(!r.ok)throw new Error('HTTP '+r.status); return r.blob(); }).then(function(b){
     var bu=URL.createObjectURL(b); var vv=document.getElementById('lessonVideo'); if(vv){vv.src=bu; if(st)st.style.display='none';}
@@ -451,13 +454,13 @@ function studentCourses(s){
       const done = ls.filter(l=>s.completedLessons.includes(l.id)).length;
       const open = state.expandedModules[mn]!==false;
       return `<div style="border-bottom:1px solid rgba(255,255,255,0.05);">
-        <div onclick="toggleModule('${esc(mn).replace(/'/g,"\\'")}')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;">
+        <div data-action="toggle-module" data-module="${esc(mn)}" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;">
           <strong style="color:#e2e8f0;font-size:13.5px;">${esc(mn)}</strong>
           <span style="display:flex;align-items:center;gap:8px;"><small style="color:#8fa1b8;">${done}/${ls.length}</small><span style="color:#8fa1b8;font-size:12px;">${open?'▾':'▸'}</span></span>
         </div>
         ${open?`<div>${ls.map(l=>{
           const active=l.id===current.id, d=s.completedLessons.includes(l.id);
-          return `<div onclick="playLesson('${l.id}')" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 16px 10px 20px;background:${active?'rgba(139,92,246,0.15)':'transparent'};border-left:3px solid ${active?'#8b5cf6':'transparent'};">
+          return `<div data-action="play-lesson" data-id="${l.id}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 16px 10px 20px;background:${active?'rgba(139,92,246,0.15)':'transparent'};border-left:3px solid ${active?'#8b5cf6':'transparent'};">
             <span style="color:${d?'#34d399':'#5b6b82'};font-size:14px;">${d?'✅':'⭕'}</span>
             <div><div style="color:${active?'#c4b5fd':'#dbe4f0'};font-size:13px;">${esc(l.title)}</div>
             <small style="color:#748195;">${esc(l.duration||'')} ${l.kind==='file'?'· 📤':'· 🔗'}</small></div>
@@ -466,11 +469,11 @@ function studentCourses(s){
   </aside>`;
 
   const player = current.kind==='file'
-    ?`<video id="lessonVideo" data-url="${current.url}" controls playsinline preload="metadata" onerror="videoError(this)" onended="videoEnded('${current.id}')" style="width:100%;height:100%;background:#000;"></video>
+    ?`<video id="lessonVideo" data-url="${current.url}" controls playsinline preload="metadata" data-lesson="${current.id}" style="width:100%;height:100%;background:#000;"></video>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">
         <span style="color:#8fa1b8;font-size:13px;">▶ Speed:</span>
-        ${[0.5,0.75,1,1.25,1.5,2].map(r=>`<button class="btn small ${r===1?'primary':'light'}" data-speed="${r}" onclick="setSpeed(${r},this)">${r}x</button>`).join('')}
-        <button class="btn small light" onclick="toggleFullscreen()" style="margin-left:auto;">⛶ Fullscreen</button>
+        ${[0.5,0.75,1,1.25,1.5,2].map(r=>`<button class="btn small ${r===1?'primary':'light'}" data-action="set-speed" data-speed="${r}">${r}x</button>`).join('')}
+        <button class="btn small light" data-action="toggle-fullscreen" style="margin-left:auto;">⛶ Fullscreen</button>
       </div>`
     :`<iframe src="${current.url}" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>`;
 
@@ -484,7 +487,7 @@ function studentCourses(s){
       <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);">
         <h3 style="margin:0 0 12px;color:#edf5ff;font-size:16px;">📝 My Notes <small style="color:#748195;font-weight:normal;">— saved for this lesson</small></h3>
         <textarea id="lessonNotes" data-lesson="${current.id}" placeholder="Is lesson ke notes yahan likhen… ye isi lesson mein save rahenge." style="width:100%;height:120px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px;color:#e2e8f0;font-family:inherit;resize:vertical;outline:none;">Loading…</textarea>
-        <div style="display:flex;gap:10px;align-items:center;margin-top:12px;"><button class="btn primary" onclick="saveNotes('${current.id}')">💾 Save Notes</button><small id="notesStatus" style="color:#748195;"></small></div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:12px;"><button class="btn primary" data-action="save-notes" data-id="${current.id}">💾 Save Notes</button><small id="notesStatus" style="color:#748195;"></small></div>
       </div>
     </div>
   </div>
@@ -1356,6 +1359,11 @@ document.addEventListener('click', async e => {
     if (a === 'edit-course')        { editCourseModal(id); return; }
     if (a === 'reset-demo')         { if (confirm('Reset all local data?')) resetDemo(); return; }
     if (a === 'delete-lesson')      { if(!confirm('Delete this lesson?'))return; const {error:delErr}=await supabase.from('lessons').delete().eq('id',id); if(delErr){toast('Delete failed: '+delErr.message);return;} toast('Lesson deleted.'); loadLessons(); return; }
+    if (a === 'play-lesson') { playLesson(id); return; }
+    if (a === 'toggle-module') { var mn=el.getAttribute('data-module'); if(!state.expandedModules)state.expandedModules={}; state.expandedModules[mn]=state.expandedModules[mn]===false?true:false; save(); var dd=document.getElementById('dashContent'); if(dd){dd.innerHTML=studentView(currentStudent());bindGlobal();} return; }
+    if (a === 'set-speed') { var r=parseFloat(el.getAttribute('data-speed')); var vv=document.getElementById('lessonVideo'); if(vv)vv.playbackRate=r; document.querySelectorAll('[data-action="set-speed"]').forEach(function(b){var on=parseFloat(b.getAttribute('data-speed'))===r;b.classList.toggle('primary',on);b.classList.toggle('light',!on);}); return; }
+    if (a === 'toggle-fullscreen') { var vf=document.getElementById('lessonVideo'); if(vf){ if(document.fullscreenElement)document.exitFullscreen(); else if(vf.requestFullscreen)vf.requestFullscreen(); else if(vf.webkitEnterFullscreen)vf.webkitEnterFullscreen(); } return; }
+    if (a === 'save-notes') { saveNotes(id); return; }
     if (a === 'toggle-complete-lesson') {
       const s = currentStudent();
       if(!s.completedLessons) s.completedLessons = [];
