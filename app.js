@@ -704,6 +704,7 @@ function adminCurriculum(){
        <div class="field"><label>Module / Chapter Name</label><input name="module" required placeholder="e.g. Module 1: Basics"></div>
        <div class="field"><label>Option A — Upload recording (video file)</label><input type="file" name="videofile" id="lesson_videofile" accept="video/*"><p class="micro" style="color:#748195;margin-top:6px;">MP4 recommended. If you choose a file, the URL field below is ignored.</p></div><div class="field"><label>Option B — Video URL (YouTube/Vimeo embed)</label><input name="url" id="lesson_url" placeholder="https://www.youtube.com/embed/..."></div>
        <div class="field"><label>Duration (minutes)</label><input name="duration" required inputmode="numeric" placeholder="e.g. 10"></div>
+       <div class="field"><label>Lecture Overview</label><div style="margin-bottom:8px;"><button type="button" class="btn small primary" id="ai_gen_btn" data-action="ai-generate-overview">Generate with AI</button></div><textarea name="overview" rows="4" placeholder="Lecture ka khulasa likhen"></textarea></div>
        <button class="btn primary" type="submit">Add Lesson</button>
     </form>
   </div>
@@ -1427,6 +1428,7 @@ document.addEventListener('click', async e => {
       })();
       return;
     }
+    if (a === 'ai-generate-overview') { e.preventDefault(); if(window.generateAIOverview) window.generateAIOverview(); return; }
     if (a === 'toggle-complete-lesson') {
       const s = currentStudent();
       if(!s.completedLessons) s.completedLessons = [];
