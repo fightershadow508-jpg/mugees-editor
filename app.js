@@ -1061,8 +1061,9 @@ function fmtTime(s){ s=Math.round(s); if(s<60)return s+'s'; return Math.floor(s/
 // ── AI Overview (Google Gemini) ──
 let GEMINI_API_KEY = '';
 async function loadGeminiKey(){ try{ const{data}=await supabase.from('app_settings').select('value').eq('key','gemini_api_key').maybeSingle(); if(data&&data.value)GEMINI_API_KEY=data.value; }catch(e){} }
-loadGeminiKey();
+// Lazy load: only fetch key when AI is actually used (not at boot)
 window.generateAIOverview = async function(){
+  await loadGeminiKey();
   const titleEl=document.querySelector('#addLessonForm [name="title"]');
   const descEl=document.querySelector('#addLessonForm [name="description"]');
   const ovEl=document.querySelector('#addLessonForm [name="overview"]');
@@ -1482,6 +1483,7 @@ document.addEventListener('click', async e => {
     if (a === 'view-submissions') { e.preventDefault(); loadSubmissions(id); return; }
     if (a === 'delete-assignment') { e.preventDefault(); if(confirm('Delete this assignment?')){ supabase.from('assignments').delete().eq('id',id).then(()=>{toast('Deleted.'); dbAssignments=null; loadAssignments();}); } return; }
     if (a === 'ai-overview') {
+      loadGeminiKey();
       const btn=el, res=document.getElementById('ai_ov_result'), txt=document.getElementById('ai_ov_text');
       const title=btn.getAttribute('data-title')||'', mod=btn.getAttribute('data-module')||'';
       if(!GEMINI_API_KEY){toast('⚠️ AI available nahi hai.');return;}
