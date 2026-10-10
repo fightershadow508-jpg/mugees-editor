@@ -1015,16 +1015,17 @@ async function loadGeminiKey(){
   if(_geminiLoading) return _geminiLoading;
   _geminiLoading = (async()=>{
     try{
-      const{data}=await supabase.from('app_settings').select('value').eq('key','gemini_api_key').maybeSingle();
-      if(data&&data.value) GEMINI_API_KEY=data.value;
-    }catch(e){}
+      const res = await supabase.from('app_settings').select('value').eq('key','gemini_api_key').maybeSingle();
+      if(res.error){ console.error('Gemini key fetch error:', res.error); throw new Error('Key fetch failed: '+res.error.message); }
+      if(res.data && res.data.value){ GEMINI_API_KEY = String(res.data.value).trim(); }
+    }catch(e){ console.error('loadGeminiKey failed:', e); throw e; }
     return GEMINI_API_KEY;
   })();
   return _geminiLoading;
 }
 async function aiGenerate(prompt){
   const key = await loadGeminiKey();
-  if(!key) throw new Error('AI key not configured');
+  if(!key) throw new Error('AI key not configured. Please add your Gemini API key in Settings.');
   const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key='+key,{
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
