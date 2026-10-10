@@ -754,7 +754,7 @@ function adminCurriculum(){
        <div class="field"><label>Module / Chapter Name</label><input name="module" required placeholder="e.g. Module 1: Basics"></div>
        <div class="field"><label>Option A — Upload recording (video file)</label><input type="file" name="videofile" id="lesson_videofile" accept="video/*"><p class="micro" style="color:#748195;margin-top:6px;">MP4 recommended. If you choose a file, the URL field below is ignored.</p></div><div class="field"><label>Option B — Video URL (YouTube/Vimeo embed)</label><input name="url" id="lesson_url" placeholder="https://www.youtube.com/embed/..."></div>
        <div class="field"><label>Duration (minutes)</label><input name="duration" required inputmode="numeric" placeholder="e.g. 10"></div>
-       <div class="field"><label>🤖 Lecture Overview (AI summary for students)</label><div style="margin-bottom:8px;"> <small style="color:#748195;">Title se auto-overview banayega</small></div><textarea name="overview" rows="4" placeholder="Is lecture ka khulasa likhen — student video dekhne se pehle parhega."></textarea></div>
+       <div class="field"><label>🤖 Lecture Overview (AI summary for students)</label><div style="margin-bottom:8px;"><button type="button" class="btn small primary" id="ai_gen_btn" onclick="generateAIOverview()">🤖 Generate with AI</button></div><div style="margin-bottom:8px;"> <small style="color:#748195;">Title se auto-overview banayega</small></div><textarea name="overview" rows="4" placeholder="Is lecture ka khulasa likhen — student video dekhne se pehle parhega."></textarea></div>
        <button class="btn primary" type="submit">Add Lesson</button>
        <div id="lv_progress" style="display:none;margin-top:4px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:13px;color:#a5b4c9;">⏳ Uploading video… <strong id="lv_pct" style="color:#edf5ff;">0%</strong></span></div><div style="height:10px;background:rgba(255,255,255,0.08);border-radius:6px;overflow:hidden;"><div id="lv_bar" style="height:100%;width:0%;background:linear-gradient(90deg,#8b5cf6,#3b82f6);border-radius:6px;transition:width .2s;"></div></div><div id="lv_detail" style="font-size:12px;color:#748195;margin-top:6px;"></div></div>
     </form>
@@ -1060,6 +1060,50 @@ function fmtSize(b){ if(b>1073741824)return (b/1073741824).toFixed(2)+' GB'; if(
 function fmtTime(s){ s=Math.round(s); if(s<60)return s+'s'; return Math.floor(s/60)+'m '+(s%60)+'s'; }
 // ── AI Overview (Google Gemini) ──
 // AI disabled in this build
+// ── AI Overview (lazy-loaded, safe) ──
+let GEMINI_API_KEY = '';
+let _geminiLoading = null;
+async function loadGeminiKey(){
+  if(GEMINI_API_KEY) return GEMINI_API_KEY;
+  if(_geminiLoading) return _geminiLoading;
+  _geminiLoading = (async()=>{
+    try{
+      const{data}=await supabase.from('app_settings').select('value').eq('key','gemini_api_key').maybeSingle();
+      if(data&&data.value) GEMINI_API_KEY=data.value;
+    }catch(e){}
+    return GEMINI_API_KEY;
+  })();
+  return _geminiLoading;
+}
+async function aiGenerate(prompt){
+  const key = await loadGeminiKey();
+  if(!key) throw new Error('AI key not configured');
+  const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key='+key,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
+  });
+  const data = await resp.json();
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if(!text) throw new Error('No AI response');
+  return text.trim();
+}
+window.generateAIOverview = async function(){
+  const form=document.getElementById('addLessonForm');
+  const titleEl=form?.querySelector('[name="title"]');
+  const descEl=form?.querySelector('[name="description"]');
+  const ovEl=form?.querySelector('[name="overview"]');
+  const btn=document.getElementById('ai_gen_btn');
+  const title=titleEl?.value.trim()||'', desc=descEl?.value.trim()||'';
+  if(!title){toast('Pehle lesson ka title likhen.');return;}
+  if(btn){btn.disabled=true;btn.textContent='⏳ Generating…';}
+  try{
+    const prompt=`Write a concise lecture overview (100-150 words) in simple English for a video lesson titled "${title}". ${desc?`Topic: "${desc}". `:''}Include what the student will learn and 3-4 key concepts as bullet points. Friendly tone.`;
+    const text=await aiGenerate(prompt);
+    if(ovEl) ovEl.value=text;
+    toast('✅ AI overview generated!');
+  }catch(e){ toast('AI failed: '+e.message); }
+  if(btn){btn.disabled=false;btn.textContent='🤖 Generate with AI';}
+};
 const alf=$('#addLessonForm');if(alf)alf.onsubmit=async e=>{e.preventDefault();const fd=new FormData(alf);const title=String(fd.get('title')).trim(),module=String(fd.get('module')).trim(),duration=String(fd.get('duration')).trim();const vf=fd.get('videofile');let url=String(fd.get('url')||'').trim(),kind='embed';
  if(vf&&vf.size>0){
   if(vf.size>500*1024*1024){toast('Video must be under 500MB.');return;}
@@ -1456,6 +1500,20 @@ document.addEventListener('click', async e => {
     if (a === 'save-notes') { saveNotes(id); return; }
     if (a === 'view-submissions') { e.preventDefault(); loadSubmissions(id); return; }
     if (a === 'delete-assignment') { e.preventDefault(); if(confirm('Delete this assignment?')){ supabase.from('assignments').delete().eq('id',id).then(()=>{toast('Deleted.'); dbAssignments=null; loadAssignments();}); } return; }
+    if (a === 'ai-overview') {
+      const btn=el, res=document.getElementById('ai_ov_result'), txt=document.getElementById('ai_ov_text');
+      const title=btn.getAttribute('data-title')||'', mod=btn.getAttribute('data-module')||'';
+      btn.disabled=true; btn.textContent='⏳ Generating…';
+      (async()=>{
+        try{
+          const prompt=`Write a concise lecture overview (100-150 words) in simple English for a video lesson titled "${title}". ${mod?`Topic: "${mod}". `:''}Include what the student will learn and 3-4 key concepts as bullet points. Friendly tone.`;
+          const text=await aiGenerate(prompt);
+          if(txt)txt.textContent=text; if(res)res.style.display='block';
+        }catch(e){ toast('AI failed: '+e.message); }
+        btn.disabled=false; btn.textContent='🤖 AI Lecture Overview';
+      })();
+      return;
+    }
     if (a === 'toggle-complete-lesson') {
       const s = currentStudent();
       if(!s.completedLessons) s.completedLessons = [];
