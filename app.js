@@ -433,8 +433,8 @@ function studentCourses(s){
          ?`<video id="lessonVideo" src="${current.url}" controls playsinline preload="metadata" onended="videoEnded('${current.id}')" style="width:100%;height:100%;background:#000;"></video>
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">
               <span style="color:#8fa1b8;font-size:13px;">▶ Speed:</span>
-              ${[0.5,0.75,1,1.25,1.5,2].map(r=>`<button class="btn small ${r===1?'primary':'light'}" data-speed="${r}" onclick="setSpeed(${r},this)">${r}x</button>`).join('')}
-              <button class="btn small light" onclick="toggleFullscreen()" style="margin-left:auto;">⛶ Fullscreen</button>
+              ${[0.5,0.75,1,1.25,1.5,2].map(r=>`<button class="btn small ${r===1?'primary':'light'}" data-speed="${r}" data-action="set-speed" data-speed="${r}">${r}x</button>`).join('')}
+              <button class="btn small light" data-action="toggle-fullscreen" style="margin-left:auto;">⛶ Fullscreen</button>
             </div>`
          :`<iframe src="${current.url}" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>`}
        </div>
@@ -450,7 +450,7 @@ function studentCourses(s){
        <div style="background:linear-gradient(135deg,rgba(139,92,246,0.10),rgba(59,130,246,0.06)); padding:16px; border-radius:12px; border:1px solid rgba(139,92,246,0.25); margin-bottom:16px;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;"> <h3 style="margin:0; color:#c4b5fd; font-size:16px;">🤖 AI Lecture Overview</h3> <button class="btn small primary" data-action="ai-overview" data-id="${current.id}" data-title="${esc(current.title)}" data-module="${esc(current.module||'')}" data-overview="${esc(current.overview||'')}" data-url="${esc(current.video_url||current.url||'')}">✨ Get Overview</button> </div> <div id="ai_ov_result" style="display:none;"> <p id="ai_ov_text" style="margin:0; color:#dbe4f0; font-size:14px; line-height:1.7; white-space:pre-wrap;"></p> </div> <p id="ai_ov_hint" style="margin:0; color:#8fa1b8; font-size:13px;">One click — poori lecture ka khulasa yahin milega</p> </div> <div style="background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
          <h3 style="margin:0 0 12px; color:#edf5ff; font-size:16px;">📝 My Notes</h3>
          <textarea id="lessonNotes" placeholder="📝 Write your notes here..." style="width:100%; height:120px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:12px; color:#e2e8f0; font-family:inherit; resize:vertical; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">${esc(notes)}</textarea>
-         <button class="btn primary" style="margin-top:12px;" onclick="saveNotes('${current.id}')">Save Notes</button>
+         <button class="btn primary" style="margin-top:12px;" data-action="save-notes" data-id="${current.id}">Save Notes</button>
        </div>
     </div>
     <div style="flex: 0 0 300px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:16px; height:fit-content; max-height:800px; overflow-y:auto;">
