@@ -719,7 +719,7 @@ let dbAssignments = null;
 async function loadAssignments(){
   try{
     const {data,error} = await supabase.from('assignments').select('*').eq('status','active').order('created_at',{ascending:false});
-    if(!error) dbAssignments = data || [];
+    dbAssignments = error ? [] : (data || []);
   }catch(e){ dbAssignments = []; }
   if(adminView==='assignments'){const c=document.getElementById('adminContent'); if(c){c.innerHTML=adminAssignments(); bindGlobal(); bindForms();}}
 }
