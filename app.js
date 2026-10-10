@@ -964,7 +964,50 @@ function bindForms(){
  const cf=$('#classForm');if(cf)cf.onsubmit=e=>{e.preventDefault();const fd=new FormData(cf);state.classes.unshift({id:uid('CL'),title:String(fd.get('title')),trainer:String(fd.get('trainer')),date:String(fd.get('date')),time:String(fd.get('time')),batch:String(fd.get('batch')),status:'Upcoming',link:String(fd.get('link')||'#')});state.students.forEach(s=>notify(s.id,'New live class scheduled',`${String(fd.get('title'))} is scheduled for ${niceDate(String(fd.get('date')))}.`));save();closeModals();render();toast('Class added and students notified.');};
  const tf=$('#trendForm');if(tf)tf.onsubmit=e=>{e.preventDefault();const fd=new FormData(tf),t={id:uid('TR'),program:String(fd.get('program')),title:String(fd.get('title')),added:todayISO(),difficulty:String(fd.get('difficulty')),status:'New'};state.trends.unshift(t);state.students.forEach(s=>notify(s.id,'New creator trend',`${t.program}: ${t.title}`));save();closeModals();render();toast('Trend published and students notified.');};
  const prf=$('#programForm');if(prf)prf.onsubmit=e=>{e.preventDefault();const fd=new FormData(prf),name=String(fd.get('name')).trim(),desc=String(fd.get('desc')).trim();state.programs=state.programs||[];state.programs.push({id:uid('PG'),name,desc,code:name.slice(0,2).toUpperCase(),status:'Active'});save();closeModals();render();toast('Program added.');};
- const alf=$('#addLessonForm');if(alf)alf.onsubmit=async e=>{e.preventDefault();const fd=new FormData(alf);const title=String(fd.get('title')).trim(),module=String(fd.get('module')).trim(),duration=String(fd.get('duration')).trim();const vf=fd.get('videofile');let url=String(fd.get('url')||'').trim(),kind='embed';
+ // ── AI Overview (lazy-loaded, safe - no boot call) ──
+let GEMINI_API_KEY = '';
+let _geminiLoading = null;
+async function loadGeminiKey(){
+  if(GEMINI_API_KEY) return GEMINI_API_KEY;
+  if(_geminiLoading) return _geminiLoading;
+  _geminiLoading = (async()=>{
+    try{
+      const{data}=await supabase.from('app_settings').select('value').eq('key','gemini_api_key').maybeSingle();
+      if(data&&data.value) GEMINI_API_KEY=data.value;
+    }catch(e){}
+    return GEMINI_API_KEY;
+  })();
+  return _geminiLoading;
+}
+async function aiGenerate(prompt){
+  const key = await loadGeminiKey();
+  if(!key) throw new Error('AI key not configured');
+  const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key='+key,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
+  });
+  const data = await resp.json();
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if(!text) throw new Error('No AI response');
+  return text.trim();
+}
+window.generateAIOverview = async function(){
+  const form=document.getElementById('addLessonForm');
+  const titleEl=form?.querySelector('[name="title"]');
+  const descEl=form?.querySelector('[name="description"]');
+  const ovEl=form?.querySelector('[name="overview"]');
+  const btn=document.getElementById('ai_gen_btn');
+  const title=titleEl?.value.trim()||'', desc=descEl?.value.trim()||'';
+  if(!title){toast('Pehle lesson ka title likhen.');return;}
+  if(btn){btn.disabled=true;btn.textContent='⏳ Generating…';}
+  try{
+    const text=await aiGenerate(`Write a concise lecture overview (100-150 words) in simple English for a video lesson titled "${title}". ${desc?`Topic: "${desc}". `:''}Include what the student will learn and 3-4 key concepts as bullet points. Friendly tone.`);
+    if(ovEl) ovEl.value=text;
+    toast('✅ AI overview generated!');
+  }catch(e){ toast('AI failed: '+e.message); }
+  if(btn){btn.disabled=false;btn.textContent='🤖 Generate with AI';}
+};
+const alf=$('#addLessonForm');if(alf)alf.onsubmit=async e=>{e.preventDefault();const fd=new FormData(alf);const title=String(fd.get('title')).trim(),module=String(fd.get('module')).trim(),duration=String(fd.get('duration')).trim();const vf=fd.get('videofile');let url=String(fd.get('url')||'').trim(),kind='embed';
  if(vf&&vf.size>0){if(vf.size>500*1024*1024){toast('Video must be under 500MB.');return;} toast('⏳ Uploading video, please wait...');const ext=(String(vf.name).split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'')||'mp4';const fpath=Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;const {error:upErr}=await supabase.storage.from('lesson-videos').upload(fpath,vf,{contentType:vf.type||'video/mp4'}); if(upErr){toast('Upload failed: '+upErr.message);return;} url=supabase.storage.from('lesson-videos').getPublicUrl(fpath).data.publicUrl; kind='file';}
  if(!url){toast('Please upload a video file or paste a video URL.');return;}
  const mins=parseInt(String(duration).replace(/[^0-9]/g,''))||0; const {error:insErr}=await supabase.from('lessons').insert([{title,description:module,video_url:url,kind,duration_minutes:mins,status:'published'}]); if(insErr){toast('Could not save lesson: '+insErr.message);return;}
@@ -1330,6 +1373,19 @@ document.addEventListener('click', async e => {
     if (a === 'edit-course')        { editCourseModal(id); return; }
     if (a === 'reset-demo')         { if (confirm('Reset all local data?')) resetDemo(); return; }
     if (a === 'delete-lesson')      { if(!confirm('Delete this lesson?'))return; const {error:delErr}=await supabase.from('lessons').delete().eq('id',id); if(delErr){toast('Delete failed: '+delErr.message);return;} toast('Lesson deleted.'); loadLessons(); return; }
+    if (a === 'ai-overview') {
+      const btn=el, res=document.getElementById('ai_ov_result'), txt=document.getElementById('ai_ov_text');
+      const title=btn.getAttribute('data-title')||'', mod=btn.getAttribute('data-module')||'';
+      btn.disabled=true; btn.textContent='⏳ Generating…';
+      (async()=>{
+        try{
+          const text=await aiGenerate(`Write a concise lecture overview (100-150 words) in simple English for a video lesson titled "${title}". ${mod?`Topic: "${mod}". `:''}Include what the student will learn and 3-4 key concepts as bullet points. Friendly tone.`);
+          if(txt)txt.textContent=text; if(res)res.style.display='block';
+        }catch(e){ toast('AI failed: '+e.message); }
+        btn.disabled=false; btn.textContent='🤖 AI Lecture Overview';
+      })();
+      return;
+    }
     if (a === 'toggle-complete-lesson') {
       const s = currentStudent();
       if(!s.completedLessons) s.completedLessons = [];
