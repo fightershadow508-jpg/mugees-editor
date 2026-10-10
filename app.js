@@ -1441,15 +1441,26 @@ document.addEventListener('click', async e => {
     if (a === 'reset-demo')         { if (confirm('Reset all local data?')) resetDemo(); return; }
     if (a === 'delete-lesson')      { if(!confirm('Delete this lesson?'))return; const {error:delErr}=await supabase.from('lessons').delete().eq('id',id); if(delErr){toast('Delete failed: '+delErr.message);return;} toast('Lesson deleted.'); loadLessons(); return; }
     if (a === 'ai-overview') {
-      const btn=el, res=document.getElementById('ai_ov_result'), txt=document.getElementById('ai_ov_text');
-      const title=btn.getAttribute('data-title')||'', mod=btn.getAttribute('data-module')||'';
-      btn.disabled=true; btn.textContent='⏳ Generating…';
+      const btn=el, res=document.getElementById('ai_ov_result'), txt=document.getElementById('ai_ov_text'), hint=document.getElementById('ai_ov_hint');
+      const title=btn.getAttribute('data-title')||'', mod=btn.getAttribute('data-module')||'', saved=btn.getAttribute('data-overview')||'', videoUrl=btn.getAttribute('data-url')||'';
+      if(hint) hint.style.display='none';
+      if(res) res.style.display='block';
+      if(saved && txt){ txt.textContent=saved; return; }
+      btn.disabled=true; btn.textContent='⏳ Analyzing video…';
+      if(txt) txt.textContent='AI video dekh raha hai…';
       (async()=>{
         try{
-          const text=await aiGenerate(`Write a concise lecture overview (100-150 words) in simple English for a video lesson titled "${title}". ${mod?`Topic: "${mod}". `:''}Include what the student will learn and 3-4 key concepts as bullet points. Friendly tone.`);
-          if(txt)txt.textContent=text; if(res)res.style.display='block';
-        }catch(e){ toast('AI failed: '+e.message); }
-        btn.disabled=false; btn.textContent='🤖 AI Lecture Overview';
+          let text;
+          if(videoUrl){ text = await aiAnalyzeVideo(videoUrl, title, mod); }
+          else { text = await aiGenerate('Write a concise lecture overview (100-150 words) in simple English for "'+title+'". Topic: "'+mod+'". Include 3-4 key points.'); }
+          if(txt) txt.textContent=text;
+        }catch(e){
+          try{
+            const fb = await aiGenerate('Write a concise lecture overview (100-150 words) in simple English for a video lesson titled "'+title+'".');
+            if(txt) txt.textContent=fb+'\n\n(Note: video analysis unavailable)';
+          }catch(e2){ if(txt) txt.textContent='AI failed: '+e.message; }
+        }
+        btn.disabled=false; btn.textContent='✨ Get Overview';
       })();
       return;
     }
