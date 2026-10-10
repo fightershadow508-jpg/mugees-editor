@@ -1015,9 +1015,9 @@ async function loadGeminiKey(){
   if(_geminiLoading) return _geminiLoading;
   _geminiLoading = (async()=>{
     try{
-      const res = await supabase.from('app_settings').select('value').eq('key','gemini_api_key').maybeSingle();
-      if(res.error){ console.error('Gemini key fetch error:', res.error); throw new Error('Key fetch failed: '+res.error.message); }
-      if(res.data && res.data.value){ GEMINI_API_KEY = String(res.data.value).trim(); }
+      const res = await supabase.rpc('get_gemini_key');
+      if(res.error){ console.error('Gemini key RPC error:', res.error); throw new Error('Key fetch failed'); }
+      if(res.data){ GEMINI_API_KEY = String(res.data).trim(); }
     }catch(e){ console.error('loadGeminiKey failed:', e); throw e; }
     return GEMINI_API_KEY;
   })();
