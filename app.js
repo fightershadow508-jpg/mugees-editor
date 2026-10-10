@@ -1059,7 +1059,9 @@ function bindForms(){
 function fmtSize(b){ if(b>1073741824)return (b/1073741824).toFixed(2)+' GB'; if(b>1048576)return (b/1048576).toFixed(1)+' MB'; return Math.round(b/1024)+' KB'; }
 function fmtTime(s){ s=Math.round(s); if(s<60)return s+'s'; return Math.floor(s/60)+'m '+(s%60)+'s'; }
 // ── AI Overview (Google Gemini) ──
-const GEMINI_API_KEY = ''; // <-- Admin: paste your free Gemini API key here (from https://aistudio.google.com/apikey)
+let GEMINI_API_KEY = '';
+async function loadGeminiKey(){ try{ const{data}=await supabase.from('app_settings').select('value').eq('key','gemini_api_key').maybeSingle(); if(data&&data.value)GEMINI_API_KEY=data.value; }catch(e){} }
+loadGeminiKey();
 window.generateAIOverview = async function(){
   const titleEl=document.querySelector('#addLessonForm [name="title"]');
   const descEl=document.querySelector('#addLessonForm [name="description"]');
