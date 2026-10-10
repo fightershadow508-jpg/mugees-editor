@@ -1446,13 +1446,17 @@ document.addEventListener('click', async e => {
       if(hint) hint.style.display='none';
       if(res) res.style.display='block';
       if(saved && txt){ txt.textContent=saved; return; }
-      btn.disabled=true; btn.textContent='⏳ Analyzing video…';
-      if(txt) txt.textContent='AI video dekh raha hai…';
+      btn.disabled=true; btn.textContent='\u23f3 Analyzing video\u2026';
+      if(txt) txt.textContent='AI video dekh raha hai\u2026';
       (async()=>{
         try{
+          // Get API key via secure RPC (inline, no helper function)
+          const kRes = await supabase.rpc('get_gemini_key');
+          if(kRes.error) throw new Error('Key fetch failed');
+          const vkey = String(kRes.data||'').trim();
+          if(!vkey) throw new Error('AI key not configured');
           let text;
           if(videoUrl){
-            const vkey = await loadGeminiKey();
             const vresp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key='+vkey,{
               method:'POST',headers:{'Content-Type':'application/json'},
               body:JSON.stringify({contents:[{parts:[
@@ -1460,19 +1464,22 @@ document.addEventListener('click', async e => {
                 {file_data:{mime_type:'video/mp4', file_uri:videoUrl}}
               ]}]})
             });
+            if(!vresp.ok) throw new Error('Video API error '+vresp.status);
             const vdata = await vresp.json();
             text = vdata?.candidates?.[0]?.content?.parts?.[0]?.text;
-            if(!text) throw new Error('Video analysis returned no text');
+            if(!text) throw new Error('No video analysis result');
+          } else {
+            const gresp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key='+vkey,{
+              method:'POST',headers:{'Content-Type':'application/json'},
+              body:JSON.stringify({contents:[{parts:[{text:'Write a concise lecture overview (100-150 words) in simple English for "'+title+'". Topic: "'+mod+'". Include 3-4 key points.'}]}]})
+            });
+            const gdata = await gresp.json();
+            text = gdata?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if(!text) throw new Error('No AI response');
           }
-          else { text = await aiGenerate('Write a concise lecture overview (100-150 words) in simple English for "'+title+'". Topic: "'+mod+'". Include 3-4 key points.'); }
-          if(txt) txt.textContent=text;
-        }catch(e){
-          try{
-            const fb = await aiGenerate('Write a concise lecture overview (100-150 words) in simple English for a video lesson titled "'+title+'".');
-            if(txt) txt.textContent=fb+'\n\n(Note: video analysis unavailable)';
-          }catch(e2){ if(txt) txt.textContent='AI failed: '+e.message; }
-        }
-        btn.disabled=false; btn.textContent='✨ Get Overview';
+          if(txt) txt.textContent=text.trim();
+        }catch(e){ if(txt) txt.textContent='AI failed: '+e.message; }
+        btn.disabled=false; btn.textContent='\u2728 Get Overview';
       })();
       return;
     }
