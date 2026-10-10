@@ -1073,7 +1073,7 @@ window.generateAIOverview = async function(){
   if(btn){btn.disabled=true; btn.textContent='⏳ Generating…';}
   try{
     const prompt=`You are a helpful course assistant. Write a concise, engaging lecture overview (100-150 words) in simple English for a video lesson titled "${title}". ${desc?`Lesson description/module: "${desc}".`:''} Cover: what the student will learn, 3-4 key concepts, and why it matters. Use bullet points for key concepts. Tone: friendly and motivating.`;
-    const resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key='+GEMINI_API_KEY,{
+    const resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+GEMINI_API_KEY,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
     });
@@ -1489,7 +1489,7 @@ document.addEventListener('click', async e => {
       (async()=>{
         try{
           const prompt=`You are a helpful course assistant. Write a concise, engaging lecture overview (100-150 words) in simple English for a video lesson titled "${title}". ${mod?`Module/topic: "${mod}".`:''} Cover: what the student will learn, 3-4 key concepts, and why it matters. Use bullet points. Tone: friendly and motivating.`;
-          const resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key='+GEMINI_API_KEY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
+          const resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+GEMINI_API_KEY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
           const data=await resp.json();
           const text=data?.candidates?.[0]?.content?.parts?.[0]?.text;
           if(!text)throw new Error('No response');
