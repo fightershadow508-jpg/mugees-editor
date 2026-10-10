@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html><head><title>JS Test</title></head>
+<body>
+<div id="result">Testing...</div>
+<script>document.getElementById('result').textContent = 'INLINE JS WORKS';</script>
+<script type="module">
+document.getElementById('result').textContent += ' + MODULE JS WORKS';
+import { supabase } from './supabase-client.js';
+document.getElementById('result').textContent += ' + SUPABASE IMPORT WORKS';
+</script>
+</body></html>
