@@ -78,20 +78,8 @@
     <div class="modal-card" id="genericModalBody"></div>
   </div>
 
-  <script>
-window.appErrors = [];
-window.addEventListener('error', function(e){
-  window.appErrors.push(e.message + ' @ ' + (e.filename||'') + ':' + (e.lineno||''));
-  var app = document.getElementById('app');
-  if(app && app.innerHTML.trim()===''){
-    app.innerHTML = '<div style="max-width:600px;margin:60px auto;padding:24px;background:#fff;border-radius:16px;"><h3>Debug: '+window.appErrors.join('<br>')+'</h3><button onclick="location.reload()" style="padding:10px 20px;">Retry</button></div>';
-  }
-}, true);
-window.addEventListener('unhandledrejection', function(e){
-  window.appErrors.push('Promise: ' + (e.reason && e.reason.message || e.reason));
-});
-</script>
-<script type="module" src="app.js"></script>
+  
+<script type="module" src="app.js?v=1791621827"></script>
 <script>
 // Boot watchdog: if app fails to load, show retry
 setTimeout(function(){
