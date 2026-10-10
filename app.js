@@ -421,7 +421,7 @@ window.saveNotes = async function(id) {
   const st=document.getElementById('notesStatus'); const say=t=>{if(st)st.textContent=t;};
   try{const uid=await getUid(); if(!uid)throw new Error('no session');
     const{error}=await supabase.from('lesson_notes').upsert({student_id:uid,lesson_id:id,notes:val,updated_at:new Date().toISOString()},{onConflict:'student_id,lesson_id'});
-    if(error)throw error; say('✅ Saved — ye notes isi lesson mein rahenge.'); toast('✅ Notes Saved!');
+    if(error)throw error; say('✅ Saved'); toast('✅ Notes Saved!');
   }catch(e){ say('⚠️ Locally saved (login required for cloud).'); toast('✅ Notes Saved!'); }
 };
 
@@ -485,7 +485,7 @@ function studentCourses(s){
       <div style="background:#000;border-radius:12px;overflow:hidden;aspect-ratio:16/9;">${player}</div><div id="videoErr" style="display:none;color:#f87171;font-size:13px;margin-top:8px;"></div>
       <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);">
         <h3 style="margin:0 0 12px;color:#edf5ff;font-size:16px;">📝 My Notes <small style="color:#748195;font-weight:normal;">— saved for this lesson</small></h3>
-        <textarea id="lessonNotes" data-lesson="${current.id}" placeholder="Is lesson ke notes yahan likhen… ye isi lesson mein save rahenge." style="width:100%;height:120px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px;color:#e2e8f0;font-family:inherit;resize:vertical;outline:none;">Loading…</textarea>
+        <textarea id="lessonNotes" data-lesson="${current.id}" placeholder="📝 Apne notes yahan likhen…" style="width:100%;height:120px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px;color:#e2e8f0;font-family:inherit;resize:vertical;outline:none;"></textarea>
         <div style="display:flex;gap:10px;align-items:center;margin-top:12px;"><button class="btn primary" data-action="save-notes" data-id="${current.id}">💾 Save Notes</button><small id="notesStatus" style="color:#748195;"></small></div>
       </div>
     </div>
