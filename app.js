@@ -784,7 +784,7 @@ document.addEventListener('submit', async function(e){
     if(!title || !desc){ toast('Title and description required.'); return; }
     try{
       let uid=null; try{ const s=await supabase.auth.getSession(); uid=s&&s.data&&s.data.session&&s.data.session.user?s.data.session.user.id:null; }catch(_){}
-      const {error} = await supabase.from('assignments').insert({title: title, description: desc, deadline: dl, created_by: uid, status: 'active'});
+      const {error} = await supabase.rpc('admin_create_assignment', {p_title: title, p_description: desc, p_deadline: dl});
       if(error) throw error;
       toast('Assignment published!');
       dbAssignments = null;
