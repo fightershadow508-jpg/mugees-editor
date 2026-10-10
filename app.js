@@ -1152,6 +1152,12 @@ function bindMobileMenu() {
 }
 function route(){const r=(location.hash||'#/').replace(/^#\//,'').split('?')[0];return r||'home'}
 function render(){syncHeader();const r=route();const app=$('#app');$('#year').textContent=new Date().getFullYear();$('#siteFooter').classList.toggle('hidden',r==='dashboard'||r==='admin');let html='';switch(r){case'home':html=homePage();break;case'courses':html=coursesPage();break;case'programs':html=programsPage();break;case'live':html=livePage();break;case'how-it-works':html=howPage();break;case'faq':html=faqPage();break;case'contact':html=contactPage();break;case'dashboard':html=studentDashboard();break;case'admin':html=adminDashboard();break;case'terms':case'privacy':case'payout-policy':case'refund-policy':case'earnings-policy':case'earnings-disclaimer':case'community-guidelines':html=legalPage(r);break;default:html=`${pageHero('Page not found','The page you requested does not exist.')}<section class="section"><a class="btn primary" href="#/">Back Home</a></section>`}app.innerHTML=html;try{bindGlobal();}catch(e){console.warn('bindGlobal error:',e);}window.scrollTo({top:0,behavior:'instant'});syncActiveLinks();
+ // ── Lock zoom on auth modal ──
+ if(!window._zoomLockInit){window._zoomLockInit=true;
+  document.addEventListener('gesturestart',function(e){var m=document.getElementById('authModal');if(m&&m.classList.contains('open'))e.preventDefault();});
+  document.addEventListener('wheel',function(e){var m=document.getElementById('authModal');if(m&&m.classList.contains('open')&&e.ctrlKey)e.preventDefault();},{passive:false});
+  document.addEventListener('keydown',function(e){var m=document.getElementById('authModal');if(m&&m.classList.contains('open')&&e.ctrlKey&&['+','-','=','0'].includes(e.key))e.preventDefault();});
+ }
  try{var _ab=document.querySelector('.side-nav button.active');if(_ab)_ab.scrollIntoView({block:'nearest',inline:'nearest'});}catch(_e){}}
 function syncActiveLinks(){
   const r=route();
