@@ -362,13 +362,17 @@ function studentSidebar(s){
 window.loadEarnings = async function(sId) {
   try {
     const { data, error } = await supabase.from('earnings').select('*').eq('student_id', sId);
-    if (!error && data) {
-      const fetched = data.map(d => ({ amount: Number(d.amount), date: d.date || (d.created_at ? d.created_at.split('T')[0] : todayISO()), program: d.program || 'Creator Program', studentId: sId }));
-      state.earnings = state.earnings.filter(e => e.studentId !== sId).concat(fetched);
-      save();
-      if (route() === 'dashboard' && currentStudent()?.id === sId) {
-         const dashContent = document.getElementById('dashContent');
-         if(dashContent) { dashContent.innerHTML = studentView(currentStudent()); bindGlobal(); }
+    if (!error && data && data.length > 0) {
+      const fetched = data.map(d => ({ id: d.id, amount: Number(d.amount), date: d.earning_date || (d.created_at ? d.created_at.split('T')[0] : todayISO()), program: d.description || 'Creator Program', studentId: sId }));
+      const localIds = new Set(state.earnings.map(e => String(e.id)));
+      const newOnes = fetched.filter(f => !localIds.has(String(f.id)));
+      if (newOnes.length > 0) {
+        state.earnings = state.earnings.concat(newOnes);
+        save();
+        if (route() === 'dashboard' && currentStudent()?.id === sId) {
+           const dashContent = document.getElementById('dashContent');
+           if(dashContent) { dashContent.innerHTML = studentView(currentStudent()); bindGlobal(); }
+        }
       }
     }
   } catch(e) { console.error('Earnings fetch error:', e); /* Fail gracefully, original zero state remains */ }
