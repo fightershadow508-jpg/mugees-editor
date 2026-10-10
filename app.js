@@ -770,6 +770,47 @@ async function loadMySubmissions(){
   }catch(e){}
 }
 
+
+// Assignment form submit handler
+document.addEventListener('submit', async function(e){
+  const aaf = e.target.closest ? e.target.closest('#addAssignmentForm') : null;
+  if(aaf){
+    e.preventDefault();
+    const fd = new FormData(aaf);
+    const title = String(fd.get('title')||'').trim();
+    const desc = String(fd.get('description')||'').trim();
+    const dl = String(fd.get('deadline')||'').trim() || null;
+    if(!title || !desc){ toast('Title and description required.'); return; }
+    try{
+      const uid = await getUid();
+      const {error} = await supabase.from('assignments').insert({title: title, description: desc, deadline: dl, created_by: uid, status: 'active'});
+      if(error) throw error;
+      toast('Assignment published!');
+      dbAssignments = null;
+      await loadAssignments();
+    }catch(err){ toast('Failed: ' + err.message); }
+    return;
+  }
+  const sf = e.target.closest ? e.target.closest('form[data-assignment-form]') : null;
+  if(sf){
+    e.preventDefault();
+    const aid = sf.getAttribute('data-assignment-form');
+    const fd = new FormData(sf);
+    const stext = String(fd.get('stext')||'').trim();
+    const surl = String(fd.get('surl')||'').trim();
+    if(!stext){ toast('Please describe your work.'); return; }
+    try{
+      const uid = await getUid();
+      if(!uid) throw new Error('Login required');
+      const {error} = await supabase.from('assignment_submissions').upsert({assignment_id: aid, student_id: uid, submission_text: stext, submission_url: surl||null, status: 'submitted'}, {onConflict: 'assignment_id,student_id'});
+      if(error) throw error;
+      toast('Assignment submitted!');
+      await loadMySubmissions();
+    }catch(err){ toast('Failed: ' + err.message); }
+    return;
+  }
+});
+
 function adminCourses(){return `<div class="subpage-head"><div><h1>Courses</h1><p style="color:#748195">Manage curriculum, modules and student learning paths.</p></div></div><div class="cards">${state.courses.map(c=>`<div class="card"><span class="pill">${c.lessons} modules</span><h3 style="margin-top:14px">${esc(c.title)}</h3><p>${esc(c.desc)}</p><ul class="feature-list">${c.modules.map(m=>`<li>${esc(m)}</li>`).join('')}</ul><button class="btn light" data-action="edit-course" data-id="${c.id}">Edit Course</button></div>`).join('')}</div>`}
 function adminLive(){return `<div class="subpage-head"><div><h1>Curriculum</h1><p style="color:#748195">Schedule classes and publish recordings.</p></div><button class="btn primary" data-action="add-class">+ Add Class</button></div><div class="panel"><table class="table"><thead><tr><th>Class</th><th>Date</th><th>Time</th><th>Trainer</th><th>Status</th></tr></thead><tbody>${state.classes.map(c=>`<tr><td>${esc(c.title)}</td><td>${niceDate(c.date)}</td><td>${esc(c.time)}</td><td>${esc(c.trainer)}</td><td><span class="tag ${c.status==='Upcoming'?'orange':'green'}">${esc(c.status)}</span></td></tr>`).join('')}</tbody></table></div>`}
 function adminPrograms(){return `<div class="subpage-head"><div><h1>Creator Programs</h1><p style="color:#748195">Manage current programs and add future creator apps.</p></div><button class="btn primary" data-action="add-program">+ Add Program</button></div><div class="cards">${(state.programs||[]).map(p=>`<div class="card"><div class="icon-tile">${esc(p.code||p.name.slice(0,2).toUpperCase())}</div><h3>${esc(p.name)}</h3><p>${esc(p.desc)}</p><span class="tag green">${esc(p.status||'Active')}</span></div>`).join('')}</div>`}
