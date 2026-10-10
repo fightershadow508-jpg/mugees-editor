@@ -1431,6 +1431,31 @@ document.addEventListener('click', async e => {
       return;
     }
     if (a === 'ai-generate-overview') { e.preventDefault(); if(window.generateAIOverview) window.generateAIOverview(); return; }
+if (a === 'play-lesson') { playLesson(id); return; }
+    if (a === 'toggle-module') { var mn=actionEl.getAttribute('data-module'); if(!state.expandedModules)state.expandedModules={}; state.expandedModules[mn]=state.expandedModules[mn]===false?true:false; save(); var dd=document.getElementById('dashContent'); if(dd){dd.innerHTML=studentView(currentStudent());bindGlobal();} return; }
+    if (a === 'set-speed') { var r=parseFloat(actionEl.getAttribute('data-speed')); var vv=document.getElementById('lessonVideo'); if(vv)vv.playbackRate=r; document.querySelectorAll('[data-action="set-speed"]').forEach(function(b){var on=parseFloat(b.getAttribute('data-speed'))===r;b.classList.toggle('primary',on);b.classList.toggle('light',!on);}); return; }
+    if (a === 'toggle-fullscreen') { var vf=document.getElementById('lessonVideo'); if(vf){ if(document.fullscreenElement)document.exitFullscreen(); else if(vf.requestFullscreen)vf.requestFullscreen(); else if(vf.webkitEnterFullscreen)vf.webkitEnterFullscreen(); } return; }
+    if (a === 'save-notes') { saveNotes(id); return; }
+    if (a === 'view-submissions') { e.preventDefault(); loadSubmissions(id); return; }
+    if (a === 'delete-assignment') { e.preventDefault(); if(confirm('Delete this assignment?')){ supabase.from('assignments').delete().eq('id',id).then(()=>{toast('Deleted.'); dbAssignments=null; loadAssignments();}); } return; }
+    if (a === 'ai-overview') {
+      const btn=el, res=document.getElementById('ai_ov_result'), txt=document.getElementById('ai_ov_text');
+      const title=btn.getAttribute('data-title')||'', mod=btn.getAttribute('data-module')||'';
+      if(!GEMINI_API_KEY){toast('⚠️ AI available nahi hai.');return;}
+      btn.disabled=true; btn.textContent='⏳ Generating…';
+      (async()=>{
+        try{
+          const prompt=`You are a helpful course assistant. Write a concise, engaging lecture overview (100-150 words) in simple English for a video lesson titled "${title}". ${mod?`Module/topic: "${mod}".`:''} Cover: what the student will learn, 3-4 key concepts, and why it matters. Use bullet points. Tone: friendly and motivating.`;
+          const resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+GEMINI_API_KEY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
+          const data=await resp.json();
+          const text=data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if(!text)throw new Error('No response');
+          if(txt)txt.textContent=text.trim(); if(res)res.style.display='block';
+        }catch(e){ toast('AI failed: '+e.message); }
+        btn.disabled=false; btn.textContent='🤖 AI Lecture Overview';
+      })();
+      return;
+    }
     if (a === 'toggle-complete-lesson') {
       const s = currentStudent();
       if(!s.completedLessons) s.completedLessons = [];
