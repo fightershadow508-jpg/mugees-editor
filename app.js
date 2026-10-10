@@ -345,7 +345,7 @@ function sparkline(values) {
 function studentSidebar(s){
   const ac = state.adminControls || { showLeaderboard: true, showTrends: true, showWithdrawals: true };
   const uc = state.unreadCounts || { trends: 0, adminSupport: 0 };
-  let items=[['overview','🏠 Dashboard'],['courses','📚 My Courses'],['live','🎥 Curriculum']];
+  let items=[['overview','🏠 Dashboard'],['courses','📚 My Courses'],['assignments','📝 Assignments'],['live','🎥 Curriculum']];
   if(ac.showTrends) items.push(['trends','🔥 Trends']);
   items.push(['performance','📊 Performance'],['earnings','💰 Earnings']);
   if(ac.showLeaderboard) items.push(['leaderboard','🏆 Leaderboard']);
@@ -376,7 +376,7 @@ window.loadEarnings = async function(sId) {
 
 function studentDashboard(){if(!state.session||state.session.role!=='student'){openAuth('login');location.hash='#/';return homePage()}const s=currentStudent(); loadEarnings(s.id); return `<div class="dashboard-page"><div class="dashboard-shell">${studentSidebar(s)}<section class="dashboard-main" id="dashContent">${studentView(s)}</section></div></div>`}
 function studentView(s){
- if(dashView==='courses') return studentCourses(s);
+ if(dashView==='courses') return studentCourses(s); if(dashView==='assignments') return studentAssignments(s);
  if(dashView==='live') return studentLive(s);
  if(dashView==='trends') return studentTrends(s);
  if(dashView==='performance') return studentPerformance(s);
@@ -659,12 +659,12 @@ function studentSupport(s=currentStudent()){
 function adminSidebar(){
   if(!state.unreadCounts) state.unreadCounts = { trends: 0, adminSupport: 0, withdrawals: 0, kyc: 0, approvals: 0 };
   const uc = state.unreadCounts;
-  const items=[['overview','🏠 Overview'],['students','👥 Students'],['approvals','✅ Approvals'],['kyc','🆔 KYC Approvals'],['curriculum','📤 Video Upload'],['courses','📚 Courses'],['live','🎥 Curriculum'],['programs','🧩 Programs'],['trends','🔥 Trends'],['earnings','💰 Earnings'],['withdrawals','🏦 Withdrawals'],['notifications','🔔 Notify'],['support','💬 Support'],['settings','⚙️ Settings']];
+  const items=[['overview','🏠 Overview'],['students','👥 Students'],['approvals','✅ Approvals'],['kyc','🆔 KYC Approvals'],['curriculum','📤 Video Upload'],['assignments','📝 Assignments'],['courses','📚 Courses'],['live','🎥 Curriculum'],['programs','🧩 Programs'],['trends','🔥 Trends'],['earnings','💰 Earnings'],['withdrawals','🏦 Withdrawals'],['notifications','🔔 Notify'],['support','💬 Support'],['settings','⚙️ Settings']];
   return `<aside class="sidebar"><div class="side-profile"><strong>${esc(state.admin.name)}</strong><div style="margin-top:5px"><span class="role-badge role-admin">Admin</span></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${adminView===id?'active':''}" data-admin="${id}" style="display:flex;justify-content:space-between;align-items:center;"><span>${l}</span>${id==='support' && uc.adminSupport>0?`<span class="nav-badge">${uc.adminSupport}</span>`:id==='withdrawals' && uc.withdrawals>0?`<span class="nav-badge">${uc.withdrawals}</span>`:id==='kyc' && uc.kyc>0?`<span class="nav-badge">${uc.kyc}</span>`:id==='approvals' && uc.approvals>0?`<span class="nav-badge">${uc.approvals}</span>`:''}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`
 }
 function adminDashboard(){if(!state.session||state.session.role!=='admin'){openAuth('login');location.hash='#/';return homePage()}return `<div class="dashboard-page"><div class="dashboard-shell">${adminSidebar()}<section class="dashboard-main" id="adminContent">${adminPanel()}</section></div></div>`}
 function adminPanel(){
- if(adminView==='students') return adminStudents(); if(adminView==='approvals') return adminApprovals(); if(adminView==='kyc') return adminKYC(); if(adminView==='curriculum') return adminCurriculum(); if(adminView==='courses') return adminCourses(); if(adminView==='live') return adminLive(); if(adminView==='programs') return adminPrograms(); if(adminView==='trends') return adminTrends(); if(adminView==='earnings') return adminEarnings(); if(adminView==='withdrawals') return adminWithdrawals(); if(adminView==='notifications') return adminNotify(); if(adminView==='support') return adminSupport(); if(adminView==='settings') return adminSettings();
+ if(adminView==='students') return adminStudents(); if(adminView==='approvals') return adminApprovals(); if(adminView==='kyc') return adminKYC(); if(adminView==='curriculum') return adminCurriculum(); if(adminView==='assignments') return adminAssignments(); if(adminView==='courses') return adminCourses(); if(adminView==='live') return adminLive(); if(adminView==='programs') return adminPrograms(); if(adminView==='trends') return adminTrends(); if(adminView==='earnings') return adminEarnings(); if(adminView==='withdrawals') return adminWithdrawals(); if(adminView==='notifications') return adminNotify(); if(adminView==='support') return adminSupport(); if(adminView==='settings') return adminSettings();
  const pending=state.withdrawals.filter(w=>w.status==='Pending').length,totalPaid=state.withdrawals.filter(w=>w.status==='Paid').reduce((a,b)=>a+b.amount,0);
  const totalRevenue = state.students.reduce((sum, s) => sum + (Number(s.lifetime) || 0), 0);
  const activeSubs = state.students.filter(s => s.status !== 'Suspended').length;
@@ -770,6 +770,62 @@ function adminCurriculum(){
     </div>
   </div>`;
 }
+// ── ASSIGNMENTS ──
+let dbAssignments = null;
+async function loadAssignments(){
+  try{
+    const {data,error} = await supabase.from('assignments').select('*').eq('status','active').order('created_at',{ascending:false});
+    if(!error) dbAssignments = data || [];
+  }catch(e){ dbAssignments = []; }
+  if(adminView==='assignments'){const c=document.getElementById('adminContent'); if(c){c.innerHTML=adminAssignments(); bindGlobal(); bindForms();}}
+}
+function adminAssignments(){
+  if(dbAssignments===null){loadAssignments();return `<div class="subpage-head"><div><h1>Assignments</h1><p style="color:#748195">Loading…</p></div></div>`;}
+  const list = dbAssignments||[];
+  return `<div class="subpage-head"><div><h1>📝 Assignments</h1><p style="color:#748195">Create assignments for students and review submissions.</p></div></div>
+  <div class="dashboard-grid"><form class="panel" id="addAssignmentForm"><h3>New Assignment</h3>
+    <div class="field"><label>Title</label><input required name="title" placeholder="e.g. CapCut Transitions Practice"></div>
+    <div class="field"><label>Description / Instructions</label><textarea required name="description" rows="4" placeholder="What should the student do?"></textarea></div>
+    <div class="field"><label>Deadline (optional)</label><input type="date" name="deadline"></div>
+    <button class="btn primary" type="submit">Publish Assignment</button></form>
+  <div class="panel"><h3>Published (${list.length})</h3><div class="list" style="margin-top:14px">
+    ${list.length===0?'<div class="empty">No assignments yet.</div>':list.map(a=>`<div class="list-item"><div class="meta"><strong>${esc(a.title)}</strong><small>${a.deadline?'Deadline: '+niceDate(a.deadline):'No deadline'} · <a href="#" data-action="view-submissions" data-id="${a.id}" style="color:#8b5cf6;">View submissions</a> | <a href="#" data-action="delete-assignment" data-id="${a.id}" style="color:#ef4444;">Delete</a></small></div></div>`).join('')}
+  </div></div></div>
+  <div class="panel" id="submissionsPanel" style="margin-top:16px;display:none;"><h3>Submissions</h3><div id="submissionsList"><div class="empty">Select "View submissions" on an assignment.</div></div></div>`;
+}
+async function loadSubmissions(assignmentId){
+  const panel=document.getElementById('submissionsPanel'), listEl=document.getElementById('submissionsList');
+  if(panel)panel.style.display='block';
+  if(listEl)listEl.innerHTML='<div class="empty">Loading submissions…</div>';
+  try{
+    const {data,error}=await supabase.from('assignment_submissions').select('*,profiles!assignment_submissions_student_id_fkey(name,email)').eq('assignment_id',assignmentId).order('submitted_at',{ascending:false});
+    if(error)throw error;
+    if(listEl)listEl.innerHTML=(data||[]).length===0?'<div class="empty">No submissions yet.</div>':`<div class="list">${data.map(s=>`<div class="list-item"><div class="meta"><strong>${esc(s.profiles?.name||'Student')}</strong><small>${esc(s.profiles?.email||'')} · ${new Date(s.submitted_at).toLocaleString()}</small><p style="margin:8px 0 0;color:#c4b5fd;">${esc(s.submission_text||'')}</p>${s.submission_url?`<a href="${esc(s.submission_url)}" target="_blank" style="color:#8b5cf6;font-size:13px;">🔗 View link</a>`:''}</div><span class="tag green">${esc(s.status)}</span></div>`).join('')}</div>`;
+    if(panel)panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }catch(e){ if(listEl)listEl.innerHTML='<div class="empty">Failed to load: '+esc(e.message)+'</div>'; }
+}
+function studentAssignments(s){
+  if(dbAssignments===null){loadAssignments();return `<div class="subpage-head"><div><h1>Assignments</h1><p style="color:#748195">Loading…</p></div></div>`;}
+  const list=dbAssignments||[];
+  const sub=(s.assignmentSubs||{});
+  return `<div class="subpage-head"><div><h1>📝 Assignments</h1><p style="color:#748195">Complete and submit your assignments.</p></div></div>
+  ${list.length===0?'<div class="empty">No assignments yet. Check back soon!</div>':`<div class="cards" style="grid-template-columns:1fr;">${list.map(a=>{
+    const done=sub[a.id];
+    return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:start;"><h3 style="margin:0;">${esc(a.title)}</h3>${done?'<span class="tag green">✅ Submitted</span>':a.deadline?'<span class="tag orange">Due: '+niceDate(a.deadline)+'</span>':''}</div>
+    <p style="color:#8fa1b8;margin:10px 0;">${esc(a.description||'')}</p>
+    ${done?`<div class="notice">Submitted on ${new Date(done.submitted_at).toLocaleString()}</div>`:
+    `<form data-assignment-form="${a.id}" style="margin-top:12px;"><div class="field"><label>Your answer / work description</label><textarea name="stext" rows="3" required placeholder="Describe what you did…"></textarea></div><div class="field"><label>Link (optional — video/post URL)</label><input name="surl" placeholder="https://…"></div><button class="btn primary" type="submit">Submit Assignment</button></form>`}
+    </div>`;}).join('')}</div>`}`;
+}
+async function loadMySubmissions(){
+  try{
+    const uid=await getUid(); if(!uid)return;
+    const {data}=await supabase.from('assignment_submissions').select('assignment_id,submitted_at').eq('student_id',uid);
+    const s=currentStudent(); if(s){s.assignmentSubs={}; (data||[]).forEach(r=>s.assignmentSubs[r.assignment_id]=r); save();}
+    if(dashView==='assignments'){const d=document.getElementById('dashContent'); if(d){d.innerHTML=studentView(currentStudent()); bindGlobal();}}
+  }catch(e){}
+}
+
 function adminCourses(){return `<div class="subpage-head"><div><h1>Courses</h1><p style="color:#748195">Manage curriculum, modules and student learning paths.</p></div></div><div class="cards">${state.courses.map(c=>`<div class="card"><span class="pill">${c.lessons} modules</span><h3 style="margin-top:14px">${esc(c.title)}</h3><p>${esc(c.desc)}</p><ul class="feature-list">${c.modules.map(m=>`<li>${esc(m)}</li>`).join('')}</ul><button class="btn light" data-action="edit-course" data-id="${c.id}">Edit Course</button></div>`).join('')}</div>`}
 function adminLive(){return `<div class="subpage-head"><div><h1>Curriculum</h1><p style="color:#748195">Schedule classes and publish recordings.</p></div><button class="btn primary" data-action="add-class">+ Add Class</button></div><div class="panel"><table class="table"><thead><tr><th>Class</th><th>Date</th><th>Time</th><th>Trainer</th><th>Status</th></tr></thead><tbody>${state.classes.map(c=>`<tr><td>${esc(c.title)}</td><td>${niceDate(c.date)}</td><td>${esc(c.time)}</td><td>${esc(c.trainer)}</td><td><span class="tag ${c.status==='Upcoming'?'orange':'green'}">${esc(c.status)}</span></td></tr>`).join('')}</tbody></table></div>`}
 function adminPrograms(){return `<div class="subpage-head"><div><h1>Creator Programs</h1><p style="color:#748195">Manage current programs and add future creator apps.</p></div><button class="btn primary" data-action="add-program">+ Add Program</button></div><div class="cards">${(state.programs||[]).map(p=>`<div class="card"><div class="icon-tile">${esc(p.code||p.name.slice(0,2).toUpperCase())}</div><h3>${esc(p.name)}</h3><p>${esc(p.desc)}</p><span class="tag green">${esc(p.status||'Active')}</span></div>`).join('')}</div>`}
@@ -1238,6 +1294,7 @@ document.addEventListener('click', async e => {
     if (d === 'trends' && state.unreadCounts?.trends > 0) { state.unreadCounts.trends = 0; save(); }
     if (d === 'notifications' && state.session?.role === 'student') { const s = currentStudent(); if(s.unreadCounts?.studentAlerts > 0) { s.unreadCounts.studentAlerts = 0; save(); } }
     dashView = d;
+    if(d==='assignments'){loadAssignments(); loadMySubmissions();}
     const mm = document.getElementById('mobileMenu');
     if (mm) mm.classList.remove('open');
     if (route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } else { render(); }
@@ -1254,6 +1311,7 @@ document.addEventListener('click', async e => {
     adminView = d;
     if(d==='approvals')loadApprovals();
     if(d==='curriculum')loadLessons();
+    if(d==='assignments')loadAssignments();
     const mm = document.getElementById('mobileMenu');
     if (mm) mm.classList.remove('open');
     if (route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
