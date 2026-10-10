@@ -1251,10 +1251,7 @@ function syncActiveLinks(){
 window.addEventListener('click', e => { if (e.target.closest('#mobileMenu a, #mobileMenu button, .mobile-menu a, .mobile-menu button')) { const mm = document.getElementById('mobileMenu'); if (mm) mm.classList.remove('open'); } });
 window.addEventListener('hashchange',()=>{$('#mobileMenu').classList.remove('open');render();});
 window.addEventListener('mousedown',e=>{if(e.target.classList.contains('modal'))closeModals();});
-try{ render(); }catch(err){
-  var app=document.getElementById('app');
-  if(app) app.innerHTML='<div style="max-width:600px;margin:60px auto;padding:24px;background:#fff;border-radius:16px;"><h3>Render Error:</h3><pre style="white-space:pre-wrap;color:#c00;">'+String(err.message||err)+'</pre></div>';
-}
+render();
 // Listen for Supabase auth state changes for password recovery
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'PASSWORD_RECOVERY') {
