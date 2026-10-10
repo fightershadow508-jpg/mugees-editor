@@ -1441,7 +1441,7 @@ document.addEventListener('click', async e => {
     if (a === 'reset-demo')         { if (confirm('Reset all local data?')) resetDemo(); return; }
     if (a === 'delete-lesson')      { if(!confirm('Delete this lesson?'))return; const {error:delErr}=await supabase.from('lessons').delete().eq('id',id); if(delErr){toast('Delete failed: '+delErr.message);return;} toast('Lesson deleted.'); loadLessons(); return; }
     if (a === 'ai-overview') {
-      const btn=el, res=document.getElementById('ai_ov_result'), txt=document.getElementById('ai_ov_text'), hint=document.getElementById('ai_ov_hint');
+      const btn=actionEl, res=document.getElementById('ai_ov_result'), txt=document.getElementById('ai_ov_text'), hint=document.getElementById('ai_ov_hint');
       const title=btn.getAttribute('data-title')||'', mod=btn.getAttribute('data-module')||'', saved=btn.getAttribute('data-overview')||'', videoUrl=btn.getAttribute('data-url')||'';
       if(hint) hint.style.display='none';
       if(res) res.style.display='block';
