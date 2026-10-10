@@ -1158,10 +1158,10 @@ function bindMobileMenu() {
       var actionTarget = el.getAttribute('data-action');
       var hrefTarget = el.getAttribute('href');
       if (dashTarget) {
-        dashView = dashTarget;
+        var _sy2 = 0; try { _sy2 = window.scrollY; } catch(e){} dashView = dashTarget;
         if(dashTarget==='courses')loadLessons();
         if (route() !== 'dashboard') { location.hash = '#/dashboard'; }
-        render();
+        render(); try { setTimeout(function(){ window.scrollTo(0, _sy2); }, 10); } catch(e){}
       } else if (adminTarget) {
         adminView = adminTarget;
         if (route() !== 'admin') { location.hash = '#/admin'; }
