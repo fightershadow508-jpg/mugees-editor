@@ -1161,7 +1161,7 @@ function bindMobileMenu() {
         var _sy2 = 0; try { _sy2 = window.scrollY; } catch(e){} dashView = dashTarget;
         if(dashTarget==='courses')loadLessons();
         if (route() !== 'dashboard') { location.hash = '#/dashboard'; }
-        render(); try { setTimeout(function(){ var ab=document.querySelector('.side-nav button.active'); if(ab) ab.scrollIntoView({block:'nearest',inline:'center'}); }, 50); } catch(e){}
+        render(); try { setTimeout(function(){ var ab=document.querySelector('.side-nav button.active'); var nv=document.querySelector('.side-nav'); if(ab&&nv){ nv.scrollLeft = ab.offsetLeft - nv.clientWidth/2 + ab.clientWidth/2; } }, 50); } catch(e){}
       } else if (adminTarget) {
         adminView = adminTarget;
         if (route() !== 'admin') { location.hash = '#/admin'; }
