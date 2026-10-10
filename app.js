@@ -24,7 +24,7 @@ const demoState = {
   ],
   courses:[
     {id:'C-101',title:'TikTok Growth & Content Creation',type:'Live + Recorded',lessons:8,progressBy:{'ST-1048':82,'ST-1052':91},desc:'Filters, effects, hooks, lighting, CapCut editing, growth strategy and transition into value-led content.',cover:'tiktok',modules:['Account & Profile Setup','Trending Filters & Effects','Strong Hooks','CapCut Free Editing','Lighting & Framing','Posting & Analytics','Voice Content Transition','Personal Brand Expansion']},
-    {id:'C-202',title:'Hypic + CapCut + Dreamina Creator Program',type:'Live + Weekly Updates',lessons:11,progressBy:{'ST-1048':67,'ST-1052':74},desc:'Face and faceless workflows, Dreamina AI creation, trend execution, reusable editing systems and future creator-app onboarding.',cover:'creator',modules:['Program Overview','Account Setup','Trend Research','Face Content Workflow','Faceless Workflow','CapCut Editing','Hypic Workflow','Dreamina AI Workflow','Upload Checklist','Common Mistakes','Weekly Opportunity Updates']}
+    {id:'C-202',title:'Hypic + CapCut Creator Program',type:'Live + Weekly Updates',lessons:10,progressBy:{'ST-1048':67,'ST-1052':74},desc:'Face and faceless workflows, trend execution, reusable editing systems and future creator-app onboarding.',cover:'creator',modules:['Program Overview','Account Setup','Trend Research','Face Content Workflow','Faceless Workflow','CapCut Editing','Hypic Workflow','Upload Checklist','Common Mistakes','Weekly Opportunity Updates']}
   ],
   classes:[
     {id:'CL-201',title:'TikTok Filters: Hook + Creator Layout',trainer:'Mughees',date:'2026-10-16',time:'8:00 PM',batch:'TikTok Batch 01',status:'Upcoming',link:'#'},
@@ -281,7 +281,7 @@ function legalPage(key){const p=legalPages[key];return `<div class="legal-wrap">
 
 function authHTML(tab='login'){
  if(tab==='login')return `<h2>Welcome back</h2><p style="color:#64748b;margin-bottom:22px;">Login to your student or admin account.</p><form id="loginForm"><div class="field"><label>Email</label><input required type="email" name="email" placeholder="you@example.com"></div><div class="field"><label>Password</label><div class="pw-wrap" style="position:relative;"><input required type="password" name="password" id="login_pw" placeholder="••••••••"><button type="button" class="eye-btn" data-action="toggle-eye" data-target="login_pw" aria-label="Show/hide password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div></div><a href="#" data-action="open-forgot-password" class="forgot-link" style="display:block;margin:6px 0 20px;color:#3b82f6;text-align:right;font-size:0.85rem;font-weight:600;">Forgot password?</a><button class="btn primary" style="width:100%" type="submit">Login</button></form>`;
- return `<h2>Create student account</h2><p style="color:#64748b;margin-bottom:22px;">Create your account to access courses, classes, progress and earnings.</p><form id="signupForm"><div class="field"><label>Full name</label><input required name="name" placeholder="Your name"></div><div class="field"><label>Profile picture (optional)</label><div style="display:flex;align-items:center;gap:12px;"><img id="signup_avatar_preview" alt="" style="display:none;width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.15);"><input type="file" name="avatar" id="signup_avatar" accept="image/*"></div></div><div class="field"><label>Email</label><input required type="email" name="email" id="signup_email" placeholder="you@example.com"></div><div class="field"><label>Network Provider</label><select required name="network"><option value="">Select Network</option><option>Jazz</option><option>Zong</option><option>Telenor</option><option>Ufone</option><option>Warid</option><option>SCOM</option></select></div><div class="field"><label>Phone</label><input required name="phone" id="signup_phone" placeholder="03XXXXXXXXX" maxlength="11" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,11)" pattern="[0-9]{11}" title="Enter exactly 11 digits"></div><div class="field"><label>ID Card Number (CNIC)</label><input required name="cnic" placeholder="XXXXX-XXXXXXX-X" maxlength="15" oninput="let v=this.value.replace(/[^0-9]/g,''); if(v.length>5)v=v.slice(0,5)+'-'+v.slice(5); if(v.length>13)v=v.slice(0,13)+'-'+v.slice(13); this.value=v.slice(0,15);"/></div><div class="field"><label>Password</label><div class="pw-wrap" style="position:relative;"><input required minlength="8" type="password" name="password" id="signup_pw" placeholder="Min 8 chars, 1 uppercase, 1 number, 1 special"><button type="button" class="eye-btn" data-action="toggle-eye" data-target="signup_pw" aria-label="Show/hide password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div><div class="pw-strength weak" id="signup_strength"><div class="pw-strength-bars"><span></span><span></span><span></span></div><span class="pw-text">Weak</span></div></div><div class="field"><label>Program</label><select name="program" required><option value="">Choose your plan</option><option>TikTok Growth</option><option>Hypic + CapCut + Dreamina</option><option>TikTok Growth + Hypic + CapCut + Dreamina</option></select></div><button class="btn primary" style="width:100%;margin-top:12px;" type="submit">Create Account</button></form>`;
+ return `<h2>Create student account</h2><p style="color:#64748b;margin-bottom:22px;">Create your account to access courses, classes, progress and earnings.</p><form id="signupForm"><div class="field"><label>Full name</label><input required name="name" placeholder="Your name"></div><div class="field"><label>Profile picture (optional)</label><div style="display:flex;align-items:center;gap:12px;"><img id="signup_avatar_preview" alt="" style="display:none;width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.15);"><input type="file" name="avatar" id="signup_avatar" accept="image/*"></div></div><div class="field"><label>Email</label><input required type="email" name="email" id="signup_email" placeholder="you@example.com"></div><div class="field"><label>Network Provider</label><select required name="network"><option value="">Select Network</option><option>Jazz</option><option>Zong</option><option>Telenor</option><option>Ufone</option><option>Warid</option><option>SCOM</option></select></div><div class="field"><label>Phone</label><input required name="phone" id="signup_phone" placeholder="03XXXXXXXXX" maxlength="11" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,11)" pattern="[0-9]{11}" title="Enter exactly 11 digits"></div><div class="field"><label>ID Card Number (CNIC)</label><input required name="cnic" placeholder="XXXXX-XXXXXXX-X" maxlength="15" oninput="let v=this.value.replace(/[^0-9]/g,''); if(v.length>5)v=v.slice(0,5)+'-'+v.slice(5); if(v.length>13)v=v.slice(0,13)+'-'+v.slice(13); this.value=v.slice(0,15);"/></div><div class="field"><label>Password</label><div class="pw-wrap" style="position:relative;"><input required minlength="8" type="password" name="password" id="signup_pw" placeholder="Min 8 chars, 1 uppercase, 1 number, 1 special"><button type="button" class="eye-btn" data-action="toggle-eye" data-target="signup_pw" aria-label="Show/hide password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></div><div class="pw-strength weak" id="signup_strength"><div class="pw-strength-bars"><span></span><span></span><span></span></div><span class="pw-text">Weak</span></div></div><div class="field"><label>Program</label><select name="program"><option>TikTok Growth</option><option>Hypic + CapCut</option><option>TikTok Growth + Hypic</option></select></div><button class="btn primary" style="width:100%;margin-top:12px;" type="submit">Create Account</button></form>`;
 }
 
 function openAuth(tab='login'){
@@ -345,7 +345,7 @@ function sparkline(values) {
 function studentSidebar(s){
   const ac = state.adminControls || { showLeaderboard: true, showTrends: true, showWithdrawals: true };
   const uc = state.unreadCounts || { trends: 0, adminSupport: 0 };
-  let items=[['overview','🏠 Dashboard'],['courses','📚 My Courses'],['assignments','📝 Assignments'],['live','🎥 Curriculum']];
+  let items=[['overview','🏠 Dashboard'],['courses','📚 My Courses'],['live','🎥 Curriculum']];
   if(ac.showTrends) items.push(['trends','🔥 Trends']);
   items.push(['performance','📊 Performance'],['earnings','💰 Earnings']);
   if(ac.showLeaderboard) items.push(['leaderboard','🏆 Leaderboard']);
@@ -362,17 +362,13 @@ function studentSidebar(s){
 window.loadEarnings = async function(sId) {
   try {
     const { data, error } = await supabase.from('earnings').select('*').eq('student_id', sId);
-    if (!error && data && data.length > 0) {
-      const fetched = data.map(d => ({ id: d.id, amount: Number(d.amount), date: d.earning_date || (d.created_at ? d.created_at.split('T')[0] : todayISO()), program: d.description || 'Creator Program', studentId: sId }));
-      const localIds = new Set(state.earnings.map(e => String(e.id)));
-      const newOnes = fetched.filter(f => !localIds.has(String(f.id)));
-      if (newOnes.length > 0) {
-        state.earnings = state.earnings.concat(newOnes);
-        save();
-        if (route() === 'dashboard' && currentStudent()?.id === sId) {
-           const dashContent = document.getElementById('dashContent');
-           if(dashContent) { dashContent.innerHTML = studentView(currentStudent()); bindGlobal(); }
-        }
+    if (!error && data) {
+      const fetched = data.map(d => ({ amount: Number(d.amount), date: d.date || (d.created_at ? d.created_at.split('T')[0] : todayISO()), program: d.program || 'Creator Program', studentId: sId }));
+      state.earnings = state.earnings.filter(e => e.studentId !== sId).concat(fetched);
+      save();
+      if (route() === 'dashboard' && currentStudent()?.id === sId) {
+         const dashContent = document.getElementById('dashContent');
+         if(dashContent) { dashContent.innerHTML = studentView(currentStudent()); bindGlobal(); }
       }
     }
   } catch(e) { console.error('Earnings fetch error:', e); /* Fail gracefully, original zero state remains */ }
@@ -380,7 +376,7 @@ window.loadEarnings = async function(sId) {
 
 function studentDashboard(){if(!state.session||state.session.role!=='student'){openAuth('login');location.hash='#/';return homePage()}const s=currentStudent(); loadEarnings(s.id); return `<div class="dashboard-page"><div class="dashboard-shell">${studentSidebar(s)}<section class="dashboard-main" id="dashContent">${studentView(s)}</section></div></div>`}
 function studentView(s){
- if(dashView==='courses') return studentCourses(s); if(dashView==='assignments') return studentAssignments(s);
+ if(dashView==='courses') return studentCourses(s);
  if(dashView==='live') return studentLive(s);
  if(dashView==='trends') return studentTrends(s);
  if(dashView==='performance') return studentPerformance(s);
@@ -403,105 +399,79 @@ function nextClassCard(){const c=state.classes.find(x=>x.status==='Upcoming')||s
 window.playLesson = function(id) {
   state.currentLessonId = id;
   render();
-  setTimeout(function(){ loadLessonNotes(id); loadVideoBlob(); }, 60);
 };
 window.setSpeed=function(r,btn){const v=document.getElementById('lessonVideo');if(v)v.playbackRate=r;document.querySelectorAll('[data-speed]').forEach(b=>{const on=parseFloat(b.getAttribute('data-speed'))===r;b.classList.toggle('primary',on);b.classList.toggle('light',!on);});};
 window.toggleFullscreen=function(){const v=document.getElementById('lessonVideo');if(!v)return;if(document.fullscreenElement){document.exitFullscreen();}else if(v.requestFullscreen)v.requestFullscreen();else if(v.webkitEnterFullscreen)v.webkitEnterFullscreen();};
-window.loadVideoBlob=function(){
-  var v=document.getElementById('lessonVideo'); if(!v)return;
-  var lid=v.getAttribute('data-lesson');
-  v.onerror=function(){ videoError(v); };
-  v.onended=function(){ if(lid)videoEnded(lid); };
-};
-window.videoError=function(v){var c=v.error?v.error.code:'?';var msgs={1:'aborted',2:'network',3:'decode',4:'src not supported / blocked'};var t=document.getElementById('videoErr');if(t){t.style.display='block';t.textContent='⚠️ Video failed to load (error '+c+': '+(msgs[c]||'unknown')+'). Try the fullscreen button or contact support.';}console.error('Video error',c,v.src);};
 window.videoEnded=function(id){toast('🎬 Video finished! Tap "Mark as Complete" below.');const b=document.querySelector('[data-action="toggle-complete-lesson"]');if(b){b.style.boxShadow='0 0 0 3px rgba(139,92,246,.5)';b.scrollIntoView({behavior:'smooth',block:'nearest'});}};
-window.saveNotes = async function(id) {
-  const ta=document.getElementById('lessonNotes'); const val=ta?ta.value:'';
-  if(!state.studentNotes) state.studentNotes={}; state.studentNotes[id]=val; save();
-  const st=document.getElementById('notesStatus'); const say=t=>{if(st)st.textContent=t;};
-  try{const uid=await getUid(); if(!uid)throw new Error('no session');
-    const{error}=await supabase.from('lesson_notes').upsert({student_id:uid,lesson_id:id,notes:val,updated_at:new Date().toISOString()},{onConflict:'student_id,lesson_id'});
-    if(error)throw error; say('✅ Saved'); toast('✅ Notes Saved!');
-  }catch(e){ say('⚠️ Locally saved (login required for cloud).'); toast('✅ Notes Saved!'); }
+window.saveNotes = function(id) {
+  if(!state.studentNotes) state.studentNotes = {};
+  state.studentNotes[id] = document.getElementById('lessonNotes').value;
+  save();
+  toast('✅ Notes Saved!');
 };
 
 function studentCourses(s){
-  if(dbLessons===null){loadLessons();return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">Loading lessons…</p></div></div>`;}
-  const _lessons=dbLessons;
-  if(_lessons.length === 0) {
+  if(dbLessons===null){loadLessons();return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">Loading lessons…</p></div></div>`;} const _lessons=(dbLessons!==null)?dbLessons:(state.curriculum||[]); if(_lessons.length === 0) {
     return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">No video lessons available yet.</p></div></div>`;
   }
+  if(!state.studentNotes) state.studentNotes = {};
   if(!s.completedLessons) s.completedLessons = [];
-  if(!state.expandedModules) state.expandedModules = {};
-
+  
   const playingId = state.currentLessonId || _lessons[0].id;
   const current = _lessons.find(l=>l.id===playingId) || _lessons[0];
+  const notes = state.studentNotes[current.id] || '';
   const isCompleted = s.completedLessons.includes(current.id);
   const total = _lessons.length;
-  const comp = _lessons.filter(l=>s.completedLessons.includes(l.id)).length;
+  const comp = s.completedLessons.length;
   const progress = Math.round((comp/total)*100) || 0;
 
-  // group by module
-  const groups = {};
-  _lessons.forEach(l=>{ const k=l.module||'General'; (groups[k]=groups[k]||[]).push(l); });
-  const modNames = Object.keys(groups);
-
-  const sidebar = `<aside style="flex:0 0 300px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;height:fit-content;max-height:820px;overflow-y:auto;">
-    <div style="padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.08);"><strong style="color:#edf5ff;font-size:15px;">Course Content</strong></div>
-    ${modNames.map(mn=>{
-      const ls = groups[mn];
-      const done = ls.filter(l=>s.completedLessons.includes(l.id)).length;
-      const open = state.expandedModules[mn]!==false;
-      return `<div style="border-bottom:1px solid rgba(255,255,255,0.05);">
-        <div data-action="toggle-module" data-module="${esc(mn)}" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;">
-          <strong style="color:#e2e8f0;font-size:13.5px;">${esc(mn)}</strong>
-          <span style="display:flex;align-items:center;gap:8px;"><small style="color:#8fa1b8;">${done}/${ls.length}</small><span style="color:#8fa1b8;font-size:12px;">${open?'▾':'▸'}</span></span>
-        </div>
-        ${open?`<div>${ls.map(l=>{
-          const active=l.id===current.id, d=s.completedLessons.includes(l.id);
-          return `<div data-action="play-lesson" data-id="${l.id}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 16px 10px 20px;background:${active?'rgba(139,92,246,0.15)':'transparent'};border-left:3px solid ${active?'#8b5cf6':'transparent'};">
-            <span style="color:${d?'#34d399':'#5b6b82'};font-size:14px;">${d?'✅':'⭕'}</span>
-            <div><div style="color:${active?'#c4b5fd':'#dbe4f0'};font-size:13px;">${esc(l.title)}</div>
-            <small style="color:#748195;">${esc(l.duration||'')} ${l.kind==='file'?'· 📤':'· 🔗'}</small></div>
-          </div>`;}).join('')}</div>`:''}
-      </div>`;}).join('')}
-  </aside>`;
-
-  const player = current.kind==='file'
-    ?`<video id="lessonVideo" src="${current.url}" controls playsinline preload="metadata" data-lesson="${current.id}" style="width:100%;height:100%;background:#000;"></video>
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">
-        <span style="color:#8fa1b8;font-size:13px;">▶ Speed:</span>
-        ${[0.5,0.75,1,1.25,1.5,2].map(r=>`<button class="btn small ${r===1?'primary':'light'}" data-action="set-speed" data-speed="${r}">${r}x</button>`).join('')}
-        <button class="btn small light" data-action="toggle-fullscreen" style="margin-left:auto;">⛶ Fullscreen</button>
-      </div>`
-    :`<iframe src="${current.url}" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>`;
-
-  return `<div class="subpage-head" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;"><div><h1 style="margin:0;">${esc(current.title)}</h1><p style="color:#748195;margin:4px 0 0;">${esc(current.module||'')}</p></div>
-    <div style="display:flex;align-items:center;gap:12px;"><span style="color:#a5b4c9;font-size:14px;">Your Progress: <strong style="color:#edf5ff;">${comp} of ${total} (${progress}%)</strong></span>
-    <button class="btn ${isCompleted?'light':'primary'}" data-action="toggle-complete-lesson" data-id="${current.id}">${isCompleted?'✅ Completed':'✓ Mark as Complete'}</button></div></div>
-  <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
-    ${sidebar}
-    <div style="flex:1 1 500px;display:flex;flex-direction:column;gap:16px;min-width:0;">
-      ${current.overview?`<div style="background:linear-gradient(135deg,rgba(139,92,246,0.12),rgba(59,130,246,0.08));border:1px solid rgba(139,92,246,0.25);border-radius:12px;padding:16px;margin-bottom:14px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="font-size:18px;">🤖</span><strong style="color:#c4b5fd;font-size:14px;">LECTURE OVERVIEW — pehle ye parhen</strong></div><p style="color:#dbe4f0;font-size:14px;line-height:1.7;margin:0;white-space:pre-wrap;">${esc(current.overview)}</p></div>`:`<div style="margin-bottom:14px;"><button class="btn small primary" data-action="ai-overview" data-id="${current.id}" data-title="${esc(current.title)}" data-module="${esc(current.module||'')}">🤖 AI Lecture Overview</button> <small style="color:#748195;">Click karen — poore lecture ka khulasa milega</small><div id="ai_ov_result" style="display:none;margin-top:10px;background:linear-gradient(135deg,rgba(139,92,246,0.12),rgba(59,130,246,0.08));border:1px solid rgba(139,92,246,0.25);border-radius:12px;padding:16px;"><p style="color:#dbe4f0;font-size:14px;line-height:1.7;margin:0;white-space:pre-wrap;" id="ai_ov_text"></p></div></div>`}
-      <div style="background:#000;border-radius:12px;overflow:hidden;aspect-ratio:16/9;">${player}</div><div id="videoErr" style="display:none;color:#f87171;font-size:13px;margin-top:8px;"></div>
-      <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);">
-        <h3 style="margin:0 0 12px;color:#edf5ff;font-size:16px;">📝 My Notes <small style="color:#748195;font-weight:normal;">— saved for this lesson</small></h3>
-        <textarea id="lessonNotes" data-lesson="${current.id}" placeholder="📝 Write your notes here…" style="width:100%;height:120px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px;color:#e2e8f0;font-family:inherit;resize:vertical;outline:none;"></textarea>
-        <div style="display:flex;gap:10px;align-items:center;margin-top:12px;"><button class="btn primary" data-action="save-notes" data-id="${current.id}">💾 Save Notes</button><small id="notesStatus" style="color:#748195;"></small></div>
-      </div>
+  return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">Progress: ${progress}% complete</p></div></div>
+  <div style="display:flex; gap:20px; flex-wrap:wrap;">
+    <div style="flex: 1 1 600px; display:flex; flex-direction:column; gap:16px;">
+       <div style="background:#000; border-radius:12px; overflow:hidden; aspect-ratio:16/9;">
+         ${current.kind==='file'
+         ?`<video id="lessonVideo" src="${current.url}" controls playsinline preload="metadata" onended="videoEnded('${current.id}')" style="width:100%;height:100%;background:#000;"></video>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">
+              <span style="color:#8fa1b8;font-size:13px;">▶ Speed:</span>
+              ${[0.5,0.75,1,1.25,1.5,2].map(r=>`<button class="btn small ${r===1?'primary':'light'}" data-speed="${r}" onclick="setSpeed(${r},this)">${r}x</button>`).join('')}
+              <button class="btn small light" onclick="toggleFullscreen()" style="margin-left:auto;">⛶ Fullscreen</button>
+            </div>`
+         :`<iframe src="${current.url}" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>`}
+       </div>
+       <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
+         <div>
+           <h2 style="margin:0; font-size:20px; color:#edf5ff;">${esc(current.title)}</h2>
+           <p style="margin:4px 0 0; color:#8fa1b8; font-size:14px;">${esc(current.module)}</p>
+         </div>
+         <button class="btn ${isCompleted ? 'light' : 'primary'}" data-action="toggle-complete-lesson" data-id="${current.id}">
+            ${isCompleted ? '✅ Completed' : 'Mark as Complete'}
+         </button>
+       </div>
+       <div style="background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
+         <h3 style="margin:0 0 12px; color:#edf5ff; font-size:16px;">📝 My Notes</h3>
+         <textarea id="lessonNotes" placeholder="Type your notes for this lesson here..." style="width:100%; height:120px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:12px; color:#e2e8f0; font-family:inherit; resize:vertical; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">${esc(notes)}</textarea>
+         <button class="btn primary" style="margin-top:12px;" onclick="saveNotes('${current.id}')">Save Notes</button>
+       </div>
     </div>
-  </div>
-`;
+    <div style="flex: 0 0 300px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:16px; height:fit-content; max-height:800px; overflow-y:auto;">
+       <h3 style="margin:0 0 16px; color:#edf5ff;">Curriculum</h3>
+       <div style="display:flex; flex-direction:column; gap:8px;">
+         ${_lessons.map(l=>{
+           const active = l.id === current.id;
+           const done = s.completedLessons.includes(l.id);
+           return `<div onclick="playLesson('${l.id}')" style="cursor:pointer; padding:12px; border-radius:8px; background:${active?'rgba(139,92,246,0.15)':'rgba(255,255,255,0.02)'}; border:1px solid ${active?'#8b5cf6':'rgba(255,255,255,0.05)'}; transition:background 0.2s;">
+             <div style="display:flex; justify-content:space-between; align-items:center;">
+               <strong style="color:${active?'#c4b5fd':'#e2e8f0'}; font-size:14px;">${esc(l.title)}</strong>
+               ${done?'<span style="color:#34d399; font-size:12px;">✅</span>':''}
+             </div>
+             <p style="margin:4px 0 0; font-size:12px; color:#8fa1b8;">${esc(l.module)} · ${esc(l.duration)}</p>
+           </div>`;
+         }).join('')}
+       </div>
+    </div>
+  </div>`;
 }
-async function getUid(){try{const{data}=await supabase.auth.getUser();return data&&data.user?data.user.id:null;}catch(e){return null;}}
-async function loadLessonNotes(lessonId){
-  const ta=document.getElementById('lessonNotes'); if(!ta||ta.getAttribute('data-lesson')!==lessonId)return;
-  let txt='';
-  try{const uid=await getUid(); if(uid){const{data}=await supabase.from('lesson_notes').select('notes').eq('student_id',uid).eq('lesson_id',lessonId).maybeSingle(); if(data&&data.notes)txt=data.notes;}}catch(e){}
-  if(!txt&&state.studentNotes&&state.studentNotes[lessonId])txt=state.studentNotes[lessonId];
-  const cur=document.getElementById('lessonNotes'); if(cur&&cur.getAttribute('data-lesson')===lessonId)cur.value=txt;
-}
-window.toggleModule=function(mn){ if(!state.expandedModules)state.expandedModules={}; state.expandedModules[mn]=state.expandedModules[mn]===false?true:false; save(); const d=document.getElementById('dashContent'); if(d){d.innerHTML=studentView(currentStudent());bindGlobal();} };function studentLive(){return `<div class="subpage-head"><div><h1>Curriculum</h1><p style="color:#748195">Upcoming sessions and previous recordings.</p></div></div><div class="live-grid">${state.classes.map(c=>`<div class="live-card"><span class="tag ${c.status==='Upcoming'?'orange':'green'}">${esc(c.status)}</span><h3 style="margin-top:14px">${esc(c.title)}</h3><p style="color:#748195">${niceDate(c.date)} · ${esc(c.time)}<br>${esc(c.trainer)} · ${esc(c.batch)}</p><button class="btn primary" data-action="class-detail" data-id="${c.id}">${c.status==='Upcoming'?'Join Class':'Watch Recording'}</button></div>`).join('')}</div>`}
+function studentLive(){return `<div class="subpage-head"><div><h1>Curriculum</h1><p style="color:#748195">Upcoming sessions and previous recordings.</p></div></div><div class="live-grid">${state.classes.map(c=>`<div class="live-card"><span class="tag ${c.status==='Upcoming'?'orange':'green'}">${esc(c.status)}</span><h3 style="margin-top:14px">${esc(c.title)}</h3><p style="color:#748195">${niceDate(c.date)} · ${esc(c.time)}<br>${esc(c.trainer)} · ${esc(c.batch)}</p><button class="btn primary" data-action="class-detail" data-id="${c.id}">${c.status==='Upcoming'?'Join Class':'Watch Recording'}</button></div>`).join('')}</div>`}
 function studentTrends(){return `<div class="subpage-head"><div><h1>Trend Updates</h1><p style="color:#748195">New creator trends published by Admin.</p></div></div><div class="cards">${state.trends.map(t=>`<div class="card"><div style="display:flex;justify-content:space-between"><span class="pill">${esc(t.program)}</span><span class="tag ${t.status==='New'?'green':''}">${esc(t.status)}</span></div><h3 style="margin-top:16px">${esc(t.title)}</h3><p>Difficulty: ${esc(t.difficulty)} · Added ${niceDate(t.added)}</p><button class="btn primary" data-action="trend-detail" data-id="${t.id}">View Tutorial</button></div>`).join('')}</div>`}
 
 function getMockLeaderboard(s) {
@@ -524,46 +494,82 @@ function getMockLeaderboard(s) {
 }
 
 function studentLeaderboard(s) {
-  // Real ranking: all students sorted by total earnings (lifetime) - dynamic!
-  const ranked = (state.students||[]).map(st=>({
-    name: st.name, avatar: st.avatar, lifetime: Number(st.lifetime||0),
-    isMe: s && st.id===s.id
-  })).sort((a,b)=>b.lifetime-a.lifetime);
+  const all  = getMockLeaderboard(s);
+  const top7  = all.slice(0, 5);
+  const top30 = all.slice(0, 5);
+  const allTime = all.slice(0, 7);
 
   const medal = ['🥇','🥈','🥉'];
-  const badge = i => i===0?'👑 Champion': i===1?'🥈 Runner-up': i===2?'🥉 3rd Place': '#'+(i+1);
   const rankColor = i => i===0?'#f59e0b': i===1?'#94a3b8': i===2?'#cd7c2f':'#8b5cf6';
-  const avatarFor = u => u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random&color=fff&rounded=true`;
+
+  const renderTable = (data, isAllTime) => `
+    <div style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="background:rgba(139,92,246,0.15); color:#a78bfa; padding:11px 14px; text-align:left; font-size:11px; letter-spacing:.5px; text-transform:uppercase; border-bottom:1px solid rgba(139,92,246,0.2);">Profile</th>
+            <th style="background:rgba(139,92,246,0.15); color:#a78bfa; padding:11px 14px; text-align:left; font-size:11px; letter-spacing:.5px; text-transform:uppercase; border-bottom:1px solid rgba(139,92,246,0.2);">Name</th>
+            <th style="background:rgba(139,92,246,0.15); color:#a78bfa; padding:11px 14px; text-align:right; font-size:11px; letter-spacing:.5px; text-transform:uppercase; border-bottom:1px solid rgba(139,92,246,0.2);">${isAllTime ? 'Amount' : 'Rank'}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map((u,i) => `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.05); transition:background .15s;" onmouseover="this.style.background='rgba(139,92,246,0.07)'" onmouseout="this.style.background='transparent'">
+              <td style="padding:10px 14px;">
+                <img src="${u.avatar}" alt="${u.name}" style="width:38px; height:38px; border-radius:50%; display:block; border:2px solid rgba(139,92,246,0.4); object-fit:cover;">
+              </td>
+              <td style="padding:10px 14px; color:#e2e8f0; font-weight:600; font-size:14px;">
+                ${i<3?medal[i]+' ':''}${esc(u.name)}
+              </td>
+              <td style="padding:10px 14px; text-align:right; font-weight:800; color:${isAllTime ? '#34d399' : rankColor(i)}; font-size:13px;">
+                ${isAllTime ? u.amount : u.rank}
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
 
   return `
     <div class="subpage-head">
       <div>
         <h1 style="color:#edf5ff;">🏆 Leaderboard</h1>
-        <p style="color:#8fa1b8;">Ranked by total earnings — higher earnings, higher rank!</p>
+        <p style="color:#8fa1b8;">Top performers across the platform.</p>
       </div>
     </div>
-    <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:20px; box-shadow:0 8px 32px rgba(0,0,0,0.2); max-width:720px;">
-      <div style="overflow-x:auto;">
-      <table style="width:100%; border-collapse:collapse;">
-        <thead><tr>
-          <th style="background:rgba(139,92,246,0.15);color:#a78bfa;padding:11px 14px;text-align:left;font-size:11px;letter-spacing:.5px;text-transform:uppercase;">Rank</th>
-          <th style="background:rgba(139,92,246,0.15);color:#a78bfa;padding:11px 14px;text-align:left;font-size:11px;letter-spacing:.5px;text-transform:uppercase;">Student</th>
-          <th style="background:rgba(139,92,246,0.15);color:#a78bfa;padding:11px 14px;text-align:right;font-size:11px;letter-spacing:.5px;text-transform:uppercase;">Earnings</th>
-        </tr></thead>
-        <tbody>
-          ${ranked.length===0?'<tr><td colspan="3" style="padding:20px;text-align:center;color:#8fa1b8;">No students yet.</td></tr>':ranked.map((u,idx)=>`
-            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);${u.isMe?'background:rgba(139,92,246,0.12);':''}">
-              <td style="padding:10px 14px;"><span style="font-weight:800;color:${rankColor(idx)};font-size:14px;">${idx<3?medal[idx]+' ':''}${badge(idx)}</span></td>
-              <td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:10px;"><img src="${avatarFor(u)}" alt="" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid rgba(139,92,246,0.4);"><span style="color:#e2e8f0;font-weight:600;font-size:14px;">${esc(u.name)}${u.isMe?' <span style="font-size:11px;color:#a78bfa;">(you)</span>':''}</span></div></td>
-              <td style="padding:10px 14px;text-align:right;font-weight:800;color:#34d399;font-size:14px;">${money(u.lifetime)}</td>
-            </tr>`).join('')}
-        </tbody>
-      </table>
-      </div>
-    </div>`;
-}
 
-function studentPerformance(s){const _cl=(typeof dbLessons!=='undefined'&&dbLessons)?dbLessons:[];const _done=(s.completedLessons||[]).filter(id=>_cl.some(l=>l.id===id)).length;const _pct=_cl.length?Math.round(_done/_cl.length*100):0;return `<div class="subpage-head"><div><h1>Performance</h1><p style="color:#748195">Your learning and participation summary.</p></div></div><div class="dash-card-grid"><div class="dash-card"><small>Course Progress</small><strong>${_pct}%</strong><div class="progress" style="margin-top:9px"><i style="width:${_pct}%"></i></div></div><div class="dash-card"><small>Lessons Completed</small><strong>${_done}/${_cl.length}</strong><div class="delta">Video lessons finished</div></div><div class="dash-card"><small>Trend Participation</small><strong>${s.trendParticipation}</strong><div class="delta">Creator updates completed</div></div></div><div class="dashboard-grid"><div class="panel"><h3>Performance level</h3><h2 style="font-size:44px;margin:18px 0 8px">${esc(s.performance)}</h2><p style="color:#748195">This score combines course progress, lessons completed and trend participation.</p></div><div class="panel"><h3>Recommended next step</h3><p style="color:#748195">Complete the next live class, finish any pending tasks and review the latest creator trend tutorial.</p><button class="btn primary" data-dash="trends">Open Trends</button></div></div>`}
+    <!-- 3-Column Leaderboard Grid -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px;">
+
+      <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:20px; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+          <span style="font-size:20px;">📅</span>
+          <h3 style="color:#e2e8f0; margin:0; font-size:16px; font-weight:800;">Top 7 Days</h3>
+        </div>
+        ${renderTable(top7, false)}
+      </div>
+
+      <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:20px; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+          <span style="font-size:20px;">🗓️</span>
+          <h3 style="color:#e2e8f0; margin:0; font-size:16px; font-weight:800;">Top 30 Days</h3>
+        </div>
+        ${renderTable(top30, false)}
+      </div>
+
+      <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:20px; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+          <span style="font-size:20px;">🌟</span>
+          <h3 style="color:#e2e8f0; margin:0; font-size:16px; font-weight:800;">All Time</h3>
+        </div>
+        ${renderTable(allTime, true)}
+      </div>
+
+    </div>
+  `;
+}
+function studentPerformance(s){return `<div class="subpage-head"><div><h1>Performance</h1><p style="color:#748195">Your learning and participation summary.</p></div></div><div class="dash-card-grid"><div class="dash-card"><small>Course Progress</small><strong>${s.progress}%</strong><div class="progress" style="margin-top:9px"><i style="width:${s.progress}%"></i></div></div><div class="dash-card"><small>Attendance</small><strong>${s.attendance}%</strong><div class="progress" style="margin-top:9px"><i style="width:${s.attendance}%"></i></div></div><div class="dash-card"><small>Tasks Completed</small><strong>${s.tasksDone}/${s.tasksTotal}</strong><div class="delta">Practical assignments</div></div><div class="dash-card"><small>Trend Participation</small><strong>${s.trendParticipation}</strong><div class="delta">Creator updates completed</div></div></div><div class="dashboard-grid"><div class="panel"><h3>Performance level</h3><h2 style="font-size:44px;margin:18px 0 8px">${esc(s.performance)}</h2><p style="color:#748195">This score combines course progress, attendance, tasks and trend participation.</p></div><div class="panel"><h3>Recommended next step</h3><p style="color:#748195">Complete the next live class, finish any pending tasks and review the latest creator trend tutorial.</p><button class="btn primary" data-dash="trends">Open Trends</button></div></div>`}
 function studentEarnings(s){const rows=state.earnings.filter(e=>e.studentId===s.id).sort((a,b)=>b.date.localeCompare(a.date));const totals=earningSummary(s.id);return `<div class="subpage-head"><div><h1>Earnings</h1><p style="color:#748195">Approved payout credits assigned to your account.</p></div><button class="btn primary" data-dash="withdraw">Withdraw</button></div><div class="dash-card-grid"><div class="dash-card"><small>Available Balance</small><strong style="color:#059669">${money(s.available)}</strong></div><div class="dash-card"><small>Pending Balance</small><strong style="color:#d97706">${money(s.pending||0)}</strong></div><div class="dash-card"><small>Total Paid</small><strong>${money(s.paid)}</strong></div><div class="dash-card"><small>Total Earnings</small><strong>${money(totals.lifetime)}</strong></div></div><div class="panel" style="margin-top:16px"><div class="notice">Dashboard earnings are approved payout credits. See the Earnings & Balance Policy for what this amount means.</div><div class="table-wrap" style="margin-top:13px"><table class="table"><thead><tr><th>Date</th><th>Program</th><th>Amount</th><th>Status</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${niceDate(e.date)}</td><td>${esc(e.program)}</td><td class="amount green">${money(e.amount)}</td><td><span class="tag green">Approved</span></td></tr>`).join('')}</tbody></table></div></div>`}
 function studentWithdraw(s){
   if(s.kyc?.status !== 'Verified') {
@@ -653,12 +659,12 @@ function studentSupport(s=currentStudent()){
 function adminSidebar(){
   if(!state.unreadCounts) state.unreadCounts = { trends: 0, adminSupport: 0, withdrawals: 0, kyc: 0, approvals: 0 };
   const uc = state.unreadCounts;
-  const items=[['overview','🏠 Overview'],['students','👥 Students'],['approvals','✅ Approvals'],['kyc','🆔 KYC Approvals'],['curriculum','📤 Video Upload'],['assignments','📝 Assignments'],['courses','📚 Courses'],['live','🎥 Curriculum'],['programs','🧩 Programs'],['trends','🔥 Trends'],['earnings','💰 Earnings'],['withdrawals','🏦 Withdrawals'],['notifications','🔔 Notify'],['support','💬 Support'],['settings','⚙️ Settings']];
+  const items=[['overview','🏠 Overview'],['students','👥 Students'],['approvals','✅ Approvals'],['kyc','🆔 KYC Approvals'],['curriculum','📤 Video Upload'],['courses','📚 Courses'],['live','🎥 Curriculum'],['programs','🧩 Programs'],['trends','🔥 Trends'],['earnings','💰 Earnings'],['withdrawals','🏦 Withdrawals'],['notifications','🔔 Notify'],['support','💬 Support'],['settings','⚙️ Settings']];
   return `<aside class="sidebar"><div class="side-profile"><strong>${esc(state.admin.name)}</strong><div style="margin-top:5px"><span class="role-badge role-admin">Admin</span></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${adminView===id?'active':''}" data-admin="${id}" style="display:flex;justify-content:space-between;align-items:center;"><span>${l}</span>${id==='support' && uc.adminSupport>0?`<span class="nav-badge">${uc.adminSupport}</span>`:id==='withdrawals' && uc.withdrawals>0?`<span class="nav-badge">${uc.withdrawals}</span>`:id==='kyc' && uc.kyc>0?`<span class="nav-badge">${uc.kyc}</span>`:id==='approvals' && uc.approvals>0?`<span class="nav-badge">${uc.approvals}</span>`:''}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`
 }
 function adminDashboard(){if(!state.session||state.session.role!=='admin'){openAuth('login');location.hash='#/';return homePage()}return `<div class="dashboard-page"><div class="dashboard-shell">${adminSidebar()}<section class="dashboard-main" id="adminContent">${adminPanel()}</section></div></div>`}
 function adminPanel(){
- if(adminView==='students') return adminStudents(); if(adminView==='approvals') return adminApprovals(); if(adminView==='kyc') return adminKYC(); if(adminView==='curriculum') return adminCurriculum(); if(adminView==='assignments') return adminAssignments(); if(adminView==='courses') return adminCourses(); if(adminView==='live') return adminLive(); if(adminView==='programs') return adminPrograms(); if(adminView==='trends') return adminTrends(); if(adminView==='earnings') return adminEarnings(); if(adminView==='withdrawals') return adminWithdrawals(); if(adminView==='notifications') return adminNotify(); if(adminView==='support') return adminSupport(); if(adminView==='settings') return adminSettings();
+ if(adminView==='students') return adminStudents(); if(adminView==='approvals') return adminApprovals(); if(adminView==='kyc') return adminKYC(); if(adminView==='curriculum') return adminCurriculum(); if(adminView==='courses') return adminCourses(); if(adminView==='live') return adminLive(); if(adminView==='programs') return adminPrograms(); if(adminView==='trends') return adminTrends(); if(adminView==='earnings') return adminEarnings(); if(adminView==='withdrawals') return adminWithdrawals(); if(adminView==='notifications') return adminNotify(); if(adminView==='support') return adminSupport(); if(adminView==='settings') return adminSettings();
  const pending=state.withdrawals.filter(w=>w.status==='Pending').length,totalPaid=state.withdrawals.filter(w=>w.status==='Paid').reduce((a,b)=>a+b.amount,0);
  const totalRevenue = state.students.reduce((sum, s) => sum + (Number(s.lifetime) || 0), 0);
  const activeSubs = state.students.filter(s => s.status !== 'Suspended').length;
@@ -666,8 +672,8 @@ function adminPanel(){
 }
 async function notifyEmail(type,userId){try{await fetch('https://ijsvpdraigzvxeeuedzd.supabase.co/functions/v1/notify',{method:'POST',headers:{'Content-Type':'application/json','apikey':'sb_publishable_FlaAOinEJSeHyLTEaEAJrQ_QR_N3dBe'},body:JSON.stringify({type,userId})});}catch(e){}}
 let pendingApprovals=[];
-async function loadApprovals(){try{const{data,error}=await supabase.from('profiles').select('id,email,name,phone,network,cnic,program,avatar_url,created_at').eq('status','pending').order('created_at',{ascending:false});if(!error)pendingApprovals=data||[];}catch(e){pendingApprovals=[];} state.unreadCounts.approvals=pendingApprovals.length; save(); const abtn=document.querySelector('.side-nav button[data-admin="approvals"]'); if(abtn){let b=abtn.querySelector('.nav-badge'); if(pendingApprovals.length>0){if(!b){b=document.createElement('span');b.className='nav-badge';abtn.appendChild(b);} b.textContent=pendingApprovals.length;} else if(b)b.remove();} if(adminView==='approvals'){const c=$('#adminContent');if(c)c.innerHTML=adminApprovals();bindForms();}}
-function adminApprovals(){return `<div class="subpage-head"><div><h1>Pending Approvals</h1><p style="color:#748195">New signups waiting for admin access.</p></div><button class="btn small light" data-action="refresh-approvals">↻ Refresh</button></div><div class="panel">${pendingApprovals.length===0?'<div class="empty" style="padding:20px;">No pending requests. 🎉</div>':`<div class="table-wrap"><div class="table-wrap"><table class="table"><thead><tr><th>Profile</th><th>Name</th><th>Email</th><th>Phone</th><th>Network</th><th>CNIC</th><th>Plan</th><th>Requested</th><th>Actions</th></tr></thead><tbody>${pendingApprovals.map(p=>`<tr><td>${p.avatar_url?`<img src="${esc(p.avatar_url)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">`:'<span style="display:inline-block;width:36px;height:36px;border-radius:50%;background:#eef2ff;color:#5b21b6;text-align:center;line-height:36px;font-weight:900;">'+esc((p.name||p.email||'?').charAt(0).toUpperCase())+'</span>'}</td><td><strong>${esc(p.name||'—')}</strong></td><td>${esc(p.email)}</td><td>${esc(p.phone||'—')}</td><td>${esc(p.network||'—')}</td><td>${esc(p.cnic||'—')}</td><td>${esc(p.program||'—')}</td><td>${p.created_at?niceDate(p.created_at.split('T')[0]):'—'}</td><td style="white-space:nowrap;"><button class="btn small primary" data-action="approve-user" data-id="${p.id}">Approve</button> <button class="btn small danger" data-action="reject-user" data-id="${p.id}">Reject</button></td></tr>`).join('')}</tbody></table></div></div>`}</div>`}
+async function loadApprovals(){try{const{data,error}=await supabase.from('profiles').select('id,email,name,phone,network').eq('status','pending');if(!error)pendingApprovals=data||[];}catch(e){pendingApprovals=[];} state.unreadCounts.approvals=pendingApprovals.length; save(); const abtn=document.querySelector('.side-nav button[data-admin="approvals"]'); if(abtn){let b=abtn.querySelector('.nav-badge'); if(pendingApprovals.length>0){if(!b){b=document.createElement('span');b.className='nav-badge';abtn.appendChild(b);} b.textContent=pendingApprovals.length;} else if(b)b.remove();} if(adminView==='approvals'){const c=$('#adminContent');if(c)c.innerHTML=adminApprovals();bindForms();}}
+function adminApprovals(){return `<div class="subpage-head"><div><h1>Pending Approvals</h1><p style="color:#748195">New signups waiting for admin access.</p></div><button class="btn small light" data-action="refresh-approvals">↻ Refresh</button></div><div class="panel">${pendingApprovals.length===0?'<div class="empty" style="padding:20px;">No pending requests. 🎉</div>':`<div class="table-wrap"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Network</th><th>Requested</th><th>Actions</th></tr></thead><tbody>${pendingApprovals.map(p=>`<tr><td><strong>${esc(p.name||'—')}</strong></td><td>${esc(p.email)}</td><td>${esc(p.phone||'—')}</td><td>${esc(p.network||'—')}</td><td>—</td><td><button class="btn small primary" data-action="approve-user" data-id="${p.id}">Approve</button> <button class="btn small danger" data-action="reject-user" data-id="${p.id}">Reject</button></td></tr>`).join('')}</tbody></table></div>`}</div>`}
 function adminStudents(){
   return `<div class="subpage-head">
     <div><h1>Manage Users</h1><p style="color:#748195">User management and access control.</p></div>
@@ -741,7 +747,7 @@ function adminKYC(){
     `}
   </div>`;
 }
-async function loadLessons(){try{const{data,error}=await supabase.from('lessons').select('*').order('created_at',{ascending:false});if(!error)dbLessons=(data||[]).map(l=>{var u=l.video_url||'';if(u.indexOf('/storage/v1/object/public/lesson-videos/')>-1)u='/video/'+u.split('/lesson-videos/').pop();return{id:l.id,title:l.title,module:l.description||'',url:u,kind:l.kind||'embed',duration:l.duration_minutes?l.duration_minutes+' min':'',overview:l.overview||''};});}catch(e){if(dbLessons===null)dbLessons=[];}
+async function loadLessons(){try{const{data,error}=await supabase.from('lessons').select('*').order('created_at',{ascending:false});if(!error)dbLessons=(data||[]).map(l=>({id:l.id,title:l.title,module:l.description||'',url:l.video_url,kind:l.kind||'embed',duration:l.duration_minutes?l.duration_minutes+' min':''}));}catch(e){if(dbLessons===null)dbLessons=[];}
  if(adminView==='curriculum'){const c=$('#adminContent');if(c){c.innerHTML=adminCurriculum();bindForms();}}
  if(typeof dashView!=='undefined'&&dashView==='courses'&&route()==='dashboard'){const d=$('#dashContent');if(d){try{d.innerHTML=studentView(currentStudent());bindGlobal();}catch(e){}}}}
 function adminCurriculum(){
@@ -754,9 +760,7 @@ function adminCurriculum(){
        <div class="field"><label>Module / Chapter Name</label><input name="module" required placeholder="e.g. Module 1: Basics"></div>
        <div class="field"><label>Option A — Upload recording (video file)</label><input type="file" name="videofile" id="lesson_videofile" accept="video/*"><p class="micro" style="color:#748195;margin-top:6px;">MP4 recommended. If you choose a file, the URL field below is ignored.</p></div><div class="field"><label>Option B — Video URL (YouTube/Vimeo embed)</label><input name="url" id="lesson_url" placeholder="https://www.youtube.com/embed/..."></div>
        <div class="field"><label>Duration (minutes)</label><input name="duration" required inputmode="numeric" placeholder="e.g. 10"></div>
-       <div class="field"><label>🤖 Lecture Overview (AI summary for students)</label><div style="margin-bottom:8px;"><button type="button" class="btn small primary" id="ai_gen_btn" onclick="generateAIOverview()">🤖 Generate with AI</button></div><div style="margin-bottom:8px;"> <small style="color:#748195;">Title se auto-overview banayega</small></div><textarea name="overview" rows="4" placeholder="Is lecture ka khulasa likhen — student video dekhne se pehle parhega."></textarea></div>
        <button class="btn primary" type="submit">Add Lesson</button>
-       <div id="lv_progress" style="display:none;margin-top:4px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:13px;color:#a5b4c9;">⏳ Uploading video… <strong id="lv_pct" style="color:#edf5ff;">0%</strong></span></div><div style="height:10px;background:rgba(255,255,255,0.08);border-radius:6px;overflow:hidden;"><div id="lv_bar" style="height:100%;width:0%;background:linear-gradient(90deg,#8b5cf6,#3b82f6);border-radius:6px;transition:width .2s;"></div></div><div id="lv_detail" style="font-size:12px;color:#748195;margin-top:6px;"></div></div>
     </form>
   </div>
   <div class="panel" style="margin-top:20px;">
@@ -766,67 +770,11 @@ function adminCurriculum(){
     </div>
   </div>`;
 }
-// ── ASSIGNMENTS ──
-let dbAssignments = null;
-async function loadAssignments(){
-  try{
-    const {data,error} = await supabase.from('assignments').select('*').eq('status','active').order('created_at',{ascending:false});
-    if(!error) dbAssignments = data || [];
-  }catch(e){ dbAssignments = []; }
-  if(adminView==='assignments'){const c=document.getElementById('adminContent'); if(c){c.innerHTML=adminAssignments(); bindGlobal(); bindForms();}}
-}
-function adminAssignments(){
-  if(dbAssignments===null){loadAssignments();return `<div class="subpage-head"><div><h1>Assignments</h1><p style="color:#748195">Loading…</p></div></div>`;}
-  const list = dbAssignments||[];
-  return `<div class="subpage-head"><div><h1>📝 Assignments</h1><p style="color:#748195">Create assignments for students and review submissions.</p></div></div>
-  <div class="dashboard-grid"><form class="panel" id="addAssignmentForm"><h3>New Assignment</h3>
-    <div class="field"><label>Title</label><input required name="title" placeholder="e.g. CapCut Transitions Practice"></div>
-    <div class="field"><label>Description / Instructions</label><textarea required name="description" rows="4" placeholder="What should the student do?"></textarea></div>
-    <div class="field"><label>Deadline (optional)</label><input type="date" name="deadline"></div>
-    <button class="btn primary" type="submit">Publish Assignment</button></form>
-  <div class="panel"><h3>Published (${list.length})</h3><div class="list" style="margin-top:14px">
-    ${list.length===0?'<div class="empty">No assignments yet.</div>':list.map(a=>`<div class="list-item"><div class="meta"><strong>${esc(a.title)}</strong><small>${a.deadline?'Deadline: '+niceDate(a.deadline):'No deadline'} · <a href="#" data-action="view-submissions" data-id="${a.id}" style="color:#8b5cf6;">View submissions</a> | <a href="#" data-action="delete-assignment" data-id="${a.id}" style="color:#ef4444;">Delete</a></small></div></div>`).join('')}
-  </div></div></div>
-  <div class="panel" id="submissionsPanel" style="margin-top:16px;display:none;"><h3>Submissions</h3><div id="submissionsList"><div class="empty">Select "View submissions" on an assignment.</div></div></div>`;
-}
-async function loadSubmissions(assignmentId){
-  const panel=document.getElementById('submissionsPanel'), listEl=document.getElementById('submissionsList');
-  if(panel)panel.style.display='block';
-  if(listEl)listEl.innerHTML='<div class="empty">Loading submissions…</div>';
-  try{
-    const {data,error}=await supabase.from('assignment_submissions').select('*,profiles!assignment_submissions_student_id_fkey(name,email)').eq('assignment_id',assignmentId).order('submitted_at',{ascending:false});
-    if(error)throw error;
-    if(listEl)listEl.innerHTML=(data||[]).length===0?'<div class="empty">No submissions yet.</div>':`<div class="list">${data.map(s=>`<div class="list-item"><div class="meta"><strong>${esc(s.profiles?.name||'Student')}</strong><small>${esc(s.profiles?.email||'')} · ${new Date(s.submitted_at).toLocaleString()}</small><p style="margin:8px 0 0;color:#c4b5fd;">${esc(s.submission_text||'')}</p>${s.submission_url?`<a href="${esc(s.submission_url)}" target="_blank" style="color:#8b5cf6;font-size:13px;">🔗 View link</a>`:''}</div><span class="tag green">${esc(s.status)}</span></div>`).join('')}</div>`;
-    if(panel)panel.scrollIntoView({behavior:'smooth',block:'nearest'});
-  }catch(e){ if(listEl)listEl.innerHTML='<div class="empty">Failed to load: '+esc(e.message)+'</div>'; }
-}
-function studentAssignments(s){
-  if(dbAssignments===null){loadAssignments();return `<div class="subpage-head"><div><h1>Assignments</h1><p style="color:#748195">Loading…</p></div></div>`;}
-  const list=dbAssignments||[];
-  const sub=(s.assignmentSubs||{});
-  return `<div class="subpage-head"><div><h1>📝 Assignments</h1><p style="color:#748195">Complete and submit your assignments.</p></div></div>
-  ${list.length===0?'<div class="empty">No assignments yet. Check back soon!</div>':`<div class="cards" style="grid-template-columns:1fr;">${list.map(a=>{
-    const done=sub[a.id];
-    return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:start;"><h3 style="margin:0;">${esc(a.title)}</h3>${done?'<span class="tag green">✅ Submitted</span>':a.deadline?'<span class="tag orange">Due: '+niceDate(a.deadline)+'</span>':''}</div>
-    <p style="color:#8fa1b8;margin:10px 0;">${esc(a.description||'')}</p>
-    ${done?`<div class="notice">Submitted on ${new Date(done.submitted_at).toLocaleString()}</div>`:
-    `<form data-assignment-form="${a.id}" style="margin-top:12px;"><div class="field"><label>Your answer / work description</label><textarea name="stext" rows="3" required placeholder="Describe what you did…"></textarea></div><div class="field"><label>Link (optional — video/post URL)</label><input name="surl" placeholder="https://…"></div><button class="btn primary" type="submit">Submit Assignment</button></form>`}
-    </div>`;}).join('')}</div>`}`;
-}
-async function loadMySubmissions(){
-  try{
-    const uid=await getUid(); if(!uid)return;
-    const {data}=await supabase.from('assignment_submissions').select('assignment_id,submitted_at').eq('student_id',uid);
-    const s=currentStudent(); if(s){s.assignmentSubs={}; (data||[]).forEach(r=>s.assignmentSubs[r.assignment_id]=r); save();}
-    if(dashView==='assignments'){const d=document.getElementById('dashContent'); if(d){d.innerHTML=studentView(currentStudent()); bindGlobal();}}
-  }catch(e){}
-}
-
 function adminCourses(){return `<div class="subpage-head"><div><h1>Courses</h1><p style="color:#748195">Manage curriculum, modules and student learning paths.</p></div></div><div class="cards">${state.courses.map(c=>`<div class="card"><span class="pill">${c.lessons} modules</span><h3 style="margin-top:14px">${esc(c.title)}</h3><p>${esc(c.desc)}</p><ul class="feature-list">${c.modules.map(m=>`<li>${esc(m)}</li>`).join('')}</ul><button class="btn light" data-action="edit-course" data-id="${c.id}">Edit Course</button></div>`).join('')}</div>`}
-function adminLive(){return `<div class="subpage-head"><div><h1>Curriculum</h1><p style="color:#748195">Schedule classes and publish recordings.</p></div><button class="btn primary" data-action="add-class">+ Add Class</button></div><div class="panel"><div class="table-wrap"><table class="table"><thead><tr><th>Class</th><th>Date</th><th>Time</th><th>Trainer</th><th>Status</th></tr></thead><tbody>${state.classes.map(c=>`<tr><td>${esc(c.title)}</td><td>${niceDate(c.date)}</td><td>${esc(c.time)}</td><td>${esc(c.trainer)}</td><td><span class="tag ${c.status==='Upcoming'?'orange':'green'}">${esc(c.status)}</span></td></tr>`).join('')}</tbody></table></div></div>`}
+function adminLive(){return `<div class="subpage-head"><div><h1>Curriculum</h1><p style="color:#748195">Schedule classes and publish recordings.</p></div><button class="btn primary" data-action="add-class">+ Add Class</button></div><div class="panel"><table class="table"><thead><tr><th>Class</th><th>Date</th><th>Time</th><th>Trainer</th><th>Status</th></tr></thead><tbody>${state.classes.map(c=>`<tr><td>${esc(c.title)}</td><td>${niceDate(c.date)}</td><td>${esc(c.time)}</td><td>${esc(c.trainer)}</td><td><span class="tag ${c.status==='Upcoming'?'orange':'green'}">${esc(c.status)}</span></td></tr>`).join('')}</tbody></table></div>`}
 function adminPrograms(){return `<div class="subpage-head"><div><h1>Creator Programs</h1><p style="color:#748195">Manage current programs and add future creator apps.</p></div><button class="btn primary" data-action="add-program">+ Add Program</button></div><div class="cards">${(state.programs||[]).map(p=>`<div class="card"><div class="icon-tile">${esc(p.code||p.name.slice(0,2).toUpperCase())}</div><h3>${esc(p.name)}</h3><p>${esc(p.desc)}</p><span class="tag green">${esc(p.status||'Active')}</span></div>`).join('')}</div>`}
 function adminTrends(){return `<div class="subpage-head"><div><h1>Trend Updates</h1><p style="color:#748195">Publish trends and notify students.</p></div><button class="btn primary" data-action="add-trend">+ Add Trend</button></div><div class="panel"><table class="table"><thead><tr><th>Program</th><th>Trend</th><th>Added</th><th>Difficulty</th><th>Status</th></tr></thead><tbody>${state.trends.map(t=>`<tr><td>${esc(t.program)}</td><td>${esc(t.title)}</td><td>${niceDate(t.added)}</td><td>${esc(t.difficulty)}</td><td><span class="tag ${t.status==='New'?'green':''}">${esc(t.status)}</span></td></tr>`).join('')}</tbody></table></div>`}
-function adminEarnings(){return `<div class="subpage-head"><div><h1>Earnings Management</h1><p style="color:#748195">Add student-visible approved payout credits. Optional source/accounting notes remain Admin-only.</p></div></div><div class="dashboard-grid"><form class="panel" id="addEarningForm"><h3>Add approved earning</h3><div class="field"><label>Student</label><select name="studentId" id="earning_student_sel">${state.students.map(s=>`<option value="${s.id}">${esc(s.name)} (@${esc(s.name).toLowerCase().replace(/\s+/g,'')}${s.id.slice(-3)}) — ${esc(s.email||'')}</option>`).join('')}</select><div id="earning_student_info" style="font-size:12px;color:#748195;margin-top:6px;"></div></div><div class="field"><label>Program</label><select name="program"><option>Hypic</option><option>CapCut</option><option>TikTok Creator</option><option>Future App</option></select></div><div class="field"><label>Approved payout credit (student-visible)</label><input required type="number" min="0.01" step="0.01" name="amount" placeholder="25.00"></div><div class="field"><label>Earning date</label><input type="date" name="edate" id="earning_date"></div><div class="field"><label>Source gross / partner report (Admin-only, optional)</label><input type="number" min="0" step="0.01" name="internalGross" placeholder="Internal record only"></div><div class="field"><label>Internal note</label><textarea name="note" rows="3" placeholder="Weekly creator report"></textarea></div><button class="btn primary" type="submit">Add Earning & Notify Student</button></form><div class="panel"><h3>Recent credits</h3><div class="list" style="margin-top:14px">${state.earnings.slice().reverse().slice(0,8).map(e=>{const s=state.students.find(x=>x.id===e.studentId);return `<div class="list-item"><div class="meta"><strong>${esc(s?.name||e.studentId)} · ${esc(e.program)}</strong><small>${niceDate(e.date)}</small></div><span class="amount green">${money(e.amount)}</span></div>`}).join('')}</div></div></div>`}
+function adminEarnings(){return `<div class="subpage-head"><div><h1>Earnings Management</h1><p style="color:#748195">Add student-visible approved payout credits. Optional source/accounting notes remain Admin-only.</p></div></div><div class="dashboard-grid"><form class="panel" id="addEarningForm"><h3>Add approved earning</h3><div class="field"><label>Student</label><select name="studentId">${state.students.map(s=>`<option value="${s.id}">${esc(s.name)} (@${esc(s.name).toLowerCase().replace(/\s+/g,'')}${s.id.slice(-3)})</option>`).join('')}</select></div><div class="field"><label>Program</label><select name="program"><option>Hypic</option><option>CapCut</option><option>TikTok Creator</option><option>Future App</option></select></div><div class="field"><label>Approved payout credit (student-visible)</label><input required type="number" min="0.01" step="0.01" name="amount" placeholder="25.00"></div><div class="field"><label>Source gross / partner report (Admin-only, optional)</label><input type="number" min="0" step="0.01" name="internalGross" placeholder="Internal record only"></div><div class="field"><label>Internal note</label><textarea name="note" rows="3" placeholder="Weekly creator report"></textarea></div><button class="btn primary" type="submit">Add Earning & Notify Student</button></form><div class="panel"><h3>Recent credits</h3><div class="list" style="margin-top:14px">${state.earnings.slice().reverse().slice(0,8).map(e=>{const s=state.students.find(x=>x.id===e.studentId);return `<div class="list-item"><div class="meta"><strong>${esc(s?.name||e.studentId)} · ${esc(e.program)}</strong><small>${niceDate(e.date)}</small></div><span class="amount green">${money(e.amount)}</span></div>`}).join('')}</div></div></div>`}
 function adminWithdrawals(){
   const pending=state.withdrawals.filter(w=>w.status==='Pending').sort((a,b)=>b.date.localeCompare(a.date));
   const processed=state.withdrawals.filter(w=>w.status!=='Pending').sort((a,b)=>b.date.localeCompare(a.date));
@@ -1000,25 +948,12 @@ function bindForms(){
  const sav=$('#signup_avatar'); if(sav)sav.onchange=()=>{const f=sav.files[0],pv=$('#signup_avatar_preview'); if(!f||!pv)return; if(f.size>2*1024*1024){toast('Photo must be under 2MB.');sav.value='';return;} const r=new FileReader(); r.onload=()=>{pv.src=r.result;pv.style.display='block';}; r.readAsDataURL(f);};
 
  const login=$('#loginForm'); if(login)login.onsubmit=async e=>{e.preventDefault();const fd=new FormData(login),email=String(fd.get('email')).trim(),pw=String(fd.get('password')); const {data,error}=await supabase.auth.signInWithPassword({email,password:pw}); if(error){toast('Invalid email or password.');return;} if(!data.session){toast('Please check your email to confirm your account, then login.');return;} const { data: prof, error: profErr } = await supabase.from('profiles').select('*').ilike('email', email).single(); if(profErr || !prof){toast('Student record not found. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;} if(prof.status==='pending'){toast('⏳ Your account is pending admin approval.');await supabase.auth.signOut();return;} if(prof.status==='suspended'){toast('Your account has been suspended. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;} if(prof.status==='rejected'){toast('Your signup request was not approved. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;} if(prof.role==='admin' || email.toLowerCase()===state.admin.email.toLowerCase()){state.session={role:'admin'}; save(); closeModals(); location.hash='#/admin'; render(); loadApprovals(); loadLessons(); return;} let s=state.students.find(x=>x.email.toLowerCase()===email.toLowerCase()); if(!s){s={id:prof.id||uid('ST'),name:prof.name||prof.full_name||email.split('@')[0],avatar:prof.avatar_url||'',email:email.toLowerCase(),password:'',phone:prof.phone||'',status:'Active Student',program:'Creator Program',joinDate:todayISO(),today:0,week:0,month:0,lifetime:650.00,available:500.00,pending:0,paid:150.00,attendance:100,progress:0,tasksDone:0,tasksTotal:20,trendParticipation:0,performance:'New',payoutMethod:'JazzCash',payoutAccount:'',city:'',bio:''}; state.students.push(s);} state.session={role:'student',studentId:s.id}; save(); closeModals(); location.hash='#/dashboard'; render(); loadLessons(); };
- const signup=$('#signupForm'); if(signup)signup.onsubmit=async e=>{e.preventDefault();const fd=new FormData(signup),email=String(fd.get('email')).trim().toLowerCase(),pw=String(fd.get('password')),phone=String(fd.get('phone')).trim(),network=String(fd.get('network')).trim(); const emailRx=/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/; if(!emailRx.test(email)){toast('❌ Invalid email format. Please use a valid email address.');const el=document.getElementById('signup_email');if(el){el.style.borderColor='#ef4444';el.focus();}return;} if(phone.length!==11||!/^[0-9]{11}$/.test(phone)){toast('❌ Phone number must be exactly 11 digits (e.g. 03001234567).');const el=document.getElementById('signup_phone');if(el){el.style.borderColor='#ef4444';el.focus();}return;} if(!network||network==='Select Network'){toast('❌ Please select your Network Provider.');return;} const plan=String(fd.get('program')).trim(); if(!plan){toast('❌ Please choose your plan.');return;} if(checkPasswordStrength(pw)!=='strong'){toast('❌ Password too weak. Use 8+ chars with uppercase, number, and special character (@$!%*?&).');return;} if(state.students.some(x=>x.email.toLowerCase()===email)){toast('An account with this email already exists.');return;}
- const cnic=String(fd.get('cnic')).trim();
- try{ const {data:dupData,error:dupErr}=await supabase.rpc('check_duplicate',{p_phone:phone,p_cnic:cnic});
-  if(!dupErr&&dupData){
-   if(dupData.phone_exists){toast('❌ This phone number is already registered with another account.');const phe=document.getElementById('signup_phone');if(phe){phe.style.borderColor='#ef4444';phe.focus();}return;}
-   if(dupData.cnic_exists){toast('❌ This ID card number is already registered with another account.');return;}
-  }
- }catch(dupEx){}
- const {data,error}=await supabase.auth.signUp({email,password:pw}); if(error){toast('Signup failed: '+(error.message||'Unknown error'));return;} if(!data.user){toast('Please check your email to confirm your account, then login.');closeModals();openAuth('login');return;} let avatar_url=null; const avatarFile=fd.get('avatar'); if(avatarFile&&avatarFile.size>0){const ext=(String(avatarFile.name).split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; const apath=data.user.id+'.'+ext; const {error:upErr}=await supabase.storage.from('avatars').upload(apath,avatarFile,{upsert:true,contentType:avatarFile.type}); if(upErr){toast('Photo upload failed: '+upErr.message+'. Continuing without photo.');} else {avatar_url=supabase.storage.from('avatars').getPublicUrl(apath).data.publicUrl;}} const {error:profErr}=await supabase.from('profiles').upsert([{id:data.user.id,email,name:String(fd.get('name')).trim(),role:'student',status:'pending',phone,network,cnic:String(fd.get('cnic')).trim(),avatar_url}],{onConflict:'id'}); if(profErr){toast('Account created but profile save failed: '+profErr.message+'. Contact support: '+state.settings.supportEmail+'.');return;} notifyEmail('new_signup',data.user.id); await supabase.auth.signOut(); closeModals(); location.hash='#/'; render(); toast('✅ Account created! Your account is pending admin approval.'); };
+ const signup=$('#signupForm'); if(signup)signup.onsubmit=async e=>{e.preventDefault();const fd=new FormData(signup),email=String(fd.get('email')).trim().toLowerCase(),pw=String(fd.get('password')),phone=String(fd.get('phone')).trim(),network=String(fd.get('network')).trim(); const emailRx=/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/; if(!emailRx.test(email)){toast('❌ Invalid email format. Please use a valid email address.');const el=document.getElementById('signup_email');if(el){el.style.borderColor='#ef4444';el.focus();}return;} if(phone.length!==11||!/^[0-9]{11}$/.test(phone)){toast('❌ Phone number must be exactly 11 digits (e.g. 03001234567).');const el=document.getElementById('signup_phone');if(el){el.style.borderColor='#ef4444';el.focus();}return;} if(!network||network==='Select Network'){toast('❌ Please select your Network Provider.');return;} if(checkPasswordStrength(pw)!=='strong'){toast('❌ Password too weak. Use 8+ chars with uppercase, number, and special character (@$!%*?&).');return;} if(state.students.some(x=>x.email.toLowerCase()===email)){toast('An account with this email already exists.');return;} const {data,error}=await supabase.auth.signUp({email,password:pw}); if(error){toast('Signup failed: '+(error.message||'Unknown error'));return;} if(!data.user){toast('Please check your email to confirm your account, then login.');closeModals();openAuth('login');return;} let avatar_url=null; const avatarFile=fd.get('avatar'); if(avatarFile&&avatarFile.size>0){const ext=(String(avatarFile.name).split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; const apath=data.user.id+'.'+ext; const {error:upErr}=await supabase.storage.from('avatars').upload(apath,avatarFile,{upsert:true,contentType:avatarFile.type}); if(upErr){toast('Photo upload failed: '+upErr.message+'. Continuing without photo.');} else {avatar_url=supabase.storage.from('avatars').getPublicUrl(apath).data.publicUrl;}} const {error:profErr}=await supabase.from('profiles').upsert([{id:data.user.id,email,name:String(fd.get('name')).trim(),role:'student',status:'pending',phone,network,cnic:String(fd.get('cnic')).trim(),avatar_url}],{onConflict:'id'}); if(profErr){toast('Account created but profile save failed: '+profErr.message+'. Contact support: '+state.settings.supportEmail+'.');return;} notifyEmail('new_signup',data.user.id); await supabase.auth.signOut(); closeModals(); location.hash='#/'; render(); toast('✅ Account created! Your account is pending admin approval.'); };
  const w=$('#withdrawForm'); if(w)w.onsubmit=e=>{e.preventDefault();const s=currentStudent(),fd=new FormData(w),amt=Number(fd.get('amount')),method=String(fd.get('method')),accountName=String(fd.get('accountName')).trim(),account=String(fd.get('account')).trim();if(!amt||amt<50){toast('Minimum withdrawal amount is $50.');return}if(s.kyc?.status!=='Verified'){toast('Complete KYC identity verification before withdrawing.');return}if(amt>s.available){toast('Requested amount exceeds your available balance.');return}if(!accountName){toast('Enter account holder name.');return}if(!account){toast('Enter your payout account.');return}s.available=Math.round((s.available-amt)*100)/100;s.pending=Math.round(((s.pending||0)+amt)*100)/100;s.accountName=accountName;s.payoutMethod=method;s.payoutAccount=account;state.withdrawals.unshift({id:uid('WD'),studentId:s.id,date:todayISO(),amount:amt,method,accountName,account,status:'Pending',paidDate:'',reference:''});if(!state.unreadCounts)state.unreadCounts={trends:0,adminSupport:0,withdrawals:0};state.unreadCounts.withdrawals=(state.unreadCounts.withdrawals||0)+1;notify(s.id,'Withdrawal submitted',`${money(amt)} withdrawal request is pending admin review. Amount moved to pending balance.`);sendWithdrawalEmailAlert(s,amt);save();dashView='payments';render();toast('Withdrawal request submitted. Amount moved to pending balance.');};
  const pf=$('#profileForm');if(pf)pf.onsubmit=e=>{e.preventDefault();const s=currentStudent(),fd=new FormData(pf);['name','phone','city','payoutMethod','payoutAccount','bio'].forEach(k=>s[k]=String(fd.get(k)||''));save();toast('Profile saved.');render();};
  const kycForm=$('#kycForm'); if(kycForm)kycForm.onsubmit=e=>{e.preventDefault();const s=currentStudent(),fd=new FormData(kycForm),docNumber=String(fd.get('docNumber')).trim();const fileInput=document.getElementById('kycDoc');if(!/^\d{5}-\d{7}-\d{1}$/.test(docNumber)){toast('Please enter a valid 13-digit ID Card Number with dashes (e.g., XXXXX-XXXXXXX-X).');return;}if(!fileInput.files[0]){toast('Upload an ID photo.');return;}const reader=new FileReader();reader.onload=function(event){s.kyc={status:'Pending',docUrl:event.target.result,docNumber};if(!state.unreadCounts)state.unreadCounts={trends:0,adminSupport:0,withdrawals:0,kyc:0};state.unreadCounts.kyc=(state.unreadCounts.kyc||0)+1;save();toast('KYC document submitted for review.');render();};reader.readAsDataURL(fileInput.files[0]);};
  const uploadInput=document.getElementById('avatarUpload');const previewImg=document.getElementById('profilePreview');if(uploadInput&&previewImg){uploadInput.addEventListener('change',function(e){const file=e.target.files[0];if(file){const reader=new FileReader();reader.onload=function(event){const dataUrl=event.target.result;previewImg.src=dataUrl;localStorage.setItem('userAvatar',dataUrl);const headerAvatar=document.getElementById('headerAvatar');if(headerAvatar)headerAvatar.src=dataUrl;};reader.readAsDataURL(file);}});}
- function showEarningStudentInfo(){var sel=document.getElementById('earning_student_sel'),info=document.getElementById('earning_student_info');if(!sel||!info)return;var s=state.students.find(x=>x.id===sel.value);if(s){info.innerHTML='📧 '+esc(s.email||'—')+' &nbsp;·&nbsp; 📱 '+esc(s.phone||'—');}else{info.innerHTML='';}}
- const ef=$('#addEarningForm');if(ef){var _esel=document.getElementById('earning_student_sel');if(_esel){_esel.onchange=showEarningStudentInfo;showEarningStudentInfo();}ef.onsubmit=e=>{e.preventDefault();const fd=new FormData(ef),sid=String(fd.get('studentId')),amt=Number(fd.get('amount')),program=String(fd.get('program')),s=state.students.find(x=>x.id===sid);if(!s||!amt)return;const edate=String(fd.get('edate')||'').trim()||todayISO(); state.earnings.unshift({id:uid('E'),studentId:sid,date:edate,program,amount:amt,note:String(fd.get('note')||''),internalGross:Number(fd.get('internalGross')||0)});s.lifetime=Number(s.lifetime||0)+amt;s.available+=amt;notify(sid,'New earnings added',`${money(amt)} has been added to your approved account balance.`);save();render();toast('Earning added and student notified.');};
-
- // ── Assignment forms ──
- const aaf=$('#addAssignmentForm'); if(aaf)aaf.onsubmit=async e=>{e.preventDefault();const fd=new FormData(aaf);const title=String(fd.get('title')).trim(),desc=String(fd.get('description')).trim(),dl=String(fd.get('deadline')||'').trim()||null; if(!title||!desc){toast('Title and description required.');return;} try{const uid=await getUid(); const{error}=await supabase.from('assignments').insert({title,description:desc,deadline:dl,created_by:uid,status:'active'}); if(error)throw error; toast('✅ Assignment published!'); dbAssignments=null; await loadAssignments();}catch(err){toast('Failed: '+err.message);}};
- document.querySelectorAll('form[data-assignment-form]').forEach(f=>{f.onsubmit=async e=>{e.preventDefault();const aid=f.getAttribute('data-assignment-form');const fd=new FormData(f);const stext=String(fd.get('stext')).trim(),surl=String(fd.get('surl')).trim(); if(!stext){toast('Please describe your work.');return;} try{const uid=await getUid(); if(!uid)throw new Error('Login required'); const{error}=await supabase.from('assignment_submissions').upsert({assignment_id:aid,student_id:uid,submission_text:stext,submission_url:surl||null,status:'submitted'},{onConflict:'assignment_id,student_id'}); if(error)throw error; toast('✅ Assignment submitted!'); await loadMySubmissions();}catch(err){toast('Failed: '+err.message);}};});
+ const ef=$('#addEarningForm');if(ef)ef.onsubmit=e=>{e.preventDefault();const fd=new FormData(ef),sid=String(fd.get('studentId')),amt=Number(fd.get('amount')),program=String(fd.get('program')),s=state.students.find(x=>x.id===sid);if(!s||!amt)return;state.earnings.unshift({id:uid('E'),studentId:sid,date:todayISO(),program,amount:amt,note:String(fd.get('note')||''),internalGross:Number(fd.get('internalGross')||0)});s.lifetime=Number(s.lifetime||0)+amt;s.available+=amt;notify(sid,'New earnings added',`${money(amt)} has been added to your approved account balance.`);save();render();toast('Earning added and student notified.');};
  const nf=$('#notifyForm');if(nf)nf.onsubmit=e=>{e.preventDefault();const fd=new FormData(nf),sid=String(fd.get('studentId')),title=String(fd.get('title')),body=String(fd.get('body'));if(sid==='all')state.students.forEach(s=>notify(s.id,title,body));else notify(sid,title,body);save();toast('Notification sent.');nf.reset();};
  const sf=$('#settingsForm');if(sf)sf.onsubmit=e=>{e.preventDefault();const fd=new FormData(sf);['brand','supportEmail','supportWhatsApp','weeklyUpdateText'].forEach(k=>state.settings[k]=String(fd.get(k)||''));save();toast('Settings saved.');};
  const acf=$('#adminControlsForm');if(acf)acf.onsubmit=e=>{e.preventDefault();const fd=new FormData(acf);state.adminControls={showLeaderboard:fd.get('showLeaderboard')==='on',showTrends:fd.get('showTrends')==='on',showWithdrawals:fd.get('showWithdrawals')==='on'};save();toast('Platform settings saved.');};
@@ -1029,100 +964,10 @@ function bindForms(){
  const cf=$('#classForm');if(cf)cf.onsubmit=e=>{e.preventDefault();const fd=new FormData(cf);state.classes.unshift({id:uid('CL'),title:String(fd.get('title')),trainer:String(fd.get('trainer')),date:String(fd.get('date')),time:String(fd.get('time')),batch:String(fd.get('batch')),status:'Upcoming',link:String(fd.get('link')||'#')});state.students.forEach(s=>notify(s.id,'New live class scheduled',`${String(fd.get('title'))} is scheduled for ${niceDate(String(fd.get('date')))}.`));save();closeModals();render();toast('Class added and students notified.');};
  const tf=$('#trendForm');if(tf)tf.onsubmit=e=>{e.preventDefault();const fd=new FormData(tf),t={id:uid('TR'),program:String(fd.get('program')),title:String(fd.get('title')),added:todayISO(),difficulty:String(fd.get('difficulty')),status:'New'};state.trends.unshift(t);state.students.forEach(s=>notify(s.id,'New creator trend',`${t.program}: ${t.title}`));save();closeModals();render();toast('Trend published and students notified.');};
  const prf=$('#programForm');if(prf)prf.onsubmit=e=>{e.preventDefault();const fd=new FormData(prf),name=String(fd.get('name')).trim(),desc=String(fd.get('desc')).trim();state.programs=state.programs||[];state.programs.push({id:uid('PG'),name,desc,code:name.slice(0,2).toUpperCase(),status:'Active'});save();closeModals();render();toast('Program added.');};
- window.uploadVideoWithProgress=function(file,path,onProg){
-  return new Promise(function(resolve,reject){
-    supabase.auth.getSession().then(function(res){
-      var token=res&&res.data&&res.data.session?res.data.session.access_token:null;
-      if(!token){reject(new Error('Not logged in'));return;}
-      var xhr=new XMLHttpRequest();
-      xhr.open('POST','https://ijsvpdraigzvxeeuedzd.supabase.co/storage/v1/object/lesson-videos/'+path);
-      xhr.setRequestHeader('apikey','sb_publishable_FlaAOinEJSeHyLTEaEAJrQ_QR_N3dBe');
-      xhr.setRequestHeader('Authorization','Bearer '+token);
-      xhr.setRequestHeader('Content-Type',file.type||'video/mp4');
-      xhr.setRequestHeader('x-upsert','true');
-      var startTs=Date.now();
-      xhr.upload.onprogress=function(e){
-        if(e.lengthComputable){
-          var pct=Math.round(e.loaded/e.total*100);
-          var elapsed=(Date.now()-startTs)/1000;
-          var speed=elapsed>0?e.loaded/elapsed:0;
-          var remain=speed>0?(e.total-e.loaded)/speed:0;
-          onProg(pct,e.loaded,e.total,speed,remain);
-        }
-      };
-      xhr.onload=function(){ if(xhr.status>=200&&xhr.status<300)resolve(); else reject(new Error('Upload failed (HTTP '+xhr.status+')')); };
-      xhr.onerror=function(){ reject(new Error('Network error during upload')); };
-      xhr.send(file);
-    });
-  });
-};
-function fmtSize(b){ if(b>1073741824)return (b/1073741824).toFixed(2)+' GB'; if(b>1048576)return (b/1048576).toFixed(1)+' MB'; return Math.round(b/1024)+' KB'; }
-function fmtTime(s){ s=Math.round(s); if(s<60)return s+'s'; return Math.floor(s/60)+'m '+(s%60)+'s'; }
-// ── AI Overview (Google Gemini) ──
-// AI disabled in this build
-// ── AI Overview (lazy-loaded, safe) ──
-let GEMINI_API_KEY = '';
-let _geminiLoading = null;
-async function loadGeminiKey(){
-  if(GEMINI_API_KEY) return GEMINI_API_KEY;
-  if(_geminiLoading) return _geminiLoading;
-  _geminiLoading = (async()=>{
-    try{
-      const{data}=await supabase.from('app_settings').select('value').eq('key','gemini_api_key').maybeSingle();
-      if(data&&data.value) GEMINI_API_KEY=data.value;
-    }catch(e){}
-    return GEMINI_API_KEY;
-  })();
-  return _geminiLoading;
-}
-async function aiGenerate(prompt){
-  const key = await loadGeminiKey();
-  if(!key) throw new Error('AI key not configured');
-  const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key='+key,{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
-  });
-  const data = await resp.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if(!text) throw new Error('No AI response');
-  return text.trim();
-}
-window.generateAIOverview = async function(){
-  const form=document.getElementById('addLessonForm');
-  const titleEl=form?.querySelector('[name="title"]');
-  const descEl=form?.querySelector('[name="description"]');
-  const ovEl=form?.querySelector('[name="overview"]');
-  const btn=document.getElementById('ai_gen_btn');
-  const title=titleEl?.value.trim()||'', desc=descEl?.value.trim()||'';
-  if(!title){toast('Pehle lesson ka title likhen.');return;}
-  if(btn){btn.disabled=true;btn.textContent='⏳ Generating…';}
-  try{
-    const prompt=`Write a concise lecture overview (100-150 words) in simple English for a video lesson titled "${title}". ${desc?`Topic: "${desc}". `:''}Include what the student will learn and 3-4 key concepts as bullet points. Friendly tone.`;
-    const text=await aiGenerate(prompt);
-    if(ovEl) ovEl.value=text;
-    toast('✅ AI overview generated!');
-  }catch(e){ toast('AI failed: '+e.message); }
-  if(btn){btn.disabled=false;btn.textContent='🤖 Generate with AI';}
-};
-const alf=$('#addLessonForm');if(alf)alf.onsubmit=async e=>{e.preventDefault();const fd=new FormData(alf);const title=String(fd.get('title')).trim(),module=String(fd.get('module')).trim(),duration=String(fd.get('duration')).trim();const vf=fd.get('videofile');let url=String(fd.get('url')||'').trim(),kind='embed';
- if(vf&&vf.size>0){
-  if(vf.size>500*1024*1024){toast('Video must be under 500MB.');return;}
-  const ext=(String(vf.name).split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'')||'mp4';
-  const fpath=Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
-  var prog=document.getElementById('lv_progress'),bar=document.getElementById('lv_bar'),pt=document.getElementById('lv_pct'),pd=document.getElementById('lv_detail');
-  if(prog)prog.style.display='block';
-  var submitBtn=alf.querySelector('button[type="submit"]'); if(submitBtn)submitBtn.disabled=true;
-  try{
-    await uploadVideoWithProgress(vf,fpath,function(pct,loaded,total,speed,remain){
-      if(bar)bar.style.width=pct+'%'; if(pt)pt.textContent=pct+'%';
-      if(pd)pd.textContent=fmtSize(loaded)+' / '+fmtSize(total)+' · '+fmtSize(speed)+'/s · '+fmtTime(remain)+' left';
-    });
-  }catch(upErr){ if(prog)prog.style.display='none'; if(submitBtn)submitBtn.disabled=false; toast('Upload failed: '+upErr.message); return; }
-  if(prog)prog.style.display='none'; if(submitBtn)submitBtn.disabled=false;
-  url='https://ijsvpdraigzvxeeuedzd.supabase.co/storage/v1/object/public/lesson-videos/'+fpath; kind='file';
-}
+ const alf=$('#addLessonForm');if(alf)alf.onsubmit=async e=>{e.preventDefault();const fd=new FormData(alf);const title=String(fd.get('title')).trim(),module=String(fd.get('module')).trim(),duration=String(fd.get('duration')).trim();const vf=fd.get('videofile');let url=String(fd.get('url')||'').trim(),kind='embed';
+ if(vf&&vf.size>0){if(vf.size>500*1024*1024){toast('Video must be under 500MB.');return;} toast('⏳ Uploading video, please wait...');const ext=(String(vf.name).split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'')||'mp4';const fpath=Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;const {error:upErr}=await supabase.storage.from('lesson-videos').upload(fpath,vf,{contentType:vf.type||'video/mp4'}); if(upErr){toast('Upload failed: '+upErr.message);return;} url=supabase.storage.from('lesson-videos').getPublicUrl(fpath).data.publicUrl; kind='file';}
  if(!url){toast('Please upload a video file or paste a video URL.');return;}
- const mins=parseInt(String(duration).replace(/[^0-9]/g,''))||0; const {error:insErr}=await supabase.from('lessons').insert([{title,description:module,video_url:url,kind,duration_minutes:mins,status:'published',overview:String(fd.get('overview')||'').trim()||null}]); if(insErr){toast('Could not save lesson: '+insErr.message);return;}
+ const mins=parseInt(String(duration).replace(/[^0-9]/g,''))||0; const {error:insErr}=await supabase.from('lessons').insert([{title,description:module,video_url:url,kind,duration_minutes:mins,status:'published'}]); if(insErr){toast('Could not save lesson: '+insErr.message);return;}
  toast('✅ Lesson published for all students!'); loadLessons();};
  const contact=$('#contactForm');if(contact)contact.onsubmit=e=>{e.preventDefault();const fd=new FormData(contact);state.contactMessages=state.contactMessages||[];state.contactMessages.unshift({id:uid('MSG'),name:String(fd.get('name')),email:String(fd.get('email')),message:String(fd.get('message')),date:todayISO()});save();contact.reset();toast('Message submitted to support.');};
 const fp=$('#forgotPasswordForm');if(fp)fp.onsubmit=async e=>{e.preventDefault();const fd=new FormData(fp),email=String(fd.get('email')).trim().toLowerCase();const {data,error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:'https://mugees-editor.vercel.app/?reset=1'});if(error){toast(error.message||'Failed to send reset email');}else{toast('Password reset email sent');closeModals();}};
@@ -1200,7 +1045,6 @@ function bindMobileMenu() {
         if(dashTarget==='courses')loadLessons();
         if (route() !== 'dashboard') { location.hash = '#/dashboard'; }
         render();
-        if(dashTarget==='courses'){ setTimeout(function(){ var _ls=(typeof dbLessons!=='undefined'&&dbLessons)?dbLessons:[]; var cid=(state&&state.currentLessonId)||(_ls[0]&&_ls[0].id); if(cid)loadLessonNotes(cid); loadVideoBlob(); }, 400); }
       } else if (adminTarget) {
         adminView = adminTarget;
         if (route() !== 'admin') { location.hash = '#/admin'; }
@@ -1228,14 +1072,7 @@ function bindMobileMenu() {
   });
 }
 function route(){const r=(location.hash||'#/').replace(/^#\//,'').split('?')[0];return r||'home'}
-function render(){syncHeader();const r=route();const app=$('#app');$('#year').textContent=new Date().getFullYear();$('#siteFooter').classList.toggle('hidden',r==='dashboard'||r==='admin');let html='';switch(r){case'home':html=homePage();break;case'courses':html=coursesPage();break;case'programs':html=programsPage();break;case'live':html=livePage();break;case'how-it-works':html=howPage();break;case'faq':html=faqPage();break;case'contact':html=contactPage();break;case'dashboard':html=studentDashboard();break;case'admin':html=adminDashboard();break;case'terms':case'privacy':case'payout-policy':case'refund-policy':case'earnings-policy':case'earnings-disclaimer':case'community-guidelines':html=legalPage(r);break;default:html=`${pageHero('Page not found','The page you requested does not exist.')}<section class="section"><a class="btn primary" href="#/">Back Home</a></section>`}app.innerHTML=html;try{bindGlobal();}catch(e){console.warn('bindGlobal error:',e);}window.scrollTo({top:0,behavior:'instant'});syncActiveLinks();
- // ── Lock zoom on auth modal ──
- if(!window._zoomLockInit){window._zoomLockInit=true;
-  document.addEventListener('gesturestart',function(e){var m=document.getElementById('authModal');if(m&&m.classList.contains('open'))e.preventDefault();});
-  document.addEventListener('wheel',function(e){var m=document.getElementById('authModal');if(m&&m.classList.contains('open')&&e.ctrlKey)e.preventDefault();},{passive:false});
-  document.addEventListener('keydown',function(e){var m=document.getElementById('authModal');if(m&&m.classList.contains('open')&&e.ctrlKey&&['+','-','=','0'].includes(e.key))e.preventDefault();});
- }
- try{var _ab=document.querySelector('.side-nav button.active');if(_ab)_ab.scrollIntoView({block:'nearest',inline:'nearest'});}catch(_e){}}
+function render(){syncHeader();const r=route();const app=$('#app');$('#year').textContent=new Date().getFullYear();$('#siteFooter').classList.toggle('hidden',r==='dashboard'||r==='admin');let html='';switch(r){case'home':html=homePage();break;case'courses':html=coursesPage();break;case'programs':html=programsPage();break;case'live':html=livePage();break;case'how-it-works':html=howPage();break;case'faq':html=faqPage();break;case'contact':html=contactPage();break;case'dashboard':html=studentDashboard();break;case'admin':html=adminDashboard();break;case'terms':case'privacy':case'payout-policy':case'refund-policy':case'earnings-policy':case'earnings-disclaimer':case'community-guidelines':html=legalPage(r);break;default:html=`${pageHero('Page not found','The page you requested does not exist.')}<section class="section"><a class="btn primary" href="#/">Back Home</a></section>`}app.innerHTML=html;try{bindGlobal();}catch(e){console.warn('bindGlobal error:',e);}window.scrollTo({top:0,behavior:'instant'});syncActiveLinks();}
 function syncActiveLinks(){
   const r=route();
   // Clear ALL active classes across desktop sidebar, desktop nav, and mobile menu
@@ -1401,7 +1238,6 @@ document.addEventListener('click', async e => {
     if (d === 'trends' && state.unreadCounts?.trends > 0) { state.unreadCounts.trends = 0; save(); }
     if (d === 'notifications' && state.session?.role === 'student') { const s = currentStudent(); if(s.unreadCounts?.studentAlerts > 0) { s.unreadCounts.studentAlerts = 0; save(); } }
     dashView = d;
-    if(d==='assignments'){loadAssignments(); loadMySubmissions();}
     const mm = document.getElementById('mobileMenu');
     if (mm) mm.classList.remove('open');
     if (route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } else { render(); }
@@ -1418,7 +1254,6 @@ document.addEventListener('click', async e => {
     adminView = d;
     if(d==='approvals')loadApprovals();
     if(d==='curriculum')loadLessons();
-    if(d==='assignments')loadAssignments();
     const mm = document.getElementById('mobileMenu');
     if (mm) mm.classList.remove('open');
     if (route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
@@ -1493,27 +1328,6 @@ document.addEventListener('click', async e => {
     if (a === 'edit-course')        { editCourseModal(id); return; }
     if (a === 'reset-demo')         { if (confirm('Reset all local data?')) resetDemo(); return; }
     if (a === 'delete-lesson')      { if(!confirm('Delete this lesson?'))return; const {error:delErr}=await supabase.from('lessons').delete().eq('id',id); if(delErr){toast('Delete failed: '+delErr.message);return;} toast('Lesson deleted.'); loadLessons(); return; }
-    if (a === 'play-lesson') { playLesson(id); return; }
-    if (a === 'toggle-module') { var mn=actionEl.getAttribute('data-module'); if(!state.expandedModules)state.expandedModules={}; state.expandedModules[mn]=state.expandedModules[mn]===false?true:false; save(); var dd=document.getElementById('dashContent'); if(dd){dd.innerHTML=studentView(currentStudent());bindGlobal();} return; }
-    if (a === 'set-speed') { var r=parseFloat(actionEl.getAttribute('data-speed')); var vv=document.getElementById('lessonVideo'); if(vv)vv.playbackRate=r; document.querySelectorAll('[data-action="set-speed"]').forEach(function(b){var on=parseFloat(b.getAttribute('data-speed'))===r;b.classList.toggle('primary',on);b.classList.toggle('light',!on);}); return; }
-    if (a === 'toggle-fullscreen') { var vf=document.getElementById('lessonVideo'); if(vf){ if(document.fullscreenElement)document.exitFullscreen(); else if(vf.requestFullscreen)vf.requestFullscreen(); else if(vf.webkitEnterFullscreen)vf.webkitEnterFullscreen(); } return; }
-    if (a === 'save-notes') { saveNotes(id); return; }
-    if (a === 'view-submissions') { e.preventDefault(); loadSubmissions(id); return; }
-    if (a === 'delete-assignment') { e.preventDefault(); if(confirm('Delete this assignment?')){ supabase.from('assignments').delete().eq('id',id).then(()=>{toast('Deleted.'); dbAssignments=null; loadAssignments();}); } return; }
-    if (a === 'ai-overview') {
-      const btn=el, res=document.getElementById('ai_ov_result'), txt=document.getElementById('ai_ov_text');
-      const title=btn.getAttribute('data-title')||'', mod=btn.getAttribute('data-module')||'';
-      btn.disabled=true; btn.textContent='⏳ Generating…';
-      (async()=>{
-        try{
-          const prompt=`Write a concise lecture overview (100-150 words) in simple English for a video lesson titled "${title}". ${mod?`Topic: "${mod}". `:''}Include what the student will learn and 3-4 key concepts as bullet points. Friendly tone.`;
-          const text=await aiGenerate(prompt);
-          if(txt)txt.textContent=text; if(res)res.style.display='block';
-        }catch(e){ toast('AI failed: '+e.message); }
-        btn.disabled=false; btn.textContent='🤖 AI Lecture Overview';
-      })();
-      return;
-    }
     if (a === 'toggle-complete-lesson') {
       const s = currentStudent();
       if(!s.completedLessons) s.completedLessons = [];
