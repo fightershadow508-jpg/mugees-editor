@@ -786,6 +786,7 @@ function adminCurriculum(){
        <div class="field"><label>Option A — Upload recording (video file)</label><input type="file" name="videofile" id="lesson_videofile" accept="video/*"><p class="micro" style="color:#748195;margin-top:6px;">MP4 recommended. If you choose a file, the URL field below is ignored.</p></div><div class="field"><label>Option B — Video URL (YouTube/Vimeo embed)</label><input name="url" id="lesson_url" placeholder="https://www.youtube.com/embed/..."></div>
        <div class="field"><label>Duration (minutes)</label><input name="duration" required inputmode="numeric" placeholder="e.g. 10"></div>
        <button class="btn primary" type="submit">Add Lesson</button>
+       <div id="lv_progress" style="display:none;margin-top:4px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:13px;color:#a5b4c9;">⏳ Uploading video… <strong id="lv_pct" style="color:#edf5ff;">0%</strong></span></div><div style="height:10px;background:rgba(255,255,255,0.08);border-radius:6px;overflow:hidden;"><div id="lv_bar" style="height:100%;width:0%;background:linear-gradient(90deg,#8b5cf6,#3b82f6);border-radius:6px;transition:width .2s;"></div></div><div id="lv_detail" style="font-size:12px;color:#748195;margin-top:6px;"></div></div>
     </form>
   </div>
   <div class="panel" style="margin-top:20px;">
@@ -989,8 +990,52 @@ function bindForms(){
  const cf=$('#classForm');if(cf)cf.onsubmit=e=>{e.preventDefault();const fd=new FormData(cf);state.classes.unshift({id:uid('CL'),title:String(fd.get('title')),trainer:String(fd.get('trainer')),date:String(fd.get('date')),time:String(fd.get('time')),batch:String(fd.get('batch')),status:'Upcoming',link:String(fd.get('link')||'#')});state.students.forEach(s=>notify(s.id,'New live class scheduled',`${String(fd.get('title'))} is scheduled for ${niceDate(String(fd.get('date')))}.`));save();closeModals();render();toast('Class added and students notified.');};
  const tf=$('#trendForm');if(tf)tf.onsubmit=e=>{e.preventDefault();const fd=new FormData(tf),t={id:uid('TR'),program:String(fd.get('program')),title:String(fd.get('title')),added:todayISO(),difficulty:String(fd.get('difficulty')),status:'New'};state.trends.unshift(t);state.students.forEach(s=>notify(s.id,'New creator trend',`${t.program}: ${t.title}`));save();closeModals();render();toast('Trend published and students notified.');};
  const prf=$('#programForm');if(prf)prf.onsubmit=e=>{e.preventDefault();const fd=new FormData(prf),name=String(fd.get('name')).trim(),desc=String(fd.get('desc')).trim();state.programs=state.programs||[];state.programs.push({id:uid('PG'),name,desc,code:name.slice(0,2).toUpperCase(),status:'Active'});save();closeModals();render();toast('Program added.');};
- const alf=$('#addLessonForm');if(alf)alf.onsubmit=async e=>{e.preventDefault();const fd=new FormData(alf);const title=String(fd.get('title')).trim(),module=String(fd.get('module')).trim(),duration=String(fd.get('duration')).trim();const vf=fd.get('videofile');let url=String(fd.get('url')||'').trim(),kind='embed';
- if(vf&&vf.size>0){if(vf.size>500*1024*1024){toast('Video must be under 500MB.');return;} toast('⏳ Uploading video, please wait...');const ext=(String(vf.name).split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'')||'mp4';const fpath=Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;const {error:upErr}=await supabase.storage.from('lesson-videos').upload(fpath,vf,{contentType:vf.type||'video/mp4'}); if(upErr){toast('Upload failed: '+upErr.message);return;} url=supabase.storage.from('lesson-videos').getPublicUrl(fpath).data.publicUrl; kind='file';}
+ window.uploadVideoWithProgress=function(file,path,onProg){
+  return new Promise(function(resolve,reject){
+    supabase.auth.getSession().then(function(res){
+      var token=res&&res.data&&res.data.session?res.data.session.access_token:null;
+      if(!token){reject(new Error('Not logged in'));return;}
+      var xhr=new XMLHttpRequest();
+      xhr.open('POST','https://ijsvpdraigzvxeeuedzd.supabase.co/storage/v1/object/lesson-videos/'+path);
+      xhr.setRequestHeader('apikey','sb_publishable_FlaAOinEJSeHyLTEaEAJrQ_QR_N3dBe');
+      xhr.setRequestHeader('Authorization','Bearer '+token);
+      xhr.setRequestHeader('Content-Type',file.type||'video/mp4');
+      xhr.setRequestHeader('x-upsert','true');
+      var startTs=Date.now();
+      xhr.upload.onprogress=function(e){
+        if(e.lengthComputable){
+          var pct=Math.round(e.loaded/e.total*100);
+          var elapsed=(Date.now()-startTs)/1000;
+          var speed=elapsed>0?e.loaded/elapsed:0;
+          var remain=speed>0?(e.total-e.loaded)/speed:0;
+          onProg(pct,e.loaded,e.total,speed,remain);
+        }
+      };
+      xhr.onload=function(){ if(xhr.status>=200&&xhr.status<300)resolve(); else reject(new Error('Upload failed (HTTP '+xhr.status+')')); };
+      xhr.onerror=function(){ reject(new Error('Network error during upload')); };
+      xhr.send(file);
+    });
+  });
+};
+function fmtSize(b){ if(b>1073741824)return (b/1073741824).toFixed(2)+' GB'; if(b>1048576)return (b/1048576).toFixed(1)+' MB'; return Math.round(b/1024)+' KB'; }
+function fmtTime(s){ s=Math.round(s); if(s<60)return s+'s'; return Math.floor(s/60)+'m '+(s%60)+'s'; }
+const alf=$('#addLessonForm');if(alf)alf.onsubmit=async e=>{e.preventDefault();const fd=new FormData(alf);const title=String(fd.get('title')).trim(),module=String(fd.get('module')).trim(),duration=String(fd.get('duration')).trim();const vf=fd.get('videofile');let url=String(fd.get('url')||'').trim(),kind='embed';
+ if(vf&&vf.size>0){
+  if(vf.size>500*1024*1024){toast('Video must be under 500MB.');return;}
+  const ext=(String(vf.name).split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'')||'mp4';
+  const fpath=Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
+  var prog=document.getElementById('lv_progress'),bar=document.getElementById('lv_bar'),pt=document.getElementById('lv_pct'),pd=document.getElementById('lv_detail');
+  if(prog)prog.style.display='block';
+  var submitBtn=alf.querySelector('button[type="submit"]'); if(submitBtn)submitBtn.disabled=true;
+  try{
+    await uploadVideoWithProgress(vf,fpath,function(pct,loaded,total,speed,remain){
+      if(bar)bar.style.width=pct+'%'; if(pt)pt.textContent=pct+'%';
+      if(pd)pd.textContent=fmtSize(loaded)+' / '+fmtSize(total)+' · '+fmtSize(speed)+'/s · '+fmtTime(remain)+' left';
+    });
+  }catch(upErr){ if(prog)prog.style.display='none'; if(submitBtn)submitBtn.disabled=false; toast('Upload failed: '+upErr.message); return; }
+  if(prog)prog.style.display='none'; if(submitBtn)submitBtn.disabled=false;
+  url='https://ijsvpdraigzvxeeuedzd.supabase.co/storage/v1/object/public/lesson-videos/'+fpath; kind='file';
+}
  if(!url){toast('Please upload a video file or paste a video URL.');return;}
  const mins=parseInt(String(duration).replace(/[^0-9]/g,''))||0; const {error:insErr}=await supabase.from('lessons').insert([{title,description:module,video_url:url,kind,duration_minutes:mins,status:'published'}]); if(insErr){toast('Could not save lesson: '+insErr.message);return;}
  toast('✅ Lesson published for all students!'); loadLessons();};
