@@ -1451,7 +1451,19 @@ document.addEventListener('click', async e => {
       (async()=>{
         try{
           let text;
-          if(videoUrl){ text = await aiAnalyzeVideo(videoUrl, title, mod); }
+          if(videoUrl){
+            const vkey = await loadGeminiKey();
+            const vresp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key='+vkey,{
+              method:'POST',headers:{'Content-Type':'application/json'},
+              body:JSON.stringify({contents:[{parts:[
+                {text:'Watch this video and provide a concise lecture overview (100-150 words) in simple English. Title: "'+title+'". Module: "'+mod+'". Describe what the video teaches, 3-4 key points, and what the student will learn. Base it on the ACTUAL video content.'},
+                {file_data:{mime_type:'video/mp4', file_uri:videoUrl}}
+              ]}]})
+            });
+            const vdata = await vresp.json();
+            text = vdata?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if(!text) throw new Error('Video analysis returned no text');
+          }
           else { text = await aiGenerate('Write a concise lecture overview (100-150 words) in simple English for "'+title+'". Topic: "'+mod+'". Include 3-4 key points.'); }
           if(txt) txt.textContent=text;
         }catch(e){
