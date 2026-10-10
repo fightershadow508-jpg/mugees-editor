@@ -447,7 +447,14 @@ function studentCourses(s){
             ${isCompleted ? '✅ Completed' : 'Mark as Complete'}
          </button>
        </div>
-       <div style="background:linear-gradient(135deg,rgba(139,92,246,0.10),rgba(59,130,246,0.06)); padding:16px; border-radius:12px; border:1px solid rgba(139,92,246,0.25); margin-bottom:16px;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;"> <h3 style="margin:0; color:#c4b5fd; font-size:16px;">🤖 AI Lecture Overview</h3> <button class="btn small primary" data-action="ai-overview" data-id="${current.id}" data-title="${esc(current.title)}" data-module="${esc(current.module||'')}" data-overview="${esc(current.overview||'')}" data-url="${esc(current.video_url||current.url||'')}">✨ Get Overview</button> </div> <div id="ai_ov_result" style="display:none;"> <p id="ai_ov_text" style="margin:0; color:#dbe4f0; font-size:14px; line-height:1.7; white-space:pre-wrap;"></p> </div> <p id="ai_ov_hint" style="margin:0; color:#8fa1b8; font-size:13px;">One click — poori lecture ka khulasa yahin milega</p> </div> <div style="background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
+       <div style="background:linear-gradient(135deg,rgba(139,92,246,0.10),rgba(59,130,246,0.06)); padding:16px; border-radius:12px; border:1px solid rgba(139,92,246,0.25); margin-bottom:16px;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;"> <h3 style="margin:0; color:#c4b5fd; font-size:16px;">🤖 AI Lecture Overview</h3> <button class="btn small primary" data-action="ai-overview" data-id="${current.id}" data-title="${esc(current.title)}" data-module="${esc(current.module||'')}" data-overview="${esc(current.overview||'')}" data-url="${esc(current.video_url||current.url||'')}">✨ Get Overview</button> </div> <div id="ai_ov_result" style="display:none;">
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+              <button class="btn small primary" data-action="ai-lang" data-lang="en">English</button>
+              <button class="btn small light" data-action="ai-lang" data-lang="ur">اردو</button>
+              <button class="btn small light" data-action="ai-lang" data-lang="roman">Roman Urdu</button>
+            </div>
+            <p id="ai_ov_text" style="margin:0; color:#dbe4f0; font-size:14px; line-height:1.7; white-space:pre-wrap;"></p>
+          </div> <p id="ai_ov_hint" style="margin:0; color:#8fa1b8; font-size:13px;">One click — poori lecture ka khulasa yahin milega</p> </div> <div style="background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
          <h3 style="margin:0 0 12px; color:#edf5ff; font-size:16px;">📝 My Notes</h3>
          <textarea id="lessonNotes" placeholder="📝 Write your notes here..." style="width:100%; height:120px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:12px; color:#e2e8f0; font-family:inherit; resize:vertical; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">${esc(notes)}</textarea>
          <button class="btn primary" style="margin-top:12px;" data-action="save-notes" data-id="${current.id}">Save Notes</button>
@@ -1477,9 +1484,41 @@ document.addEventListener('click', async e => {
             text = gdata?.candidates?.[0]?.content?.parts?.[0]?.text;
             if(!text) throw new Error('No AI response');
           }
-          if(txt) txt.textContent=text.trim();
+          if(txt){ txt.textContent=text.trim(); txt.setAttribute('data-original', text.trim()); }
         }catch(e){ if(txt) txt.textContent='AI failed: '+e.message; }
         btn.disabled=false; btn.textContent='\u2728 Get Overview';
+      })();
+      return;
+    }
+    if (a === 'ai-lang') {
+      const langBtn=actionEl, lang=langBtn.getAttribute('data-lang');
+      const txt=document.getElementById('ai_ov_text');
+      if(!txt || !txt.getAttribute('data-original')){ toast('Pehle overview generate karen'); return; }
+      const original=txt.getAttribute('data-original');
+      // Update button styles
+      document.querySelectorAll('[data-action="ai-lang"]').forEach(b=>{
+        b.classList.toggle('primary', b===langBtn);
+        b.classList.toggle('light', b!==langBtn);
+      });
+      if(lang==='en'){ txt.textContent=original; return; }
+      langBtn.disabled=true; const oldT=langBtn.textContent; langBtn.textContent='...';
+      (async()=>{
+        try{
+          const kRes = await supabase.rpc('get_gemini_key');
+          const vkey = String(kRes.data||'').trim();
+          const prompt = lang==='ur' 
+            ? 'Is English text ko aasaan Urdu (اردو script) mein translate karo. Sirf translation do, koi explanation nahi:\n\n'+original
+            : 'Is English text ko Roman Urdu (Urdu Latin script mein) mein translate karo. Sirf translation do, koi explanation nahi:\n\n'+original;
+          const tresp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key='+vkey,{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
+          });
+          const tdata = await tresp.json();
+          const translated = tdata?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if(translated) txt.textContent=translated.trim();
+          else throw new Error('Translation failed');
+        }catch(e){ toast('Translation failed: '+e.message); }
+        langBtn.disabled=false; langBtn.textContent=oldT;
       })();
       return;
     }
