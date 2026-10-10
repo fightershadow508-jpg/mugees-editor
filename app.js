@@ -459,7 +459,7 @@ function studentCourses(s){
          ${_lessons.map(l=>{
            const active = l.id === current.id;
            const done = s.completedLessons.includes(l.id);
-           return `<div onclick="playLesson('${l.id}')" style="cursor:pointer; padding:12px; border-radius:8px; background:${active?'rgba(139,92,246,0.15)':'rgba(255,255,255,0.02)'}; border:1px solid ${active?'#8b5cf6':'rgba(255,255,255,0.05)'}; transition:background 0.2s;">
+           return `<div data-action="play-lesson" data-id="${l.id}" style="cursor:pointer; padding:12px; border-radius:8px; background:${active?'rgba(139,92,246,0.15)':'rgba(255,255,255,0.02)'}; border:1px solid ${active?'#8b5cf6':'rgba(255,255,255,0.05)'}; transition:background 0.2s;">
              <div style="display:flex; justify-content:space-between; align-items:center;">
                <strong style="color:${active?'#c4b5fd':'#e2e8f0'}; font-size:14px;">${esc(l.title)}</strong>
                ${done?'<span style="color:#34d399; font-size:12px;">✅</span>':''}
