@@ -474,100 +474,44 @@ function studentCourses(s){
 function studentLive(){return `<div class="subpage-head"><div><h1>Curriculum</h1><p style="color:#748195">Upcoming sessions and previous recordings.</p></div></div><div class="live-grid">${state.classes.map(c=>`<div class="live-card"><span class="tag ${c.status==='Upcoming'?'orange':'green'}">${esc(c.status)}</span><h3 style="margin-top:14px">${esc(c.title)}</h3><p style="color:#748195">${niceDate(c.date)} · ${esc(c.time)}<br>${esc(c.trainer)} · ${esc(c.batch)}</p><button class="btn primary" data-action="class-detail" data-id="${c.id}">${c.status==='Upcoming'?'Join Class':'Watch Recording'}</button></div>`).join('')}</div>`}
 function studentTrends(){return `<div class="subpage-head"><div><h1>Trend Updates</h1><p style="color:#748195">New creator trends published by Admin.</p></div></div><div class="cards">${state.trends.map(t=>`<div class="card"><div style="display:flex;justify-content:space-between"><span class="pill">${esc(t.program)}</span><span class="tag ${t.status==='New'?'green':''}">${esc(t.status)}</span></div><h3 style="margin-top:16px">${esc(t.title)}</h3><p>Difficulty: ${esc(t.difficulty)} · Added ${niceDate(t.added)}</p><button class="btn primary" data-action="trend-detail" data-id="${t.id}">View Tutorial</button></div>`).join('')}</div>`}
 
-function getMockLeaderboard(s) {
-  const users = [
-    { name: 'Ahmad Raza',   rank: 'TOP 1', amount: 'Rs11,873,137' },
-    { name: 'Zainab Bibi',  rank: 'TOP 2', amount: 'Rs9,441,280'  },
-    { name: 'Usman Ali',    rank: 'TOP 3', amount: 'Rs7,820,500'  },
-    { name: s ? s.name : 'Fatima Noor',  rank: 'TOP 4', amount: 'Rs6,155,900'  },
-    { name: 'Ali Hassan',   rank: 'TOP 5', amount: 'Rs4,932,640'  },
-    { name: 'Aisha Khan',   rank: 'TOP 6', amount: 'Rs3,710,000'  },
-    { name: 'Bilal Tariq',  rank: 'TOP 7', amount: 'Rs2,490,800'  },
-  ];
-  return users.map((u) => {
-    let avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random&color=fff&rounded=true`;
-    if (s && u.name === s.name) {
-      avatarUrl = localStorage.getItem('userAvatar') || s.avatar || avatarUrl;
-    }
-    return { ...u, avatar: avatarUrl };
-  });
-}
-
 function studentLeaderboard(s) {
-  const all  = getMockLeaderboard(s);
-  const top7  = all.slice(0, 5);
-  const top30 = all.slice(0, 5);
-  const allTime = all.slice(0, 7);
+  // Real ranking: all students sorted by total earnings (lifetime) - dynamic!
+  const ranked = (state.students||[]).map(st=>({
+    name: st.name, avatar: st.avatar, lifetime: Number(st.lifetime||0),
+    isMe: s && st.id===s.id
+  })).sort((a,b)=>b.lifetime-a.lifetime);
 
   const medal = ['🥇','🥈','🥉'];
+  const badge = i => i===0?'👑 Champion': i===1?'🥈 Runner-up': i===2?'🥉 3rd Place': '#'+(i+1);
   const rankColor = i => i===0?'#f59e0b': i===1?'#94a3b8': i===2?'#cd7c2f':'#8b5cf6';
-
-  const renderTable = (data, isAllTime) => `
-    <div style="overflow-x:auto;">
-      <table style="width:100%; border-collapse:collapse;">
-        <thead>
-          <tr>
-            <th style="background:rgba(139,92,246,0.15); color:#a78bfa; padding:11px 14px; text-align:left; font-size:11px; letter-spacing:.5px; text-transform:uppercase; border-bottom:1px solid rgba(139,92,246,0.2);">Profile</th>
-            <th style="background:rgba(139,92,246,0.15); color:#a78bfa; padding:11px 14px; text-align:left; font-size:11px; letter-spacing:.5px; text-transform:uppercase; border-bottom:1px solid rgba(139,92,246,0.2);">Name</th>
-            <th style="background:rgba(139,92,246,0.15); color:#a78bfa; padding:11px 14px; text-align:right; font-size:11px; letter-spacing:.5px; text-transform:uppercase; border-bottom:1px solid rgba(139,92,246,0.2);">${isAllTime ? 'Amount' : 'Rank'}</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${data.map((u,i) => `
-            <tr style="border-bottom:1px solid rgba(255,255,255,0.05); transition:background .15s;" onmouseover="this.style.background='rgba(139,92,246,0.07)'" onmouseout="this.style.background='transparent'">
-              <td style="padding:10px 14px;">
-                <img src="${u.avatar}" alt="${u.name}" style="width:38px; height:38px; border-radius:50%; display:block; border:2px solid rgba(139,92,246,0.4); object-fit:cover;">
-              </td>
-              <td style="padding:10px 14px; color:#e2e8f0; font-weight:600; font-size:14px;">
-                ${i<3?medal[i]+' ':''}${esc(u.name)}
-              </td>
-              <td style="padding:10px 14px; text-align:right; font-weight:800; color:${isAllTime ? '#34d399' : rankColor(i)}; font-size:13px;">
-                ${isAllTime ? u.amount : u.rank}
-              </td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>
-  `;
+  const avatarFor = u => u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random&color=fff&rounded=true`;
 
   return `
     <div class="subpage-head">
       <div>
         <h1 style="color:#edf5ff;">🏆 Leaderboard</h1>
-        <p style="color:#8fa1b8;">Top performers across the platform.</p>
+        <p style="color:#8fa1b8;">Ranked by total earnings — higher earnings, higher rank!</p>
       </div>
     </div>
-
-    <!-- 3-Column Leaderboard Grid -->
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px;">
-
-      <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:20px; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
-          <span style="font-size:20px;">📅</span>
-          <h3 style="color:#e2e8f0; margin:0; font-size:16px; font-weight:800;">Top 7 Days</h3>
-        </div>
-        ${renderTable(top7, false)}
+    <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:20px; box-shadow:0 8px 32px rgba(0,0,0,0.2); max-width:720px;">
+      <div style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse;">
+        <thead><tr>
+          <th style="background:rgba(139,92,246,0.15);color:#a78bfa;padding:11px 14px;text-align:left;font-size:11px;letter-spacing:.5px;text-transform:uppercase;">Rank</th>
+          <th style="background:rgba(139,92,246,0.15);color:#a78bfa;padding:11px 14px;text-align:left;font-size:11px;letter-spacing:.5px;text-transform:uppercase;">Student</th>
+          <th style="background:rgba(139,92,246,0.15);color:#a78bfa;padding:11px 14px;text-align:right;font-size:11px;letter-spacing:.5px;text-transform:uppercase;">Earnings</th>
+        </tr></thead>
+        <tbody>
+          ${ranked.length===0?'<tr><td colspan="3" style="padding:20px;text-align:center;color:#8fa1b8;">No students yet.</td></tr>':ranked.map((u,idx)=>`
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);${u.isMe?'background:rgba(139,92,246,0.12);':''}">
+              <td style="padding:10px 14px;"><span style="font-weight:800;color:${rankColor(idx)};font-size:14px;">${idx<3?medal[idx]+' ':''}${badge(idx)}</span></td>
+              <td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:10px;"><img src="${avatarFor(u)}" alt="" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid rgba(139,92,246,0.4);"><span style="color:#e2e8f0;font-weight:600;font-size:14px;">${esc(u.name)}${u.isMe?' <span style="font-size:11px;color:#a78bfa;">(you)</span>':''}</span></div></td>
+              <td style="padding:10px 14px;text-align:right;font-weight:800;color:#34d399;font-size:14px;">${money(u.lifetime)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
       </div>
-
-      <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:20px; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
-          <span style="font-size:20px;">🗓️</span>
-          <h3 style="color:#e2e8f0; margin:0; font-size:16px; font-weight:800;">Top 30 Days</h3>
-        </div>
-        ${renderTable(top30, false)}
-      </div>
-
-      <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:20px; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
-          <span style="font-size:20px;">🌟</span>
-          <h3 style="color:#e2e8f0; margin:0; font-size:16px; font-weight:800;">All Time</h3>
-        </div>
-        ${renderTable(allTime, true)}
-      </div>
-
-    </div>
-  `;
+    </div>`;
 }
 function studentPerformance(s){return `<div class="subpage-head"><div><h1>Performance</h1><p style="color:#748195">Your learning and participation summary.</p></div></div><div class="dash-card-grid"><div class="dash-card"><small>Course Progress</small><strong>${s.progress}%</strong><div class="progress" style="margin-top:9px"><i style="width:${s.progress}%"></i></div></div><div class="dash-card"><small>Attendance</small><strong>${s.attendance}%</strong><div class="progress" style="margin-top:9px"><i style="width:${s.attendance}%"></i></div></div><div class="dash-card"><small>Tasks Completed</small><strong>${s.tasksDone}/${s.tasksTotal}</strong><div class="delta">Practical assignments</div></div><div class="dash-card"><small>Trend Participation</small><strong>${s.trendParticipation}</strong><div class="delta">Creator updates completed</div></div></div><div class="dashboard-grid"><div class="panel"><h3>Performance level</h3><h2 style="font-size:44px;margin:18px 0 8px">${esc(s.performance)}</h2><p style="color:#748195">This score combines course progress, attendance, tasks and trend participation.</p></div><div class="panel"><h3>Recommended next step</h3><p style="color:#748195">Complete the next live class, finish any pending tasks and review the latest creator trend tutorial.</p><button class="btn primary" data-dash="trends">Open Trends</button></div></div>`}
 function studentEarnings(s){const rows=state.earnings.filter(e=>e.studentId===s.id).sort((a,b)=>b.date.localeCompare(a.date));const totals=earningSummary(s.id);return `<div class="subpage-head"><div><h1>Earnings</h1><p style="color:#748195">Approved payout credits assigned to your account.</p></div><button class="btn primary" data-dash="withdraw">Withdraw</button></div><div class="dash-card-grid"><div class="dash-card"><small>Available Balance</small><strong style="color:#059669">${money(s.available)}</strong></div><div class="dash-card"><small>Pending Balance</small><strong style="color:#d97706">${money(s.pending||0)}</strong></div><div class="dash-card"><small>Total Paid</small><strong>${money(s.paid)}</strong></div><div class="dash-card"><small>Total Earnings</small><strong>${money(totals.lifetime)}</strong></div></div><div class="panel" style="margin-top:16px"><div class="notice">Dashboard earnings are approved payout credits. See the Earnings & Balance Policy for what this amount means.</div><div class="table-wrap" style="margin-top:13px"><table class="table"><thead><tr><th>Date</th><th>Program</th><th>Amount</th><th>Status</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${niceDate(e.date)}</td><td>${esc(e.program)}</td><td class="amount green">${money(e.amount)}</td><td><span class="tag green">Approved</span></td></tr>`).join('')}</tbody></table></div></div>`}
