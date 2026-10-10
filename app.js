@@ -1293,7 +1293,7 @@ document.addEventListener('click', async e => {
     
     if (dashTarget) {
       dashView = dashTarget;
-      if (route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } setTimeout(function(){try{window.scrollTo(0,_saveY||0);}catch(e){}},60); else { render(); } setTimeout(function(){window.scrollTo(0,_saveY||0);},50);
+      if (route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } else { render(); }
     } else if (adminTarget) {
       adminView = adminTarget;
       if (route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
