@@ -1,5 +1,6 @@
 // supabase-client.js
 // Initialize Supabase client for authentication
+// Replace placeholders with your actual Supabase project URL and publishable anon key.
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
 
 const SUPABASE_URL = 'https://ijsvpdraigzvxeeuedzd.supabase.co';
