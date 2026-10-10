@@ -447,7 +447,7 @@ function studentCourses(s){
             ${isCompleted ? '✅ Completed' : 'Mark as Complete'}
          </button>
        </div>
-       <div style="background:linear-gradient(135deg,rgba(139,92,246,0.10),rgba(59,130,246,0.06)); padding:16px; border-radius:12px; border:1px solid rgba(139,92,246,0.25); margin-bottom:16px;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;"> <h3 style="margin:0; color:#c4b5fd; font-size:16px;">🤖 AI Lecture Overview</h3> <button class="btn small primary" data-action="ai-overview" data-id="${current.id}" data-title="${esc(current.title)}" data-module="${esc(current.module||'')}" data-overview="${esc(current.overview||'')}">✨ Get Overview</button> </div> <div id="ai_ov_result" style="display:none;"> <p id="ai_ov_text" style="margin:0; color:#dbe4f0; font-size:14px; line-height:1.7; white-space:pre-wrap;"></p> </div> <p id="ai_ov_hint" style="margin:0; color:#8fa1b8; font-size:13px;">One click — poori lecture ka khulasa yahin milega</p> </div> <div style="background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
+       <div style="background:linear-gradient(135deg,rgba(139,92,246,0.10),rgba(59,130,246,0.06)); padding:16px; border-radius:12px; border:1px solid rgba(139,92,246,0.25); margin-bottom:16px;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;"> <h3 style="margin:0; color:#c4b5fd; font-size:16px;">🤖 AI Lecture Overview</h3> <button class="btn small primary" data-action="ai-overview" data-id="${current.id}" data-title="${esc(current.title)}" data-module="${esc(current.module||'')}" data-overview="${esc(current.overview||'')}" data-url="${esc(current.video_url||current.url||'')}">✨ Get Overview</button> </div> <div id="ai_ov_result" style="display:none;"> <p id="ai_ov_text" style="margin:0; color:#dbe4f0; font-size:14px; line-height:1.7; white-space:pre-wrap;"></p> </div> <p id="ai_ov_hint" style="margin:0; color:#8fa1b8; font-size:13px;">One click — poori lecture ka khulasa yahin milega</p> </div> <div style="background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
          <h3 style="margin:0 0 12px; color:#edf5ff; font-size:16px;">📝 My Notes</h3>
          <textarea id="lessonNotes" placeholder="📝 Write your notes here..." style="width:100%; height:120px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:12px; color:#e2e8f0; font-family:inherit; resize:vertical; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">${esc(notes)}</textarea>
          <button class="btn primary" style="margin-top:12px;" onclick="saveNotes('${current.id}')">Save Notes</button>
@@ -1033,6 +1033,29 @@ async function aiGenerate(prompt){
   const data = await resp.json();
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
   if(!text) throw new Error('No AI response');
+  return text.trim();
+}
+
+// True video analysis - AI watches the video and generates overview
+async function aiAnalyzeVideo(videoUrl, title, module){
+  const key = await loadGeminiKey();
+  if(!key) throw new Error('AI key not configured. Please add your Gemini API key in Settings.');
+  if(!videoUrl) throw new Error('No video URL available');
+  const prompt = `Watch this video carefully and provide a concise lecture overview in simple English (100-150 words). The lesson is titled "${title}"${module?` (Module: "${module}")`:''}. Describe: 1) What the video teaches/demonstrates, 2) 3-4 key concepts or steps shown in the video, 3) What the student will be able to do after watching. Base your overview on the ACTUAL video content you see, not just the title. Friendly, clear tone.`;
+  const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key='+key,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents:[{parts:[
+      {text:prompt},
+      {file_data:{mime_type:'video/mp4', file_uri:videoUrl}}
+    ]}]})
+  });
+  if(!resp.ok){
+    const errText = await resp.text();
+    throw new Error('Video analysis failed ('+resp.status+')');
+  }
+  const data = await resp.json();
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if(!text) throw new Error('No AI response - video might be too long or inaccessible');
   return text.trim();
 }
 window.generateAIOverview = async function(){
