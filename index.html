@@ -78,16 +78,6 @@
     <div class="modal-card" id="genericModalBody"></div>
   </div>
 
-  
-<script type="module" src="app.js?v=1791621827"></script>
-<script>
-// Boot watchdog: if app fails to load, show retry
-setTimeout(function(){
-  var app = document.getElementById('app');
-  if(app && app.innerHTML.trim()===''){
-    app.innerHTML = '<div style="max-width:480px;margin:80px auto;padding:32px;text-align:center;background:#fff;border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,.1);"><h2 style="margin:0 0 12px;">⚠️ Loading issue</h2><p style="color:#64748b;margin-bottom:20px;">The app could not start. Please check your internet connection and try again.</p><button onclick="location.reload()" style="background:linear-gradient(135deg,#8b5cf6,#3b82f6);color:#fff;border:0;border-radius:12px;padding:12px 28px;font-weight:800;cursor:pointer;">🔄 Retry</button></div>';
-  }
-}, 12000);
-</script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
