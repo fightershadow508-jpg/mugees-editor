@@ -764,7 +764,7 @@ function studentAssignments(s){
 }
 async function loadMySubmissions(){
   try{
-    const uid=await getUid(); if(!uid)return;
+    let uid=null; try{ const s=await supabase.auth.getSession(); uid=s&&s.data&&s.data.session&&s.data.session.user?s.data.session.user.id:null; }catch(_){} if(!uid)return;
     const {data}=await supabase.from('assignment_submissions').select('assignment_id,submitted_at').eq('student_id',uid);
     const s=currentStudent(); if(s){s.assignmentSubs={}; (data||[]).forEach(r=>s.assignmentSubs[r.assignment_id]=r); save();}
     if(dashView==='assignments'){const d=document.getElementById('dashContent'); if(d){d.innerHTML=studentView(currentStudent()); bindGlobal();}}
@@ -783,7 +783,7 @@ document.addEventListener('submit', async function(e){
     const dl = String(fd.get('deadline')||'').trim() || null;
     if(!title || !desc){ toast('Title and description required.'); return; }
     try{
-      const uid = await getUid();
+      let uid=null; try{ const s=await supabase.auth.getSession(); uid=s&&s.data&&s.data.session&&s.data.session.user?s.data.session.user.id:null; }catch(_){}
       const {error} = await supabase.from('assignments').insert({title: title, description: desc, deadline: dl, created_by: uid, status: 'active'});
       if(error) throw error;
       toast('Assignment published!');
@@ -801,7 +801,7 @@ document.addEventListener('submit', async function(e){
     const surl = String(fd.get('surl')||'').trim();
     if(!stext){ toast('Please describe your work.'); return; }
     try{
-      const uid = await getUid();
+      let uid=null; try{ const s=await supabase.auth.getSession(); uid=s&&s.data&&s.data.session&&s.data.session.user?s.data.session.user.id:null; }catch(_){}
       if(!uid) throw new Error('Login required');
       const {error} = await supabase.from('assignment_submissions').upsert({assignment_id: aid, student_id: uid, submission_text: stext, submission_url: surl||null, status: 'submitted'}, {onConflict: 'assignment_id,student_id'});
       if(error) throw error;
