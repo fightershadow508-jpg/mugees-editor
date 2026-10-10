@@ -482,7 +482,7 @@ function studentCourses(s){
   <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
     ${sidebar}
     <div style="flex:1 1 500px;display:flex;flex-direction:column;gap:16px;min-width:0;">
-      ${current.overview?`<div style="background:linear-gradient(135deg,rgba(139,92,246,0.12),rgba(59,130,246,0.08));border:1px solid rgba(139,92,246,0.25);border-radius:12px;padding:16px;margin-bottom:14px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="font-size:18px;">🤖</span><strong style="color:#c4b5fd;font-size:14px;">LECTURE OVERVIEW — pehle ye parhen</strong></div><p style="color:#dbe4f0;font-size:14px;line-height:1.7;margin:0;white-space:pre-wrap;">${esc(current.overview)}</p></div>`:''}
+      ${current.overview?`<div style="background:linear-gradient(135deg,rgba(139,92,246,0.12),rgba(59,130,246,0.08));border:1px solid rgba(139,92,246,0.25);border-radius:12px;padding:16px;margin-bottom:14px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="font-size:18px;">🤖</span><strong style="color:#c4b5fd;font-size:14px;">LECTURE OVERVIEW — pehle ye parhen</strong></div><p style="color:#dbe4f0;font-size:14px;line-height:1.7;margin:0;white-space:pre-wrap;">${esc(current.overview)}</p></div>`:`<div style="margin-bottom:14px;"><button class="btn small primary" data-action="ai-overview" data-id="${current.id}" data-title="${esc(current.title)}" data-module="${esc(current.module||'')}">🤖 AI Lecture Overview</button> <small style="color:#748195;">Click karen — poore lecture ka khulasa milega</small><div id="ai_ov_result" style="display:none;margin-top:10px;background:linear-gradient(135deg,rgba(139,92,246,0.12),rgba(59,130,246,0.08));border:1px solid rgba(139,92,246,0.25);border-radius:12px;padding:16px;"><p style="color:#dbe4f0;font-size:14px;line-height:1.7;margin:0;white-space:pre-wrap;" id="ai_ov_text"></p></div></div>`}
       <div style="background:#000;border-radius:12px;overflow:hidden;aspect-ratio:16/9;">${player}</div><div id="videoErr" style="display:none;color:#f87171;font-size:13px;margin-top:8px;"></div>
       <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);">
         <h3 style="margin:0 0 12px;color:#edf5ff;font-size:16px;">📝 My Notes <small style="color:#748195;font-weight:normal;">— saved for this lesson</small></h3>
@@ -524,81 +524,45 @@ function getMockLeaderboard(s) {
 }
 
 function studentLeaderboard(s) {
-  const all  = getMockLeaderboard(s);
-  const top7  = all.slice(0, 5);
-  const top30 = all.slice(0, 5);
-  const allTime = all.slice(0, 7);
+  // Real ranking: all students sorted by total earnings (lifetime) - dynamic!
+  const ranked = (state.students||[]).map(st=>({
+    name: st.name, avatar: st.avatar, lifetime: Number(st.lifetime||0),
+    isMe: s && st.id===s.id
+  })).sort((a,b)=>b.lifetime-a.lifetime);
 
   const medal = ['🥇','🥈','🥉'];
+  const badge = i => i===0?'👑 Champion': i===1?'🥈 Runner-up': i===2?'🥉 3rd Place': '#'+(i+1);
   const rankColor = i => i===0?'#f59e0b': i===1?'#94a3b8': i===2?'#cd7c2f':'#8b5cf6';
-
-  const renderTable = (data, isAllTime) => `
-    <div style="overflow-x:auto;">
-      <table style="width:100%; border-collapse:collapse;">
-        <thead>
-          <tr>
-            <th style="background:rgba(139,92,246,0.15); color:#a78bfa; padding:11px 14px; text-align:left; font-size:11px; letter-spacing:.5px; text-transform:uppercase; border-bottom:1px solid rgba(139,92,246,0.2);">Profile</th>
-            <th style="background:rgba(139,92,246,0.15); color:#a78bfa; padding:11px 14px; text-align:left; font-size:11px; letter-spacing:.5px; text-transform:uppercase; border-bottom:1px solid rgba(139,92,246,0.2);">Name</th>
-            <th style="background:rgba(139,92,246,0.15); color:#a78bfa; padding:11px 14px; text-align:right; font-size:11px; letter-spacing:.5px; text-transform:uppercase; border-bottom:1px solid rgba(139,92,246,0.2);">${isAllTime ? 'Amount' : 'Rank'}</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${data.map((u,i) => `
-            <tr style="border-bottom:1px solid rgba(255,255,255,0.05); transition:background .15s;" onmouseover="this.style.background='rgba(139,92,246,0.07)'" onmouseout="this.style.background='transparent'">
-              <td style="padding:10px 14px;">
-                <img src="${u.avatar}" alt="${u.name}" style="width:38px; height:38px; border-radius:50%; display:block; border:2px solid rgba(139,92,246,0.4); object-fit:cover;">
-              </td>
-              <td style="padding:10px 14px; color:#e2e8f0; font-weight:600; font-size:14px;">
-                ${i<3?medal[i]+' ':''}${esc(u.name)}
-              </td>
-              <td style="padding:10px 14px; text-align:right; font-weight:800; color:${isAllTime ? '#34d399' : rankColor(i)}; font-size:13px;">
-                ${isAllTime ? u.amount : u.rank}
-              </td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>
-  `;
+  const avatarFor = u => u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random&color=fff&rounded=true`;
 
   return `
     <div class="subpage-head">
       <div>
         <h1 style="color:#edf5ff;">🏆 Leaderboard</h1>
-        <p style="color:#8fa1b8;">Top performers across the platform.</p>
+        <p style="color:#8fa1b8;">Ranked by total earnings — higher earnings, higher rank!</p>
       </div>
     </div>
-
-    <!-- 3-Column Leaderboard Grid -->
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px;">
-
-      <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:20px; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
-          <span style="font-size:20px;">📅</span>
-          <h3 style="color:#e2e8f0; margin:0; font-size:16px; font-weight:800;">Top 7 Days</h3>
-        </div>
-        ${renderTable(top7, false)}
+    <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:20px; box-shadow:0 8px 32px rgba(0,0,0,0.2); max-width:720px;">
+      <div style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse;">
+        <thead><tr>
+          <th style="background:rgba(139,92,246,0.15);color:#a78bfa;padding:11px 14px;text-align:left;font-size:11px;letter-spacing:.5px;text-transform:uppercase;">Rank</th>
+          <th style="background:rgba(139,92,246,0.15);color:#a78bfa;padding:11px 14px;text-align:left;font-size:11px;letter-spacing:.5px;text-transform:uppercase;">Student</th>
+          <th style="background:rgba(139,92,246,0.15);color:#a78bfa;padding:11px 14px;text-align:right;font-size:11px;letter-spacing:.5px;text-transform:uppercase;">Earnings</th>
+        </tr></thead>
+        <tbody>
+          ${ranked.length===0?'<tr><td colspan="3" style="padding:20px;text-align:center;color:#8fa1b8;">No students yet.</td></tr>':ranked.map((u,idx)=>`
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);${u.isMe?'background:rgba(139,92,246,0.12);':''}">
+              <td style="padding:10px 14px;"><span style="font-weight:800;color:${rankColor(idx)};font-size:14px;">${idx<3?medal[idx]+' ':''}${badge(idx)}</span></td>
+              <td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:10px;"><img src="${avatarFor(u)}" alt="" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid rgba(139,92,246,0.4);"><span style="color:#e2e8f0;font-weight:600;font-size:14px;">${esc(u.name)}${u.isMe?' <span style="font-size:11px;color:#a78bfa;">(you)</span>':''}</span></div></td>
+              <td style="padding:10px 14px;text-align:right;font-weight:800;color:#34d399;font-size:14px;">${money(u.lifetime)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
       </div>
-
-      <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:20px; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
-          <span style="font-size:20px;">🗓️</span>
-          <h3 style="color:#e2e8f0; margin:0; font-size:16px; font-weight:800;">Top 30 Days</h3>
-        </div>
-        ${renderTable(top30, false)}
-      </div>
-
-      <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:20px; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
-          <span style="font-size:20px;">🌟</span>
-          <h3 style="color:#e2e8f0; margin:0; font-size:16px; font-weight:800;">All Time</h3>
-        </div>
-        ${renderTable(allTime, true)}
-      </div>
-
-    </div>
-  `;
+    </div>`;
 }
+
 function studentPerformance(s){const _cl=(typeof dbLessons!=='undefined'&&dbLessons)?dbLessons:[];const _done=(s.completedLessons||[]).filter(id=>_cl.some(l=>l.id===id)).length;const _pct=_cl.length?Math.round(_done/_cl.length*100):0;return `<div class="subpage-head"><div><h1>Performance</h1><p style="color:#748195">Your learning and participation summary.</p></div></div><div class="dash-card-grid"><div class="dash-card"><small>Course Progress</small><strong>${_pct}%</strong><div class="progress" style="margin-top:9px"><i style="width:${_pct}%"></i></div></div><div class="dash-card"><small>Lessons Completed</small><strong>${_done}/${_cl.length}</strong><div class="delta">Video lessons finished</div></div><div class="dash-card"><small>Trend Participation</small><strong>${s.trendParticipation}</strong><div class="delta">Creator updates completed</div></div></div><div class="dashboard-grid"><div class="panel"><h3>Performance level</h3><h2 style="font-size:44px;margin:18px 0 8px">${esc(s.performance)}</h2><p style="color:#748195">This score combines course progress, lessons completed and trend participation.</p></div><div class="panel"><h3>Recommended next step</h3><p style="color:#748195">Complete the next live class, finish any pending tasks and review the latest creator trend tutorial.</p><button class="btn primary" data-dash="trends">Open Trends</button></div></div>`}
 function studentEarnings(s){const rows=state.earnings.filter(e=>e.studentId===s.id).sort((a,b)=>b.date.localeCompare(a.date));const totals=earningSummary(s.id);return `<div class="subpage-head"><div><h1>Earnings</h1><p style="color:#748195">Approved payout credits assigned to your account.</p></div><button class="btn primary" data-dash="withdraw">Withdraw</button></div><div class="dash-card-grid"><div class="dash-card"><small>Available Balance</small><strong style="color:#059669">${money(s.available)}</strong></div><div class="dash-card"><small>Pending Balance</small><strong style="color:#d97706">${money(s.pending||0)}</strong></div><div class="dash-card"><small>Total Paid</small><strong>${money(s.paid)}</strong></div><div class="dash-card"><small>Total Earnings</small><strong>${money(totals.lifetime)}</strong></div></div><div class="panel" style="margin-top:16px"><div class="notice">Dashboard earnings are approved payout credits. See the Earnings & Balance Policy for what this amount means.</div><div class="table-wrap" style="margin-top:13px"><table class="table"><thead><tr><th>Date</th><th>Program</th><th>Amount</th><th>Status</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${niceDate(e.date)}</td><td>${esc(e.program)}</td><td class="amount green">${money(e.amount)}</td><td><span class="tag green">Approved</span></td></tr>`).join('')}</tbody></table></div></div>`}
 function studentWithdraw(s){
@@ -790,7 +754,7 @@ function adminCurriculum(){
        <div class="field"><label>Module / Chapter Name</label><input name="module" required placeholder="e.g. Module 1: Basics"></div>
        <div class="field"><label>Option A — Upload recording (video file)</label><input type="file" name="videofile" id="lesson_videofile" accept="video/*"><p class="micro" style="color:#748195;margin-top:6px;">MP4 recommended. If you choose a file, the URL field below is ignored.</p></div><div class="field"><label>Option B — Video URL (YouTube/Vimeo embed)</label><input name="url" id="lesson_url" placeholder="https://www.youtube.com/embed/..."></div>
        <div class="field"><label>Duration (minutes)</label><input name="duration" required inputmode="numeric" placeholder="e.g. 10"></div>
-       <div class="field"><label>🤖 Lecture Overview (AI summary for students)</label><textarea name="overview" rows="4" placeholder="Is lecture ka khulasa likhen — student video dekhne se pehle parhega. AI se banwa kar yahan paste kar sakte hain."></textarea></div>
+       <div class="field"><label>🤖 Lecture Overview (AI summary for students)</label><div style="margin-bottom:8px;"><button type="button" class="btn small primary" id="ai_gen_btn" onclick="generateAIOverview()">🤖 Generate with AI</button> <small style="color:#748195;">Title se auto-overview banayega</small></div><textarea name="overview" rows="4" placeholder="Is lecture ka khulasa likhen — student video dekhne se pehle parhega."></textarea></div>
        <button class="btn primary" type="submit">Add Lesson</button>
        <div id="lv_progress" style="display:none;margin-top:4px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:13px;color:#a5b4c9;">⏳ Uploading video… <strong id="lv_pct" style="color:#edf5ff;">0%</strong></span></div><div style="height:10px;background:rgba(255,255,255,0.08);border-radius:6px;overflow:hidden;"><div id="lv_bar" style="height:100%;width:0%;background:linear-gradient(90deg,#8b5cf6,#3b82f6);border-radius:6px;transition:width .2s;"></div></div><div id="lv_detail" style="font-size:12px;color:#748195;margin-top:6px;"></div></div>
     </form>
@@ -1094,6 +1058,31 @@ function bindForms(){
 };
 function fmtSize(b){ if(b>1073741824)return (b/1073741824).toFixed(2)+' GB'; if(b>1048576)return (b/1048576).toFixed(1)+' MB'; return Math.round(b/1024)+' KB'; }
 function fmtTime(s){ s=Math.round(s); if(s<60)return s+'s'; return Math.floor(s/60)+'m '+(s%60)+'s'; }
+// ── AI Overview (Google Gemini) ──
+const GEMINI_API_KEY = ''; // <-- Admin: paste your free Gemini API key here (from https://aistudio.google.com/apikey)
+window.generateAIOverview = async function(){
+  const titleEl=document.querySelector('#addLessonForm [name="title"]');
+  const descEl=document.querySelector('#addLessonForm [name="description"]');
+  const ovEl=document.querySelector('#addLessonForm [name="overview"]');
+  const btn=document.getElementById('ai_gen_btn');
+  const title=titleEl?titleEl.value.trim():'', desc=descEl?descEl.value.trim():'';
+  if(!title){toast('Pehle lesson ka title likhen.');return;}
+  if(!GEMINI_API_KEY){toast('⚠️ AI key set nahi hai. Admin se rabta karen.');return;}
+  if(btn){btn.disabled=true; btn.textContent='⏳ Generating…';}
+  try{
+    const prompt=`You are a helpful course assistant. Write a concise, engaging lecture overview (100-150 words) in simple English for a video lesson titled "${title}". ${desc?`Lesson description/module: "${desc}".`:''} Cover: what the student will learn, 3-4 key concepts, and why it matters. Use bullet points for key concepts. Tone: friendly and motivating.`;
+    const resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+GEMINI_API_KEY,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
+    });
+    const data=await resp.json();
+    const text=data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if(!text)throw new Error('No response from AI');
+    if(ovEl)ovEl.value=text.trim();
+    toast('✅ AI overview generated! Edit if needed.');
+  }catch(e){ toast('AI failed: '+e.message); }
+  if(btn){btn.disabled=false; btn.textContent='🤖 Generate with AI';}
+};
 const alf=$('#addLessonForm');if(alf)alf.onsubmit=async e=>{e.preventDefault();const fd=new FormData(alf);const title=String(fd.get('title')).trim(),module=String(fd.get('module')).trim(),duration=String(fd.get('duration')).trim();const vf=fd.get('videofile');let url=String(fd.get('url')||'').trim(),kind='embed';
  if(vf&&vf.size>0){
   if(vf.size>500*1024*1024){toast('Video must be under 500MB.');return;}
@@ -1490,6 +1479,24 @@ document.addEventListener('click', async e => {
     if (a === 'save-notes') { saveNotes(id); return; }
     if (a === 'view-submissions') { e.preventDefault(); loadSubmissions(id); return; }
     if (a === 'delete-assignment') { e.preventDefault(); if(confirm('Delete this assignment?')){ supabase.from('assignments').delete().eq('id',id).then(()=>{toast('Deleted.'); dbAssignments=null; loadAssignments();}); } return; }
+    if (a === 'ai-overview') {
+      const btn=el, res=document.getElementById('ai_ov_result'), txt=document.getElementById('ai_ov_text');
+      const title=btn.getAttribute('data-title')||'', mod=btn.getAttribute('data-module')||'';
+      if(!GEMINI_API_KEY){toast('⚠️ AI available nahi hai.');return;}
+      btn.disabled=true; btn.textContent='⏳ Generating…';
+      (async()=>{
+        try{
+          const prompt=`You are a helpful course assistant. Write a concise, engaging lecture overview (100-150 words) in simple English for a video lesson titled "${title}". ${mod?`Module/topic: "${mod}".`:''} Cover: what the student will learn, 3-4 key concepts, and why it matters. Use bullet points. Tone: friendly and motivating.`;
+          const resp=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+GEMINI_API_KEY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
+          const data=await resp.json();
+          const text=data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if(!text)throw new Error('No response');
+          if(txt)txt.textContent=text.trim(); if(res)res.style.display='block';
+        }catch(e){ toast('AI failed: '+e.message); }
+        btn.disabled=false; btn.textContent='🤖 AI Lecture Overview';
+      })();
+      return;
+    }
     if (a === 'toggle-complete-lesson') {
       const s = currentStudent();
       if(!s.completedLessons) s.completedLessons = [];
