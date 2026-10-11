@@ -1138,6 +1138,9 @@ function syncHeader(){
 // ── DIRECT MOBILE MENU EVENT BINDING ──────────────────────────────────────────
 // Called every time syncHeader() rebuilds the mobile menu HTML.
 // Attaches click AND touchstart directly to each element — no delegation.
+function keepActiveDashTabVisible(){
+  try{setTimeout(function(){var ab=document.querySelector('.side-nav button.active');var nv=document.querySelector('.sidebar');if(ab&&nv){nv.scrollLeft=ab.offsetLeft-nv.clientWidth/2+ab.clientWidth/2;}},50);}catch(e){}
+}
 function bindMobileMenu() {
   var menu = document.getElementById('mobileMenu');
   if (!menu) return;
@@ -1359,6 +1362,7 @@ document.addEventListener('click', async e => {
     const mm = document.getElementById('mobileMenu');
     if (mm) mm.classList.remove('open');
     if (route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } else { render(); }
+    keepActiveDashTabVisible();
     return;
   }
 
@@ -1376,6 +1380,7 @@ document.addEventListener('click', async e => {
     const mm = document.getElementById('mobileMenu');
     if (mm) mm.classList.remove('open');
     if (route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
+    keepActiveDashTabVisible();
     return;
   }
 
