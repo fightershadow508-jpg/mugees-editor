@@ -1478,10 +1478,19 @@ document.addEventListener('click', async e => {
                 {file_data:{mime_type:'video/mp4', file_uri:videoUrl}}
               ]}]})
             });
-            if(!vresp.ok) throw new Error('Video API error '+vresp.status);
-            const vdata = await vresp.json();
-            text = vdata?.candidates?.[0]?.content?.parts?.[0]?.text;
-            if(!text) throw new Error('No video analysis result');
+            if(!vresp.ok){
+              const gresp2 = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key='+vkey,{
+                method:'POST',headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({contents:[{parts:[{text:'Write a concise lecture overview (100-150 words) in simple English for a video lesson titled "'+title+'". Module/Topic: "'+mod+'". Describe what such a lesson would typically teach, 3-4 key points, and what the student will learn.'}]}]})
+              });
+              const gdata2 = await gresp2.json();
+              text = gdata2?.candidates?.[0]?.content?.parts?.[0]?.text;
+              if(!text) throw new Error('Video API error '+vresp.status);
+            } else {
+              const vdata = await vresp.json();
+              text = vdata?.candidates?.[0]?.content?.parts?.[0]?.text;
+              if(!text) throw new Error('No video analysis result');
+            }
           } else {
             const gresp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key='+vkey,{
               method:'POST',headers:{'Content-Type':'application/json'},
