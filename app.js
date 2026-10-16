@@ -714,7 +714,7 @@ function adminCurriculum(){
     <form id="addLessonForm" style="display:flex; flex-direction:column; gap:12px; padding:20px;">
        <div class="field"><label>Lesson Title</label><input name="title" required placeholder="e.g. Intro to Video Editing"></div>
        <div class="field"><label>Module / Chapter Name</label><input name="module" required placeholder="e.g. Module 1: Basics"></div>
-       <div class="field"><label>Option A — Upload recording (video file)</label><input type="file" name="videofile" id="lesson_videofile" accept="video/*"><p class="micro" style="color:#748195;margin-top:6px;">MP4 recommended. If you choose a file, the URL field below is ignored.</p></div><div class="field"><label>Option B — Video URL (YouTube/Vimeo embed)</label><input name="url" id="lesson_url" placeholder="https://www.youtube.com/embed/..."></div>
+       <div class="field"><label>Option A — Upload recording (video file)</label><input type="file" name="videofile" id="lesson_videofile" accept="video/*"><p class="micro" style="color:#748195;margin-top:6px;">MP4 recommended. If you choose a file, the URL field below is ignored.</p><div id="upload_progress_wrap" style="display:none;margin-top:10px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:13px;color:#8fa1b8;">Uploading...</span><span id="upload_progress_pct" style="font-size:13px;font-weight:600;color:#8b5cf6;">0%</span></div><div style="height:10px;background:rgba(255,255,255,0.08);border-radius:6px;overflow:hidden;"><div id="upload_progress_bar" style="height:100%;width:0%;background:linear-gradient(90deg,#8b5cf6,#6366f1);border-radius:6px;transition:width 0.2s;"></div></div></div></div><div class="field"><label>Option B — Video URL (YouTube/Vimeo embed)</label><input name="url" id="lesson_url" placeholder="https://www.youtube.com/embed/..."></div>
        <div class="field"><label>Duration (minutes)</label><input name="duration" required inputmode="numeric" placeholder="e.g. 10"></div>
        <div class="field"><label>Lecture Overview</label><div style="margin-bottom:8px;"><button type="button" class="btn small primary" id="ai_gen_btn" data-action="ai-generate-overview">Generate with AI</button></div><textarea name="overview" rows="4" placeholder="Lecture ka khulasa likhen"></textarea></div>
        <button class="btn primary" type="submit">Add Lesson</button>
@@ -1087,7 +1087,25 @@ window.generateAIOverview = async function(){
   if(btn){btn.disabled=false;btn.textContent='🤖 Generate with AI';}
 };
 const alf=$('#addLessonForm');if(alf)alf.onsubmit=async e=>{e.preventDefault();const fd=new FormData(alf);const title=String(fd.get('title')).trim(),module=String(fd.get('module')).trim(),duration=String(fd.get('duration')).trim();const vf=fd.get('videofile');let url=String(fd.get('url')||'').trim(),kind='embed';
- if(vf&&vf.size>0){if(vf.size>500*1024*1024){toast('Video must be under 500MB.');return;} toast('⏳ Uploading video, please wait...');const ext=(String(vf.name).split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'')||'mp4';const fpath=Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;const {error:upErr}=await supabase.storage.from('lesson-videos').upload(fpath,vf,{contentType:vf.type||'video/mp4'}); if(upErr){toast('Upload failed: '+upErr.message);return;} url=supabase.storage.from('lesson-videos').getPublicUrl(fpath).data.publicUrl; kind='file';}
+ if(vf&&vf.size>0){if(vf.size>500*1024*1024){toast('Video must be under 500MB.');return;} const ext=(String(vf.name).split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'')||'mp4';const fpath=Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
+  const progWrap=document.getElementById('upload_progress_wrap'),progBar=document.getElementById('upload_progress_bar'),progPct=document.getElementById('upload_progress_pct');
+  if(progWrap)progWrap.style.display='block';
+  try{
+    const sess=(await supabase.auth.getSession()).data.session;
+    const upUrl='https://ijsvpdraigzvxeeuedzd.supabase.co/storage/v1/object/lesson-videos/'+fpath;
+    await new Promise((resolve,reject)=>{
+      const xhr=new XMLHttpRequest();
+      xhr.open('POST',upUrl);
+      xhr.setRequestHeader('apikey','sb_publishable_FlaAOinEJSeHyLTEaEAJrQ_QR_N3dBe');
+      if(sess&&sess.access_token)xhr.setRequestHeader('Authorization','Bearer '+sess.access_token);
+      xhr.setRequestHeader('Content-Type',vf.type||'video/mp4');
+      xhr.upload.onprogress=(e)=>{if(e.lengthComputable&&progBar){const pct=Math.round((e.loaded/e.total)*100);progBar.style.width=pct+'%';if(progPct)progPct.textContent=pct+'%';}};
+      xhr.onload=()=>{if(xhr.status>=200&&xhr.status<300)resolve();else reject(new Error('Upload failed (HTTP '+xhr.status+')'));};
+      xhr.onerror=()=>reject(new Error('Upload network error'));
+      xhr.send(vf);
+    });
+  }catch(upErr){if(progWrap)progWrap.style.display='none';toast('Upload failed: '+(upErr.message||upErr));return;}
+  if(progWrap)progWrap.style.display='none'; url=supabase.storage.from('lesson-videos').getPublicUrl(fpath).data.publicUrl; kind='file';}
  if(!url){toast('Please upload a video file or paste a video URL.');return;}
  const mins=parseInt(String(duration).replace(/[^0-9]/g,''))||0; const {error:insErr}=await supabase.from('lessons').insert([{title,description:module,video_url:url,kind,duration_minutes:mins,status:'published',overview:String(fd.get('overview')||'').trim()||null}]); if(insErr){toast('Could not save lesson: '+insErr.message);return;}
  toast('✅ Lesson published for all students!'); loadLessons();};
