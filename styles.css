@@ -1058,4 +1058,7 @@ input:checked + .slider:before { transform: translateX(18px); background-color: 
   .auth-tabs button{flex:1;font-size:14px;padding:10px 8px}
   /* Generic modal (trend detail etc.): fit small screens */
   #genericModal .modal-card{width:min(470px,calc(100vw - 24px))}
+  /* Admin tables (Trends, etc.): horizontal scroll inside panel, not page blowout */
+  .panel{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .panel .table{min-width:560px}
 }
