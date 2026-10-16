@@ -436,7 +436,7 @@ function studentCourses(s){
               ${[0.5,0.75,1,1.25,1.5,2].map(r=>`<button class="btn small ${r===1?'primary':'light'}" data-speed="${r}" data-action="set-speed" data-speed="${r}">${r}x</button>`).join('')}
               <button class="btn small light" data-action="toggle-fullscreen" style="margin-left:auto;">⛶ Fullscreen</button>
             </div>`
-         :`<iframe src="${current.video_url||current.url}" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>`}
+         :`<iframe src="${embedUrl(current.video_url||current.url)}" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>`}
        </div>
        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
          <div>
@@ -1138,6 +1138,8 @@ function syncHeader(){
 // ── DIRECT MOBILE MENU EVENT BINDING ──────────────────────────────────────────
 // Called every time syncHeader() rebuilds the mobile menu HTML.
 // Attaches click AND touchstart directly to each element — no delegation.
+
+function embedUrl(u){try{u=String(u||'');var m=u.match(/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]+)/);if(m)return 'https://drive.google.com/file/d/'+m[1]+'/preview';return u;}catch(e){return u;}}
 function keepActiveDashTabVisible(){
   try{setTimeout(function(){var ab=document.querySelector('.side-nav button.active');var nv=document.querySelector('.sidebar');if(ab&&nv){nv.scrollLeft=ab.offsetLeft-nv.clientWidth/2+ab.clientWidth/2;}},50);}catch(e){}
 }
