@@ -644,6 +644,11 @@ function adminStudents(){
             return `<tr>
               <td><img src="${avatarImg}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.1);"></td>
               <td><strong>${esc(s.name)}</strong><br><small style="color:#8fa1b8">@${esc(s.name).toLowerCase().replace(/\s+/g,'')}${s.id.slice(-3)}</small></td>
+              <td><small>${esc(s.email||'—')}</small></td>
+              <td><small>${esc(s.phone||'—')}</small></td>
+              <td><small>${esc(s.network||'—')}</small></td>
+              <td><small>${esc(s.cnic||'—')}</small></td>
+              <td><small>${esc(s.program||'—')}</small></td>
               <td>${niceDate(s.joinDate)}</td>
               <td><span class="tag ${isSuspended?'red':'green'}">${esc(s.status||'Active Creator')}</span></td>
               <td>
