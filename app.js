@@ -1042,7 +1042,7 @@ function bindForms(){
         <div class="field"><label>Full name</label><input required name="name" value="${esc(rp.name||'')}" placeholder="Your name"></div>
         <div class="field"><label>Network Provider</label><select required name="network"><option value="">Select Network</option>${['Jazz','Zong','Telenor','Ufone','Warid','SCOM'].map(n=>`<option ${rp.network===n?'selected':''}>${n}</option>`).join('')}</select></div>
         <div class="field"><label>Phone</label><input required name="phone" value="${esc(rp.phone||'')}" placeholder="03XXXXXXXXX" maxlength="11"></div>
-        <div class="field"><label>ID Card Number (CNIC)</label><input required name="cnic" value="${esc(rp.cnic||'')}" placeholder="XXXXX-XXXXXXX-X" maxlength="15"></div>
+        <div class="field"><label>ID Card Number (CNIC)</label><input required name="cnic" value="${esc(rp.cnic||'')}" placeholder="XXXXX-XXXXXXX-X" maxlength="15" oninput="formatCNIC(this)"></div>
         <div class="field"><label>Program</label><select name="program" required><option value="">Choose your plan</option>${['TikTok Growth','Hypic + CapCut + Dreamina','TikTok Growth + Hypic + CapCut + Dreamina'].map(p=>`<option ${rp.program===p?'selected':''}>${p}</option>`).join('')}</select></div>
         <button class="btn primary" style="width:100%;margin-top:8px;" type="submit">📝 Submit Re-application</button>
         <button class="btn light" style="width:100%;margin-top:8px;" type="button" data-action="close-modal">Cancel</button>
