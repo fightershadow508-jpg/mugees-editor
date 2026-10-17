@@ -1033,14 +1033,22 @@ function bindForms(){
     }
   }catch(e){} if(prof.status==='pending'){toast('⏳ Your account is pending admin approval.');await supabase.auth.signOut();return;} if(prof.status==='suspended'){toast('Your account has been suspended. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;} if(prof.status==='rejected'){
       closeModals();
+      const rp=prof;
       $('#genericModalBody').innerHTML=`<button class="modal-close" data-action="close-modal">×</button>
         <h2>Application Not Approved</h2>
-        <p style="color:#64748b;margin-bottom:20px;">Your previous signup request was not approved by admin.</p>
-        <p style="color:#64748b;margin-bottom:20px;">Would you like to submit a new application? Admin will review it again.</p>
-        <button class="btn primary" style="width:100%;margin-bottom:10px;" data-action="reapply-login">📝 Re-apply Now</button>
-        <button class="btn light" style="width:100%;" data-action="close-modal">Cancel</button>`;
+        <p style="color:#64748b;margin-bottom:16px;">Your previous request was not approved. Update your details below and re-apply.</p>
+        <form id="reapplyForm">
+        <div class="field"><label>Full name</label><input required name="name" value="${esc(rp.name||'')}" placeholder="Your name"></div>
+        <div class="field"><label>Network Provider</label><select required name="network"><option value="">Select Network</option>${['Jazz','Zong','Telenor','Ufone','Warid','SCOM'].map(n=>`<option ${rp.network===n?'selected':''}>${n}</option>`).join('')}</select></div>
+        <div class="field"><label>Phone</label><input required name="phone" value="${esc(rp.phone||'')}" placeholder="03XXXXXXXXX" maxlength="11"></div>
+        <div class="field"><label>ID Card Number (CNIC)</label><input required name="cnic" value="${esc(rp.cnic||'')}" placeholder="XXXXX-XXXXXXX-X" maxlength="15"></div>
+        <div class="field"><label>Program</label><select name="program" required><option value="">Choose your plan</option>${['TikTok Growth','Hypic + CapCut + Dreamina','TikTok Growth + Hypic + CapCut + Dreamina'].map(p=>`<option ${rp.program===p?'selected':''}>${p}</option>`).join('')}</select></div>
+        <button class="btn primary" style="width:100%;margin-top:8px;" type="submit">📝 Submit Re-application</button>
+        <button class="btn light" style="width:100%;margin-top:8px;" type="button" data-action="close-modal">Cancel</button>
+        </form>`;
       $('#genericModal').classList.add('open');
       window._reapplyProfId = prof.id;
+      bindForms();
       return;
     } if(prof.role==='admin' || email.toLowerCase()===state.admin.email.toLowerCase()){state.session={role:'admin'}; save(); closeModals(); location.hash='#/admin'; render(); loadApprovals(); loadLessons(); return;} let s=state.students.find(x=>x.email.toLowerCase()===email.toLowerCase());
   const profJoin = prof.created_at ? prof.created_at.slice(0,10) : todayISO();
@@ -1172,7 +1180,7 @@ window.generateAIOverview = async function(){
   }catch(e){ toast('AI failed: '+e.message); }
   if(btn){btn.disabled=false;btn.textContent='🤖 Generate with AI';}
 };
-const alf=$('#addLessonForm');if(alf)alf.onsubmit=async e=>{e.preventDefault();const fd=new FormData(alf);const title=String(fd.get('title')).trim(),module=String(fd.get('module')).trim(),duration=String(fd.get('duration')).trim();const vf=fd.get('videofile');let url=String(fd.get('url')||'').trim(),kind='embed';
+const rap=$('#reapplyForm');if(rap)rap.onsubmit=async e=>{e.preventDefault();const fd=new FormData(rap);const pid=window._reapplyProfId;if(!pid){toast('Session expired. Please login again.');return;}const btn=rap.querySelector('button[type="submit"]');if(btn){btn.disabled=true;btn.textContent='Submitting...';}try{const upd={status:'pending',name:String(fd.get('name')).trim(),phone:String(fd.get('phone')).trim(),network:String(fd.get('network')).trim(),cnic:String(fd.get('cnic')).trim(),program:String(fd.get('program')||'').trim()};const {error:upErr}=await supabase.from('profiles').update(upd).eq('id',pid);if(upErr)throw upErr;await supabase.auth.signOut();window._reapplyProfId=null;closeModals();toast('✅ Re-application submitted! Admin will review it soon.');}catch(err){if(btn){btn.disabled=false;btn.textContent='📝 Submit Re-application';}toast('Failed: '+((err&&err.message)||'try again'));}}; const alf=$('#addLessonForm');if(alf)alf.onsubmit=async e=>{e.preventDefault();const fd=new FormData(alf);const title=String(fd.get('title')).trim(),module=String(fd.get('module')).trim(),duration=String(fd.get('duration')).trim();const vf=fd.get('videofile');let url=String(fd.get('url')||'').trim(),kind='embed';
  if(vf&&vf.size>0){if(vf.size>500*1024*1024){toast('Video must be under 500MB.');return;} const ext=(String(vf.name).split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'')||'mp4';const fpath=Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
   const progWrap=document.getElementById('upload_progress_wrap'),progBar=document.getElementById('upload_progress_bar'),progPct=document.getElementById('upload_progress_pct');
   if(progWrap)progWrap.style.display='block';
@@ -1533,17 +1541,7 @@ document.addEventListener('click', async e => {
     if (a === 'open-forgot-password') { openForgotPassword(); return; }
     if (a === 'close-modal')          { closeModals(); await supabase.auth.signOut().catch(()=>{}); window._reapplyProfId=null; return; }
     if (a === 'reapply-login') {
-      const pid = window._reapplyProfId;
-      if(!pid){ toast('Session expired. Please login again.'); return; }
-      const btn = actionEl; btn.disabled=true; btn.textContent='Submitting...';
-      try{
-        const {error:upErr} = await supabase.from('profiles').update({status:'pending'}).eq('id',pid);
-        if(upErr) throw upErr;
-        await supabase.auth.signOut();
-        window._reapplyProfId=null;
-        closeModals();
-        toast('✅ Re-application submitted! Admin will review it soon.');
-      }catch(e){ btn.disabled=false; btn.textContent='📝 Re-apply Now'; toast('Failed: '+(e.message||'try again')); }
+      toast('Please use the form to submit your re-application.');
       return;
     }
     if (a === 'logout') {
