@@ -646,6 +646,7 @@ async function loadStudents(){
   }catch(e){}
 }
 function adminStudents(){
+  loadStudents();
   return `<div class="subpage-head">
     <div><h1>Manage Users</h1><p style="color:#748195">User management and access control.</p></div>
   </div>
