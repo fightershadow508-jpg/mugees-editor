@@ -5,6 +5,7 @@ const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 const esc = (v='') => String(v).replace(/[&<>'"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
 const money = n => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n||0));
 const formatCNIC = el=>{let v=el.value.replace(/[^0-9]/g,'').slice(0,13);let out=v.slice(0,5);if(v.length>5)out+='-'+v.slice(5,12);if(v.length>12)out+='-'+v.slice(12);el.value=out;};
+window.formatCNIC = formatCNIC;
 const uid = (p='ID') => `${p}-${Math.random().toString(36).slice(2,7).toUpperCase()}${Date.now().toString().slice(-3)}`;
 const todayISO = () => new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Karachi',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const niceDate = (d=todayISO()) => new Date(`${d}T12:00:00`).toLocaleDateString('en-US',{day:'2-digit',month:'short',year:'numeric'});
