@@ -625,6 +625,26 @@ async function notifyEmail(type,userId){try{await fetch('https://ijsvpdraigzvxee
 let pendingApprovals=[];
 async function loadApprovals(){try{const{data,error}=await supabase.from('profiles').select('id,email,name,phone,network,cnic,program,created_at').eq('status','pending');if(!error)pendingApprovals=data||[];}catch(e){pendingApprovals=[];} state.unreadCounts.approvals=pendingApprovals.length; save(); const abtn=document.querySelector('.side-nav button[data-admin="approvals"]'); if(abtn){let b=abtn.querySelector('.nav-badge'); if(pendingApprovals.length>0){if(!b){b=document.createElement('span');b.className='nav-badge';abtn.appendChild(b);} b.textContent=pendingApprovals.length;} else if(b)b.remove();} if(adminView==='approvals'){const c=$('#adminContent');if(c)c.innerHTML=adminApprovals();bindForms();}}
 function adminApprovals(){return `<div class="subpage-head"><div><h1>Pending Approvals</h1><p style="color:#748195">New signups waiting for admin access.</p></div><button class="btn small light" data-action="refresh-approvals">↻ Refresh</button></div><div class="panel">${pendingApprovals.length===0?'<div class="empty" style="padding:20px;">No pending requests. 🎉</div>':`<div class="table-wrap"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Network</th><th>CNIC</th><th>Program</th><th>Requested</th><th>Actions</th></tr></thead><tbody>${pendingApprovals.map(p=>`<tr><td><strong>${esc(p.name||'—')}</strong></td><td>${esc(p.email)}</td><td>${esc(p.phone||'—')}</td><td>${esc(p.network||'—')}</td><td>${esc(p.cnic||'—')}</td><td>${esc(p.program||'—')}</td><td>${p.created_at ? new Date(p.created_at).toLocaleDateString() : '—'}</td><td><button class="btn small primary" data-action="approve-user" data-id="${p.id}">Approve</button> <button class="btn small danger" data-action="reject-user" data-id="${p.id}">Reject</button></td></tr>`).join('')}</tbody></table></div>`}</div>`}
+async function loadStudents(){
+  try{
+    const {data,error}=await supabase.from('profiles').select('id,email,name,full_name,phone,network,cnic,program,avatar_url,status,created_at').neq('status','pending').neq('status','rejected');
+    if(!error&&data){
+      data.forEach(p=>{
+        const email=(p.email||'').toLowerCase();
+        let s=state.students.find(x=>x.email.toLowerCase()===email);
+        const jdate=p.created_at?p.created_at.slice(0,10):todayISO();
+        if(!s){
+          s={id:p.id,name:p.name||p.full_name||email.split('@')[0],avatar:p.avatar_url||'',email,phone:p.phone||'',network:p.network||'',cnic:p.cnic||'',status:'Active Student',program:p.program||'Creator Program',joinDate:jdate,today:0,week:0,month:0,lifetime:0,available:0,pending:0,paid:0,attendance:100,progress:0,tasksDone:0,tasksTotal:20,trendParticipation:0,performance:'New',payoutMethod:'',payoutAccount:'',city:'',bio:''};
+          state.students.push(s);
+        }else{
+          s.name=p.name||p.full_name||s.name; s.phone=p.phone||s.phone; s.network=p.network||s.network; s.cnic=p.cnic||s.cnic; s.program=p.program||s.program; s.avatar=p.avatar_url||s.avatar; s.joinDate=jdate;
+        }
+      });
+      save();
+      if(adminView==='students'){const c=document.getElementById('adminContent');if(c){c.innerHTML=adminStudents();bindGlobal();}}
+    }
+  }catch(e){}
+}
 function adminStudents(){
   return `<div class="subpage-head">
     <div><h1>Manage Users</h1><p style="color:#748195">User management and access control.</p></div>
