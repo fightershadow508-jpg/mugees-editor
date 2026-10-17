@@ -1002,7 +1002,18 @@ function bindForms(){
  bindPasswordStrength("rp_pw", "rp_strength");
  const sav=$('#signup_avatar'); if(sav)sav.onchange=()=>{const f=sav.files[0],pv=$('#signup_avatar_preview'); if(!f||!pv)return; if(f.size>2*1024*1024){toast('Photo must be under 2MB.');sav.value='';return;} const r=new FileReader(); r.onload=()=>{pv.src=r.result;pv.style.display='block';}; r.readAsDataURL(f);};
 
- const login=$('#loginForm'); if(login)login.onsubmit=async e=>{e.preventDefault();const fd=new FormData(login),email=String(fd.get('email')).trim(),pw=String(fd.get('password')); const {data,error}=await supabase.auth.signInWithPassword({email,password:pw}); if(error){toast('Invalid email or password.');return;} if(!data.session){toast('Please check your email to confirm your account, then login.');return;} const { data: prof, error: profErr } = await supabase.from('profiles').select('*').ilike('email', email).single(); if(profErr || !prof){toast('Student record not found. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;} if(prof.status==='pending'){toast('⏳ Your account is pending admin approval.');await supabase.auth.signOut();return;} if(prof.status==='suspended'){toast('Your account has been suspended. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;} if(prof.status==='rejected'){toast('Your signup request was not approved. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;} if(prof.role==='admin' || email.toLowerCase()===state.admin.email.toLowerCase()){state.session={role:'admin'}; save(); closeModals(); location.hash='#/admin'; render(); loadApprovals(); loadLessons(); return;} let s=state.students.find(x=>x.email.toLowerCase()===email.toLowerCase()); if(!s){s={id:prof.id||uid('ST'),name:prof.name||prof.full_name||email.split('@')[0],avatar:prof.avatar_url||'',email:email.toLowerCase(),password:'',phone:prof.phone||'',status:'Active Student',program:'Creator Program',joinDate:todayISO(),today:0,week:0,month:0,lifetime:650.00,available:500.00,pending:0,paid:150.00,attendance:100,progress:0,tasksDone:0,tasksTotal:20,trendParticipation:0,performance:'New',payoutMethod:'JazzCash',payoutAccount:'',city:'',bio:''}; state.students.push(s);} state.session={role:'student',studentId:s.id}; save(); closeModals(); location.hash='#/dashboard'; render(); loadLessons(); };
+ const login=$('#loginForm'); if(login)login.onsubmit=async e=>{e.preventDefault();const fd=new FormData(login),email=String(fd.get('email')).trim(),pw=String(fd.get('password')); const {data,error}=await supabase.auth.signInWithPassword({email,password:pw}); if(error){toast('Invalid email or password.');return;} if(!data.session){toast('Please check your email to confirm your account, then login.');return;} const { data: prof, error: profErr } = await supabase.from('profiles').select('*').ilike('email', email).single(); if(profErr || !prof){toast('Student record not found. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;} if(prof.status==='pending'){toast('⏳ Your account is pending admin approval.');await supabase.auth.signOut();return;} if(prof.status==='suspended'){toast('Your account has been suspended. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;} if(prof.status==='rejected'){
+      closeModals();
+      $('#genericModalBody').innerHTML=`<button class="modal-close" data-action="close-modal">×</button>
+        <h2>Application Not Approved</h2>
+        <p style="color:#64748b;margin-bottom:20px;">Your previous signup request was not approved by admin.</p>
+        <p style="color:#64748b;margin-bottom:20px;">Would you like to submit a new application? Admin will review it again.</p>
+        <button class="btn primary" style="width:100%;margin-bottom:10px;" data-action="reapply-login">📝 Re-apply Now</button>
+        <button class="btn light" style="width:100%;" data-action="close-modal">Cancel</button>`;
+      $('#genericModal').classList.add('open');
+      window._reapplyProfId = prof.id;
+      return;
+    } if(prof.role==='admin' || email.toLowerCase()===state.admin.email.toLowerCase()){state.session={role:'admin'}; save(); closeModals(); location.hash='#/admin'; render(); loadApprovals(); loadLessons(); return;} let s=state.students.find(x=>x.email.toLowerCase()===email.toLowerCase()); if(!s){s={id:prof.id||uid('ST'),name:prof.name||prof.full_name||email.split('@')[0],avatar:prof.avatar_url||'',email:email.toLowerCase(),password:'',phone:prof.phone||'',status:'Active Student',program:'Creator Program',joinDate:todayISO(),today:0,week:0,month:0,lifetime:650.00,available:500.00,pending:0,paid:150.00,attendance:100,progress:0,tasksDone:0,tasksTotal:20,trendParticipation:0,performance:'New',payoutMethod:'JazzCash',payoutAccount:'',city:'',bio:''}; state.students.push(s);} state.session={role:'student',studentId:s.id}; save(); closeModals(); location.hash='#/dashboard'; render(); loadLessons(); };
  const signup=$('#signupForm'); if(signup)signup.onsubmit=async e=>{e.preventDefault();const fd=new FormData(signup),email=String(fd.get('email')).trim().toLowerCase(),pw=String(fd.get('password')),phone=String(fd.get('phone')).trim(),network=String(fd.get('network')).trim(); const emailRx=/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/; if(!emailRx.test(email)){toast('❌ Invalid email format. Please use a valid email address.');const el=document.getElementById('signup_email');if(el){el.style.borderColor='#ef4444';el.focus();}return;} if(phone.length!==11||!/^[0-9]{11}$/.test(phone)){toast('❌ Phone number must be exactly 11 digits (e.g. 03001234567).');const el=document.getElementById('signup_phone');if(el){el.style.borderColor='#ef4444';el.focus();}return;} if(!network||network==='Select Network'){toast('❌ Please select your Network Provider.');return;} if(checkPasswordStrength(pw)!=='strong'){toast('❌ Password too weak. Use 8+ chars with uppercase, number, and special character (@$!%*?&).');return;} if(state.students.some(x=>x.email.toLowerCase()===email)){toast('An account with this email already exists.');return;} const {data,error}=await supabase.auth.signUp({email,password:pw});
   if(error){
     // If user already exists, check if they were rejected before - allow re-application
@@ -1471,7 +1482,21 @@ document.addEventListener('click', async e => {
     if(a==='reject-user'){if(!confirm('Reject this signup request?'))return;const pid=actionEl.dataset.id;const{error:rjErr}=await supabase.from('profiles').update({status:'rejected'}).eq('id',pid);if(rjErr){toast('Reject failed: '+rjErr.message);return;}toast('Request rejected.');notifyEmail('rejected',pid);loadApprovals();return;}
     if(a==='refresh-approvals'){loadApprovals();return;}
     if (a === 'open-forgot-password') { openForgotPassword(); return; }
-    if (a === 'close-modal')          { closeModals(); return; }
+    if (a === 'close-modal')          { closeModals(); await supabase.auth.signOut().catch(()=>{}); window._reapplyProfId=null; return; }
+    if (a === 'reapply-login') {
+      const pid = window._reapplyProfId;
+      if(!pid){ toast('Session expired. Please login again.'); return; }
+      const btn = actionEl; btn.disabled=true; btn.textContent='Submitting...';
+      try{
+        const {error:upErr} = await supabase.from('profiles').update({status:'pending'}).eq('id',pid);
+        if(upErr) throw upErr;
+        await supabase.auth.signOut();
+        window._reapplyProfId=null;
+        closeModals();
+        toast('✅ Re-application submitted! Admin will review it soon.');
+      }catch(e){ btn.disabled=false; btn.textContent='📝 Re-apply Now'; toast('Failed: '+(e.message||'try again')); }
+      return;
+    }
     if (a === 'logout') {
       state.session = null; save(); dashView = 'overview'; adminView = 'overview';
       const menu = document.getElementById('mobileMenu');
