@@ -1023,7 +1023,15 @@ function bindForms(){
  bindPasswordStrength("rp_pw", "rp_strength");
  const sav=$('#signup_avatar'); if(sav)sav.onchange=()=>{const f=sav.files[0],pv=$('#signup_avatar_preview'); if(!f||!pv)return; if(f.size>2*1024*1024){toast('Photo must be under 2MB.');sav.value='';return;} const r=new FileReader(); r.onload=()=>{pv.src=r.result;pv.style.display='block';}; r.readAsDataURL(f);};
 
- const login=$('#loginForm'); if(login)login.onsubmit=async e=>{e.preventDefault();const fd=new FormData(login),email=String(fd.get('email')).trim(),pw=String(fd.get('password')); const {data,error}=await supabase.auth.signInWithPassword({email,password:pw}); if(error){toast('Invalid email or password.');return;} if(!data.session){toast('Please check your email to confirm your account, then login.');return;} const { data: prof, error: profErr } = await supabase.from('profiles').select('*').ilike('email', email).single(); if(profErr || !prof){toast('Student record not found. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;} if(prof.status==='pending'){toast('⏳ Your account is pending admin approval.');await supabase.auth.signOut();return;} if(prof.status==='suspended'){toast('Your account has been suspended. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;} if(prof.status==='rejected'){
+ const login=$('#loginForm'); if(login)login.onsubmit=async e=>{e.preventDefault();const fd=new FormData(login),email=String(fd.get('email')).trim(),pw=String(fd.get('password')); const {data,error}=await supabase.auth.signInWithPassword({email,password:pw}); if(error){toast('Invalid email or password.');return;} if(!data.session){toast('Please check your email to confirm your account, then login.');return;} const { data: prof, error: profErr } = await supabase.from('profiles').select('*').ilike('email', email).single(); if(profErr || !prof){toast('Student record not found. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;}
+  try{
+    const pp=JSON.parse(localStorage.getItem('pendingProfile')||'null');
+    if(pp&&pp.email===email.toLowerCase()&&(!prof.name||!prof.phone)){
+      await supabase.from('profiles').update({name:pp.name,phone:pp.phone,network:pp.network,cnic:pp.cnic,program:pp.program}).eq('id',prof.id);
+      prof.name=pp.name||prof.name; prof.phone=pp.phone||prof.phone; prof.network=pp.network||prof.network; prof.cnic=pp.cnic||prof.cnic; prof.program=pp.program||prof.program;
+      localStorage.removeItem('pendingProfile');
+    }
+  }catch(e){} if(prof.status==='pending'){toast('⏳ Your account is pending admin approval.');await supabase.auth.signOut();return;} if(prof.status==='suspended'){toast('Your account has been suspended. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;} if(prof.status==='rejected'){
       closeModals();
       $('#genericModalBody').innerHTML=`<button class="modal-close" data-action="close-modal">×</button>
         <h2>Application Not Approved</h2>
@@ -1064,7 +1072,11 @@ function bindForms(){
       }catch(e){}
     }
     toast('Signup failed: '+(error.message||'Unknown error'));return;
-  } if(!data.user){toast('Please check your email to confirm your account, then login.');closeModals();openAuth('login');return;} let avatar_url=null; const avatarFile=fd.get('avatar'); if(avatarFile&&avatarFile.size>0){const ext=(String(avatarFile.name).split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; const apath=data.user.id+'.'+ext; const {error:upErr}=await supabase.storage.from('avatars').upload(apath,avatarFile,{upsert:true,contentType:avatarFile.type}); if(upErr){toast('Photo upload failed: '+upErr.message+'. Continuing without photo.');} else {avatar_url=supabase.storage.from('avatars').getPublicUrl(apath).data.publicUrl;}} const {error:profErr}=await supabase.from('profiles').upsert([{id:data.user.id,email,name:String(fd.get('name')).trim(),role:'student',status:'pending',phone,network,cnic:String(fd.get('cnic')).trim(),program:String(fd.get('program')||'').trim(),avatar_url}],{onConflict:'id'});
+  } if(!data.user){toast('Please check your email to confirm your account, then login.');closeModals();openAuth('login');return;}
+  if(!data.session){
+    try{localStorage.setItem('pendingProfile',JSON.stringify({uid:data.user.id,email,name:String(fd.get('name')).trim(),phone,network,cnic:String(fd.get('cnic')).trim(),program:String(fd.get('program')||'').trim()}));}catch(e){}
+    toast('✅ Account created! Please check your email to confirm, then login.');closeModals();openAuth('login');return;
+  } let avatar_url=null; const avatarFile=fd.get('avatar'); if(avatarFile&&avatarFile.size>0){const ext=(String(avatarFile.name).split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; const apath=data.user.id+'.'+ext; const {error:upErr}=await supabase.storage.from('avatars').upload(apath,avatarFile,{upsert:true,contentType:avatarFile.type}); if(upErr){toast('Photo upload failed: '+upErr.message+'. Continuing without photo.');} else {avatar_url=supabase.storage.from('avatars').getPublicUrl(apath).data.publicUrl;}} const {error:profErr}=await supabase.from('profiles').upsert([{id:data.user.id,email,name:String(fd.get('name')).trim(),role:'student',status:'pending',phone,network,cnic:String(fd.get('cnic')).trim(),program:String(fd.get('program')||'').trim(),avatar_url}],{onConflict:'id'});
   if(profErr){
     const pm=(profErr.message||'').toLowerCase();
     if(pm.includes('profiles_phone_unique')||pm.includes('duplicate')&&pm.includes('phone')){
