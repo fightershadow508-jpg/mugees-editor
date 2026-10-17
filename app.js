@@ -1008,19 +1008,24 @@ function bindForms(){
     // If user already exists, check if they were rejected before - allow re-application
     if(error.message&&error.message.toLowerCase().includes('already registered')){
       try{
-        const {data:existingProf}=await supabase.from('profiles').select('id,status').ilike('email',email).maybeSingle();
-        if(existingProf&&existingProf.status==='rejected'){
-          // Try signing in with provided password to verify ownership
-          const {data:signInData,error:signInErr}=await supabase.auth.signInWithPassword({email,password:pw});
-          if(!signInErr&&signInData.user){
-            // Update profile to pending with new details
+        // Try signing in with provided credentials to verify ownership
+        const {data:signInData,error:signInErr}=await supabase.auth.signInWithPassword({email,password:pw});
+        if(!signInErr&&signInData.user){
+          // Now authenticated - check if profile was rejected
+          const {data:existingProf}=await supabase.from('profiles').select('id,status').eq('id',signInData.user.id).maybeSingle();
+          if(existingProf&&existingProf.status==='rejected'){
             const {error:updErr}=await supabase.from('profiles').update({status:'pending',name:String(fd.get('name')).trim(),phone,network,cnic:String(fd.get('cnic')).trim(),program:String(fd.get('program')||'').trim()}).eq('id',existingProf.id);
             await supabase.auth.signOut();
             if(!updErr){toast('✅ Re-application submitted! Your account is pending admin approval.');closeModals();location.hash='#/';render();return;}
+            toast('Re-application failed. Please try again.');
+            return;
           }
-          toast('This email was previously rejected. Please login with your original password to re-apply, or use Forgot Password to reset it.');
+          await supabase.auth.signOut();
+          toast('This email is already registered. Please login instead.');
           return;
         }
+        toast('This email is already registered. If your previous application was rejected, login with your original password to re-apply, or use Forgot Password.');
+        return;
       }catch(e){}
     }
     toast('Signup failed: '+(error.message||'Unknown error'));return;
