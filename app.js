@@ -112,8 +112,8 @@ function loadState() {
   return structuredClone(demoState);
 }
 let state=loadState();
-(function(){try{const _v='3';const _sv=localStorage.getItem('me_data_version');if(_sv!==_v){localStorage.setItem('me_data_version',_v);if(state&&state.students){state.students.forEach(s=>{s.available=0;s.pending=0;s.paid=0;s.lifetime=0;});}if(state){state.earnings=[];state.withdrawals=[];}save();}}catch(e){}})();
-(function(){try{if(state&&state.session&&state.session.role==='student'&&state.session.studentId){setTimeout(()=>{try{loadCloudEarnings();loadCloudWithdrawals();loadStudents();setTimeout(()=>{try{if(typeof render==='function')render();}catch(e){}},1200);}catch(e){}},500);}}catch(e){}})();
+(function(){try{const _v='4';const _sv=localStorage.getItem('me_data_version');if(_sv!==_v){localStorage.setItem('me_data_version',_v);if(state&&state.students){state.students.forEach(s=>{s.available=0;s.pending=0;s.paid=0;s.lifetime=0;});}if(state){state.earnings=[];state.withdrawals=[];}save();}}catch(e){}})();
+(function(){try{if(state&&state.session&&state.session.role==='student'&&state.session.studentId){try{loadCloudEarnings();loadCloudWithdrawals();loadStudents();setTimeout(()=>{try{if(typeof render==='function')render();}catch(e){}},800);}catch(e){}}}catch(e){}})();
 let dashView='overview';
 let adminView='overview';
 function save(){localStorage.setItem('me_creator_state_v2',JSON.stringify(state));}
