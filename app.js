@@ -363,7 +363,7 @@ function studentSidebar(s){
   if(ac.showWithdrawals) items.push(['withdraw','🏦 Withdraw'],['payments','🧾 Payments']);
   items.push(['notifications','🔔 Notifications'],['profile','👤 Profile'],['support','💬 Support']);
   const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random&color=fff&rounded=true`;
-  const avatarImg = s.avatar || localStorage.getItem('userAvatar') || fallbackUrl;
+  if(s.avatar){try{localStorage.setItem('userAvatar',s.avatar);}catch(e){}}else{try{localStorage.removeItem('userAvatar');}catch(e){}}const avatarImg = s.avatar || fallbackUrl;
   const alerts = s.unreadCounts?.studentAlerts || 0;
   return `<aside class="sidebar"><div class="side-profile side-profile-rich"><img id="headerAvatar" src="${esc(avatarImg)}" alt="Profile" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.1);"><div><strong>${esc(s.name)}</strong><div style="margin-top:5px"><span class="role-badge role-student">Student</span></div></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${dashView===id?'active':''}" data-dash="${id}" style="display:flex;justify-content:space-between;align-items:center;"><span>${l}</span>${id==='trends' && uc.trends>0?`<span class="nav-badge">${uc.trends}</span>`:id==='notifications' && alerts>0?`<span class="nav-badge">${alerts}</span>`:''}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`
 }
