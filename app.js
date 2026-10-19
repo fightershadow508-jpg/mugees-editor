@@ -1451,7 +1451,7 @@ document.addEventListener('click', async e => {
       dashView = dashTarget;
       if (route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } else { render(); }
     } else if (adminTarget) {
-      adminView = adminTarget;
+      adminView = adminTarget; if(adminTarget==='students')loadStudents();
       if (route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
     } else if (actionTarget === 'logout' || mobileBtn.innerText.toLowerCase().includes('logout')) {
       if (window.supabase && supabase.auth) {
