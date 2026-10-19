@@ -1,4 +1,5 @@
 import { supabase } from './supabase-client.js';
+let _loadingEarnings=false;let _loadingWithdrawals=false;let _loadingStudents=false;
 let dbLessons=null; // shared lesson cache (Supabase). null=not loaded yet
 const $ = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
@@ -534,7 +535,7 @@ function studentLeaderboard(s) {
     </div>`;
 }
 function studentPerformance(s){return `<div class="subpage-head"><div><h1>Performance</h1><p style="color:#748195">Your learning and participation summary.</p></div></div><div class="dash-card-grid"><div class="dash-card"><small>Course Progress</small><strong>${s.progress}%</strong><div class="progress" style="margin-top:9px"><i style="width:${s.progress}%"></i></div></div><div class="dash-card"><small>Tasks Completed</small><strong>${s.tasksDone}/${s.tasksTotal}</strong><div class="delta">Practical assignments</div></div><div class="dash-card"><small>Trend Participation</small><strong>${s.trendParticipation}</strong><div class="delta">Creator updates completed</div></div></div><div class="dashboard-grid"><div class="panel"><h3>Performance level</h3><h2 style="font-size:44px;margin:18px 0 8px">${esc(s.performance)}</h2><p style="color:#748195">This score combines course progress, tasks and trend participation.</p></div><div class="panel"><h3>Recommended next step</h3><p style="color:#748195">Complete the next live class, finish any pending tasks and review the latest creator trend tutorial.</p><button class="btn primary" data-dash="trends">Open Trends</button></div></div>`}
-let _loadingEarnings=false;
+
 async function loadCloudEarnings(){
   if(_loadingEarnings)return;_loadingEarnings=true;
   try{
@@ -546,7 +547,7 @@ async function loadCloudEarnings(){
   }catch(e){}
   _loadingEarnings=false;
 }
-let _loadingWithdrawals=false;
+
 async function loadCloudWithdrawals(){
   if(_loadingWithdrawals)return;_loadingWithdrawals=true;
   try{
@@ -670,7 +671,7 @@ async function notifyEmail(type,userId){try{await fetch('https://ijsvpdraigzvxee
 let pendingApprovals=[];
 async function loadApprovals(){try{const{data,error}=await supabase.from('profiles').select('id,email,name,phone,network,cnic,program,created_at,avatar_url').eq('status','pending');if(!error)pendingApprovals=data||[];}catch(e){pendingApprovals=[];} state.unreadCounts.approvals=pendingApprovals.length; save(); const abtn=document.querySelector('.side-nav button[data-admin="approvals"]'); if(abtn){let b=abtn.querySelector('.nav-badge'); if(pendingApprovals.length>0){if(!b){b=document.createElement('span');b.className='nav-badge';abtn.appendChild(b);} b.textContent=pendingApprovals.length;} else if(b)b.remove();} if(adminView==='approvals'){const c=$('#adminContent');if(c)c.innerHTML=adminApprovals();bindForms();}}
 function adminApprovals(){return `<div class="subpage-head"><div><h1>Pending Approvals</h1><p style="color:#748195">New signups waiting for admin access.</p></div><button class="btn small light" data-action="refresh-approvals">↻ Refresh</button></div><div class="panel">${pendingApprovals.length===0?'<div class="empty" style="padding:20px;">No pending requests. 🎉</div>':`<div class="table-wrap"><table class="table"><thead><tr><th>Photo</th><th>Name</th><th>Email</th><th>Phone</th><th>Network</th><th>CNIC</th><th>Program</th><th>Requested</th><th>Actions</th></tr></thead><tbody>${pendingApprovals.map(p=>`<tr><td>${p.avatar_url?`<img src="${esc(p.avatar_url)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;" alt="">`:'—'}</td><td><strong>${esc(p.name||'—')}</strong></td><td>${esc(p.email)}</td><td>${esc(p.phone||'—')}</td><td>${esc(p.network||'—')}</td><td>${esc(p.cnic||'—')}</td><td>${esc(p.program||'—')}</td><td>${p.created_at ? new Date(p.created_at).toLocaleDateString() : '—'}</td><td><button class="btn small primary" data-action="approve-user" data-id="${p.id}">Approve</button> <button class="btn small danger" data-action="reject-user" data-id="${p.id}">Reject</button></td></tr>`).join('')}</tbody></table></div>`}</div>`}
-let _loadingStudents=false;
+
 async function loadStudents(){
   if(_loadingStudents)return;
   _loadingStudents=true;
