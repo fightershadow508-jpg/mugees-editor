@@ -383,6 +383,7 @@ window.loadEarnings = async function(sId) {
 
 function studentDashboard(){if(!state.session||state.session.role!=='student'){openAuth('login');location.hash='#/';return homePage()}const s=currentStudent(); loadEarnings(s.id); return `<div class="dashboard-page"><div class="dashboard-shell">${studentSidebar(s)}<section class="dashboard-main" id="dashContent">${studentView(s)}</section></div></div>`}
 function studentView(s){
+ loadCloudEarnings();loadCloudWithdrawals();
  if(dashView==='courses') return studentCourses(s); if(dashView==='assignments') return studentAssignments(s);
  if(dashView==='live') return studentLive(s);
  if(dashView==='trends') return studentTrends(s);
