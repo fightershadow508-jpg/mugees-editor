@@ -538,10 +538,9 @@ async function loadCloudEarnings(){
   try{
     const {data,error}=await supabase.from('earnings').select('id,student_id,amount,description,program,earning_date,created_at');
     if(!error&&data){
-      const mapped=data.map(e=>({id:e.id,studentId:e.student_id,date:(e.earning_date||'').slice(0,10),program:e.program||'General',amount:Number(e.amount||0),note:e.description||'',cloud:true}));
-      const localOnly=state.earnings.filter(e=>!e.cloud&&!mapped.find(m=>m.id===e.id));
-      state.earnings=mapped.concat(localOnly);
+      state.earnings=data.map(e=>({id:e.id,studentId:e.student_id,date:(e.earning_date||'').slice(0,10),program:e.program||'General',amount:Number(e.amount||0),note:e.description||'',cloud:true}));
       save();
+      if(typeof render==='function'){try{render();}catch(e){}}
     }
   }catch(e){}
   _loadingEarnings=false;
@@ -552,9 +551,7 @@ async function loadCloudWithdrawals(){
   try{
     const {data,error}=await supabase.from('withdrawals').select('id,student_id,amount,status');
     if(!error&&data){
-      const mapped=data.map(w=>({id:w.id,studentId:w.student_id,amount:Number(w.amount||0),status:w.status||'pending',cloud:true}));
-      const localOnly=(state.withdrawals||[]).filter(w=>!w.cloud&&!mapped.find(m=>m.id===w.id));
-      state.withdrawals=mapped.concat(localOnly);
+      state.withdrawals=data.map(w=>({id:w.id,studentId:w.student_id,amount:Number(w.amount||0),status:w.status||'pending',cloud:true}));
       save();
     }
   }catch(e){}
@@ -687,7 +684,7 @@ async function loadStudents(){
           s={id:p.id,name:p.name||p.full_name||email.split('@')[0],avatar:p.avatar_url||'',email,phone:p.phone||'',network:p.network||'',cnic:p.cnic||'',status:'Active Student',program:p.program||'Creator Program',joinDate:jdate,today:0,week:0,month:0,lifetime:0,available:0,pending:0,paid:0,attendance:100,progress:0,tasksDone:0,tasksTotal:20,trendParticipation:0,performance:'New',payoutMethod:'',payoutAccount:'',city:'',bio:''};
           state.students.push(s);
         }else{
-          s.name=p.name||p.full_name||s.name; s.phone=p.phone||s.phone; s.network=p.network||s.network; s.cnic=p.cnic||s.cnic; s.program=p.program||s.program; s.avatar=p.avatar_url||s.avatar; s.joinDate=jdate;
+          s.name=p.name||p.full_name||s.name; s.phone=p.phone||s.phone; s.network=p.network||s.network; s.cnic=p.cnic||s.cnic; s.program=p.program||s.program; s.avatar=p.avatar_url||''; s.joinDate=jdate;
         }
       });
       save();
