@@ -632,7 +632,10 @@ async function notifyEmail(type,userId){try{await fetch('https://ijsvpdraigzvxee
 let pendingApprovals=[];
 async function loadApprovals(){try{const{data,error}=await supabase.from('profiles').select('id,email,name,phone,network,cnic,program,created_at,avatar_url').eq('status','pending');if(!error)pendingApprovals=data||[];}catch(e){pendingApprovals=[];} state.unreadCounts.approvals=pendingApprovals.length; save(); const abtn=document.querySelector('.side-nav button[data-admin="approvals"]'); if(abtn){let b=abtn.querySelector('.nav-badge'); if(pendingApprovals.length>0){if(!b){b=document.createElement('span');b.className='nav-badge';abtn.appendChild(b);} b.textContent=pendingApprovals.length;} else if(b)b.remove();} if(adminView==='approvals'){const c=$('#adminContent');if(c)c.innerHTML=adminApprovals();bindForms();}}
 function adminApprovals(){return `<div class="subpage-head"><div><h1>Pending Approvals</h1><p style="color:#748195">New signups waiting for admin access.</p></div><button class="btn small light" data-action="refresh-approvals">↻ Refresh</button></div><div class="panel">${pendingApprovals.length===0?'<div class="empty" style="padding:20px;">No pending requests. 🎉</div>':`<div class="table-wrap"><table class="table"><thead><tr><th>Photo</th><th>Name</th><th>Email</th><th>Phone</th><th>Network</th><th>CNIC</th><th>Program</th><th>Requested</th><th>Actions</th></tr></thead><tbody>${pendingApprovals.map(p=>`<tr><td>${p.avatar_url?`<img src="${esc(p.avatar_url)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;" alt="">`:'—'}</td><td><strong>${esc(p.name||'—')}</strong></td><td>${esc(p.email)}</td><td>${esc(p.phone||'—')}</td><td>${esc(p.network||'—')}</td><td>${esc(p.cnic||'—')}</td><td>${esc(p.program||'—')}</td><td>${p.created_at ? new Date(p.created_at).toLocaleDateString() : '—'}</td><td><button class="btn small primary" data-action="approve-user" data-id="${p.id}">Approve</button> <button class="btn small danger" data-action="reject-user" data-id="${p.id}">Reject</button></td></tr>`).join('')}</tbody></table></div>`}</div>`}
+let _loadingStudents=false;
 async function loadStudents(){
+  if(_loadingStudents)return;
+  _loadingStudents=true;
   try{
     const {data,error}=await supabase.from('profiles').select('id,email,name,full_name,phone,network,cnic,program,avatar_url,status,created_at').neq('status','pending').neq('status','rejected');
     if(!error&&data){
@@ -648,12 +651,12 @@ async function loadStudents(){
         }
       });
       save();
-      if(adminView==='students'){const c=document.getElementById('adminContent');if(c){c.innerHTML=adminStudents();bindGlobal();}}
+      if(adminView==='students'){const c=document.getElementById('adminContent');if(c){const _tw=c.querySelector('.table-wrap');const _sl=_tw?_tw.scrollLeft:0;c.innerHTML=adminStudents();bindGlobal();const _ntw=c.querySelector('.table-wrap');if(_ntw)_ntw.scrollLeft=_sl;}}
     }
   }catch(e){}
+  _loadingStudents=false;
 }
 function adminStudents(){
-  loadStudents();
   return `<div class="subpage-head">
     <div><h1>Manage Users</h1><p style="color:#748195">User management and access control.</p></div>
   </div>
