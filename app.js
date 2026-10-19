@@ -1034,8 +1034,22 @@ function bindForms(){
   try{
     const pp=JSON.parse(localStorage.getItem('pendingProfile')||'null');
     if(pp&&pp.email===email.toLowerCase()&&(!prof.name||!prof.phone)){
-      await supabase.from('profiles').update({name:pp.name,phone:pp.phone,network:pp.network,cnic:pp.cnic,program:pp.program}).eq('id',prof.id);
+      let _avatarUrl=prof.avatar_url||null;
+      if(pp.avatarData&&pp.avatarData.indexOf('data:image')===0){
+        try{
+          const _resp=await fetch(pp.avatarData);
+          const _blob=await _resp.blob();
+          const _ext=(_blob.type.split('/')[1]||'jpg').replace(/[^a-z0-9]/g,'')||'jpg';
+          const _apath=prof.id+'.'+_ext;
+          const {error:_upErr}=await supabase.storage.from('avatars').upload(_apath,_blob,{upsert:true,contentType:_blob.type});
+          if(!_upErr){_avatarUrl=supabase.storage.from('avatars').getPublicUrl(_apath).data.publicUrl;}
+        }catch(_e){}
+      }
+      const _upd={name:pp.name,phone:pp.phone,network:pp.network,cnic:pp.cnic,program:pp.program};
+      if(_avatarUrl)_upd.avatar_url=_avatarUrl;
+      await supabase.from('profiles').update(_upd).eq('id',prof.id);
       prof.name=pp.name||prof.name; prof.phone=pp.phone||prof.phone; prof.network=pp.network||prof.network; prof.cnic=pp.cnic||prof.cnic; prof.program=pp.program||prof.program;
+      if(_avatarUrl)prof.avatar_url=_avatarUrl;
       localStorage.removeItem('pendingProfile');
     }
   }catch(e){} if(prof.status==='pending'){toast('⏳ Your account is pending admin approval.');await supabase.auth.signOut();return;} if(prof.status==='suspended'){toast('Your account has been suspended. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;} if(prof.status==='rejected'){
@@ -1089,8 +1103,18 @@ function bindForms(){
     toast('Signup failed: '+(error.message||'Unknown error'));return;
   } if(!data.user){toast('Please check your email to confirm your account, then login.');closeModals();openAuth('login');return;}
   if(!data.session){
-    try{localStorage.setItem('pendingProfile',JSON.stringify({uid:data.user.id,email,name:String(fd.get('name')).trim(),phone,network,cnic:String(fd.get('cnic')).trim(),program:String(fd.get('program')||'').trim()}));}catch(e){}
-    toast('✅ Account created! Please check your email to confirm, then login.');closeModals();openAuth('login');return;
+    const _savePending=(avatarData)=>{
+      try{localStorage.setItem('pendingProfile',JSON.stringify({uid:data.user.id,email,name:String(fd.get('name')).trim(),phone,network,cnic:String(fd.get('cnic')).trim(),program:String(fd.get('program')||'').trim(),avatarData:avatarData||null}));}catch(e){}
+      toast('✅ Account created! Please check your email to confirm, then login.');closeModals();openAuth('login');
+    };
+    const _avFile=fd.get('avatar');
+    if(_avFile&&_avFile.size>0&&_avFile.size<2000000){
+      const _reader=new FileReader();
+      _reader.onload=()=>_savePending(_reader.result);
+      _reader.onerror=()=>_savePending(null);
+      _reader.readAsDataURL(_avFile);
+    }else{_savePending(null);}
+    return;
   } let avatar_url=null; const avatarFile=fd.get('avatar'); if(avatarFile&&avatarFile.size>0){const ext=(String(avatarFile.name).split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; const apath=data.user.id+'.'+ext; const {error:upErr}=await supabase.storage.from('avatars').upload(apath,avatarFile,{upsert:true,contentType:avatarFile.type}); if(upErr){toast('Photo upload failed: '+upErr.message+'. Continuing without photo.');} else {avatar_url=supabase.storage.from('avatars').getPublicUrl(apath).data.publicUrl;}} const {error:profErr}=await supabase.from('profiles').upsert([{id:data.user.id,email,name:String(fd.get('name')).trim(),role:'student',status:'pending',phone,network,cnic:String(fd.get('cnic')).trim(),program:String(fd.get('program')||'').trim(),avatar_url}],{onConflict:'id'});
   if(profErr){
     const pm=(profErr.message||'').toLowerCase();
