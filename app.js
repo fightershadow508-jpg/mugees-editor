@@ -1075,7 +1075,7 @@ function bindForms(){
  const login=$('#loginForm'); if(login)login.onsubmit=async e=>{e.preventDefault();const fd=new FormData(login),email=String(fd.get('email')).trim(),pw=String(fd.get('password')); const {data,error}=await supabase.auth.signInWithPassword({email,password:pw}); if(error){toast('Invalid email or password.');return;} if(!data.session){toast('Please check your email to confirm your account, then login.');return;} const { data: prof, error: profErr } = await supabase.from('profiles').select('*').ilike('email', email).single(); if(profErr || !prof){toast('Student record not found. Contact support: '+state.settings.supportEmail+'.');await supabase.auth.signOut();return;}
   try{
     const pp=JSON.parse(localStorage.getItem('pendingProfile')||'null');
-    if(pp&&pp.email===email.toLowerCase()&&(!prof.name||!prof.phone)){
+    if(pp&&pp.email===email.toLowerCase()&&(!prof.name||!prof.phone||!prof.avatar_url)){
       let _avatarUrl=prof.avatar_url||null;
       if(pp.avatarData&&pp.avatarData.indexOf('data:image')===0){
         try{
