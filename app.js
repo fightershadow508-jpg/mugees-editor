@@ -418,8 +418,13 @@ window.saveNotes = function(id) {
 };
 
 function studentCourses(s){
-  if(dbLessons===null){loadLessons();return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">Loading lessons…</p></div></div>`;} const _lessons=(dbLessons!==null)?dbLessons:(state.curriculum||[]); if(_lessons.length === 0) {
-    return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">No video lessons available yet.</p></div></div>`;
+  if(dbLessons===null){loadLessons();return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">Loading lessons…</p></div></div>`;} let _lessons=(dbLessons!==null)?dbLessons:(state.curriculum||[]);
+  const _sprog=String(s.program||'').trim();
+  if(_sprog&&_sprog!=='TikTok Growth + Hypic + CapCut + Dreamina'){
+    _lessons=_lessons.filter(l=>{const _lp=String(l.program||'All').trim();return _lp==='All'||_lp===_sprog;});
+  }
+  if(_lessons.length === 0) {
+    return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">No video lessons available for your course yet.</p></div></div>`;
   }
   if(!state.studentNotes) state.studentNotes = {};
   if(!s.completedLessons) s.completedLessons = [];
@@ -734,7 +739,7 @@ function adminKYC(){
     `}
   </div>`;
 }
-async function loadLessons(){try{const{data,error}=await supabase.from('lessons').select('*').order('created_at',{ascending:false});if(!error)dbLessons=(data||[]).map(l=>({id:l.id,title:l.title,module:l.description||'',url:l.video_url,kind:l.kind||'embed',duration:l.duration_minutes?l.duration_minutes+' min':''}));}catch(e){if(dbLessons===null)dbLessons=[];}
+async function loadLessons(){try{const{data,error}=await supabase.from('lessons').select('*').order('created_at',{ascending:false});if(!error)dbLessons=(data||[]).map(l=>({id:l.id,title:l.title,module:l.description||'',url:l.video_url,kind:l.kind||'embed',program:l.program||'All',duration:l.duration_minutes?l.duration_minutes+' min':''}));}catch(e){if(dbLessons===null)dbLessons=[];}
  if(adminView==='curriculum'){const c=$('#adminContent');if(c){c.innerHTML=adminCurriculum();bindForms();}}
  if(typeof dashView!=='undefined'&&dashView==='courses'&&route()==='dashboard'){const d=$('#dashContent');if(d){try{d.innerHTML=studentView(currentStudent());bindGlobal();}catch(e){}}}}
 function adminCurriculum(){
@@ -745,6 +750,7 @@ function adminCurriculum(){
     <form id="addLessonForm" style="display:flex; flex-direction:column; gap:12px; padding:20px;">
        <div class="field"><label>Lesson Title</label><input name="title" required placeholder="e.g. Intro to Video Editing"></div>
        <div class="field"><label>Module / Chapter Name</label><input name="module" required placeholder="e.g. Module 1: Basics"></div>
+       <div class="field"><label>Course / Program</label><select name="program" required><option value="All">All Courses (visible to everyone)</option><option value="TikTok Growth">TikTok Growth</option><option value="Hypic + CapCut + Dreamina">Hypic + CapCut + Dreamina</option><option value="TikTok Growth + Hypic + CapCut + Dreamina">TikTok Growth + Hypic + CapCut + Dreamina</option></select><p class="micro" style="color:#748195;margin-top:6px;">Only students enrolled in this course will see the lesson.</p></div>
        <div class="field"><label>Option A — Upload recording (video file)</label><input type="file" name="videofile" id="lesson_videofile" accept="video/*"><p class="micro" style="color:#748195;margin-top:6px;">MP4 recommended. If you choose a file, the URL field below is ignored.</p><div id="upload_progress_wrap" style="display:none;margin-top:10px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:13px;color:#8fa1b8;">Uploading...</span><span id="upload_progress_pct" style="font-size:13px;font-weight:600;color:#8b5cf6;">0%</span></div><div style="height:10px;background:rgba(255,255,255,0.08);border-radius:6px;overflow:hidden;"><div id="upload_progress_bar" style="height:100%;width:0%;background:linear-gradient(90deg,#8b5cf6,#6366f1);border-radius:6px;transition:width 0.2s;"></div></div></div></div><div class="field"><label>Option B — Video URL (YouTube/Vimeo embed)</label><input name="url" id="lesson_url" placeholder="https://www.youtube.com/embed/..."></div>
        <div class="field"><label>Duration (minutes)</label><input name="duration" required inputmode="numeric" placeholder="e.g. 10"></div>
        <div class="field"><label>Lecture Overview</label><div style="margin-bottom:8px;"><button type="button" class="btn small primary" id="ai_gen_btn" data-action="ai-generate-overview">Generate with AI</button></div><textarea name="overview" rows="4" placeholder="Lecture ka khulasa likhen"></textarea></div>
@@ -754,7 +760,7 @@ function adminCurriculum(){
   <div class="panel" style="margin-top:20px;">
     <div class="panel-head"><h3>Existing Lessons</h3></div>
     <div class="list">
-       ${(dbLessons!==null?dbLessons:state.curriculum).length===0?'<div class="empty" style="padding:20px;">No lessons uploaded yet.</div>' : (dbLessons!==null?dbLessons:state.curriculum).map(l=>`<div class="list-item" style="justify-content:space-between"><div class="meta"><strong>${esc(l.title)}</strong><small>${esc(l.module)} · ${esc(l.duration||'')} ${l.kind==='file'?'· 📤':'· 🔗'}</small></div><button class="btn small light" data-action="delete-lesson" data-id="${l.id}" style="color:#ef4444; border-color:#ef4444;">Delete</button></div>`).join('')}
+       ${(dbLessons!==null?dbLessons:state.curriculum).length===0?'<div class="empty" style="padding:20px;">No lessons uploaded yet.</div>' : (dbLessons!==null?dbLessons:state.curriculum).map(l=>`<div class="list-item" style="justify-content:space-between"><div class="meta"><strong>${esc(l.title)}</strong><small>${esc(l.module)} · ${esc(l.duration||'')} ${l.kind==='file'?'· 📤':'· 🔗'} · <span style="color:#8b5cf6;">${esc(l.program||'All')}</span></small></div><button class="btn small light" data-action="delete-lesson" data-id="${l.id}" style="color:#ef4444; border-color:#ef4444;">Delete</button></div>`).join('')}
     </div>
   </div>`;
 }
@@ -1214,7 +1220,7 @@ window.generateAIOverview = async function(){
   }catch(e){ toast('AI failed: '+e.message); }
   if(btn){btn.disabled=false;btn.textContent='🤖 Generate with AI';}
 };
-const rap=$('#reapplyForm');if(rap)rap.onsubmit=async e=>{e.preventDefault();const fd=new FormData(rap);const pid=window._reapplyProfId;if(!pid){toast('Session expired. Please login again.');return;}const btn=rap.querySelector('button[type="submit"]');if(btn){btn.disabled=true;btn.textContent='Submitting...';}try{const upd={status:'pending',name:String(fd.get('name')).trim(),phone:String(fd.get('phone')).trim(),network:String(fd.get('network')).trim(),cnic:String(fd.get('cnic')).trim(),program:String(fd.get('program')||'').trim()};const {error:upErr}=await supabase.from('profiles').update(upd).eq('id',pid);if(upErr)throw upErr;await supabase.auth.signOut();window._reapplyProfId=null;closeModals();toast('✅ Re-application submitted! Admin will review it soon.');}catch(err){if(btn){btn.disabled=false;btn.textContent='📝 Submit Re-application';}toast('Failed: '+((err&&err.message)||'try again'));}}; const alf=$('#addLessonForm');if(alf)alf.onsubmit=async e=>{e.preventDefault();const fd=new FormData(alf);const title=String(fd.get('title')).trim(),module=String(fd.get('module')).trim(),duration=String(fd.get('duration')).trim();const vf=fd.get('videofile');let url=String(fd.get('url')||'').trim(),kind='embed';
+const rap=$('#reapplyForm');if(rap)rap.onsubmit=async e=>{e.preventDefault();const fd=new FormData(rap);const pid=window._reapplyProfId;if(!pid){toast('Session expired. Please login again.');return;}const btn=rap.querySelector('button[type="submit"]');if(btn){btn.disabled=true;btn.textContent='Submitting...';}try{const upd={status:'pending',name:String(fd.get('name')).trim(),phone:String(fd.get('phone')).trim(),network:String(fd.get('network')).trim(),cnic:String(fd.get('cnic')).trim(),program:String(fd.get('program')||'').trim()};const {error:upErr}=await supabase.from('profiles').update(upd).eq('id',pid);if(upErr)throw upErr;await supabase.auth.signOut();window._reapplyProfId=null;closeModals();toast('✅ Re-application submitted! Admin will review it soon.');}catch(err){if(btn){btn.disabled=false;btn.textContent='📝 Submit Re-application';}toast('Failed: '+((err&&err.message)||'try again'));}}; const alf=$('#addLessonForm');if(alf)alf.onsubmit=async e=>{e.preventDefault();const fd=new FormData(alf);const title=String(fd.get('title')).trim(),module=String(fd.get('module')).trim(),duration=String(fd.get('duration')).trim(),lessonProgram=String(fd.get('program')||'All').trim();const vf=fd.get('videofile');let url=String(fd.get('url')||'').trim(),kind='embed';
  if(vf&&vf.size>0){if(vf.size>500*1024*1024){toast('Video must be under 500MB.');return;} const ext=(String(vf.name).split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'')||'mp4';const fpath=Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
   const progWrap=document.getElementById('upload_progress_wrap'),progBar=document.getElementById('upload_progress_bar'),progPct=document.getElementById('upload_progress_pct');
   if(progWrap)progWrap.style.display='block';
@@ -1235,8 +1241,8 @@ const rap=$('#reapplyForm');if(rap)rap.onsubmit=async e=>{e.preventDefault();con
   }catch(upErr){if(progWrap)progWrap.style.display='none';toast('Upload failed: '+(upErr.message||upErr));return;}
   if(progWrap)progWrap.style.display='none'; url=supabase.storage.from('lesson-videos').getPublicUrl(fpath).data.publicUrl; kind='file';}
  if(!url){toast('Please upload a video file or paste a video URL.');return;}
- const mins=parseInt(String(duration).replace(/[^0-9]/g,''))||0; const {error:insErr}=await supabase.from('lessons').insert([{title,description:module,video_url:url,kind,duration_minutes:mins,status:'published',overview:String(fd.get('overview')||'').trim()||null}]); if(insErr){toast('Could not save lesson: '+insErr.message);return;}
- toast('✅ Lesson published for all students!'); loadLessons();};
+ const mins=parseInt(String(duration).replace(/[^0-9]/g,''))||0; const {error:insErr}=await supabase.from('lessons').insert([{title,description:module,video_url:url,kind,duration_minutes:mins,status:'published',program:lessonProgram,overview:String(fd.get('overview')||'').trim()||null}]); if(insErr){toast('Could not save lesson: '+insErr.message);return;}
+ toast('✅ Lesson published'+(lessonProgram==='All'?' for all students!':' for '+lessonProgram+' students!')); loadLessons();};
  const contact=$('#contactForm');if(contact)contact.onsubmit=e=>{e.preventDefault();const fd=new FormData(contact);state.contactMessages=state.contactMessages||[];state.contactMessages.unshift({id:uid('MSG'),name:String(fd.get('name')),email:String(fd.get('email')),message:String(fd.get('message')),date:todayISO()});save();contact.reset();toast('Message submitted to support.');};
 const fp=$('#forgotPasswordForm');if(fp)fp.onsubmit=async e=>{e.preventDefault();const fd=new FormData(fp),email=String(fd.get('email')).trim().toLowerCase();const {data,error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:'https://mugees-editor.vercel.app/?reset=1'});if(error){toast(error.message||'Failed to send reset email');}else{toast('Password reset email sent');closeModals();}};
 const rp=$('#resetPasswordForm');if(rp)rp.onsubmit=async e=>{e.preventDefault();const fd=new FormData(rp),pw=String(fd.get('password')),cp=String(fd.get('confirm'));if(pw.length<8){var er=document.getElementById('rp_err');if(er)er.textContent='Password must be at least 8 characters.';toast('Password must be at least 8 characters.');return;}if(pw!==cp){var er=document.getElementById('rp_err');if(er)er.textContent='Passwords do not match.';toast('Passwords do not match.');return;}var er=document.getElementById('rp_err');if(er)er.textContent='';const {data,error}=await supabase.auth.updateUser({password:pw});if(error){toast(error.message||'Failed to reset password');}else{toast('Password updated');closeModals();openAuth('login');}};
