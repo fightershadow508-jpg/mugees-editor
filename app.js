@@ -546,7 +546,29 @@ async function loadCloudEarnings(){
   }catch(e){}
   _loadingEarnings=false;
 }
-function studentEarnings(s){loadCloudEarnings();const rows=state.earnings.filter(e=>e.studentId===s.id).sort((a,b)=>b.date.localeCompare(a.date));const totals=earningSummary(s.id);return `<div class="subpage-head"><div><h1>Earnings</h1><p style="color:#748195">Approved payout credits assigned to your account.</p></div><button class="btn primary" data-dash="withdraw">Withdraw</button></div><div class="dash-card-grid"><div class="dash-card"><small>Available Balance</small><strong style="color:#059669">${money(s.available)}</strong></div><div class="dash-card"><small>Pending Balance</small><strong style="color:#d97706">${money(s.pending||0)}</strong></div><div class="dash-card"><small>Total Paid</small><strong>${money(s.paid)}</strong></div><div class="dash-card"><small>Total Earnings</small><strong>${money(totals.lifetime)}</strong></div></div><div class="panel" style="margin-top:16px"><div class="notice">Dashboard earnings are approved payout credits. See the Earnings & Balance Policy for what this amount means.</div><div class="table-wrap" style="margin-top:13px"><table class="table"><thead><tr><th>Date</th><th>Program</th><th>Amount</th><th>Status</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${niceDate(e.date)}</td><td>${esc(e.program)}</td><td class="amount green">${money(e.amount)}</td><td><span class="tag green">Approved</span></td></tr>`).join('')}</tbody></table></div></div>`}
+let _loadingWithdrawals=false;
+async function loadCloudWithdrawals(){
+  if(_loadingWithdrawals)return;_loadingWithdrawals=true;
+  try{
+    const {data,error}=await supabase.from('withdrawals').select('id,student_id,amount,status');
+    if(!error&&data){
+      const mapped=data.map(w=>({id:w.id,studentId:w.student_id,amount:Number(w.amount||0),status:w.status||'pending',cloud:true}));
+      const localOnly=(state.withdrawals||[]).filter(w=>!w.cloud&&!mapped.find(m=>m.id===w.id));
+      state.withdrawals=mapped.concat(localOnly);
+      save();
+    }
+  }catch(e){}
+  _loadingWithdrawals=false;
+}
+function cloudBalances(sid){
+  const earn=(state.earnings||[]).filter(e=>e.studentId===sid).reduce((a,e)=>a+Number(e.amount||0),0);
+  const wds=(state.withdrawals||[]).filter(w=>w.studentId===sid);
+  const paid=wds.filter(w=>['paid','completed','approved'].includes(String(w.status).toLowerCase())).reduce((a,w)=>a+Number(w.amount||0),0);
+  const pending=wds.filter(w=>['pending','requested'].includes(String(w.status).toLowerCase())).reduce((a,w)=>a+Number(w.amount||0),0);
+  const available=Math.max(0,Math.round((earn-paid-pending)*100)/100);
+  return {lifetime:earn,paid,pending,available};
+}
+function studentEarnings(s){loadCloudEarnings();loadCloudWithdrawals();const rows=state.earnings.filter(e=>e.studentId===s.id).sort((a,b)=>b.date.localeCompare(a.date));const cb=cloudBalances(s.id);return `<div class="subpage-head"><div><h1>Earnings</h1><p style="color:#748195">Approved payout credits assigned to your account.</p></div><button class="btn primary" data-dash="withdraw">Withdraw</button></div><div class="dash-card-grid"><div class="dash-card"><small>Available Balance</small><strong style="color:#059669">${money(cb.available)}</strong></div><div class="dash-card"><small>Pending Balance</small><strong style="color:#d97706">${money(cb.pending)}</strong></div><div class="dash-card"><small>Total Paid</small><strong>${money(cb.paid)}</strong></div><div class="dash-card"><small>Total Earnings</small><strong>${money(cb.lifetime)}</strong></div></div><div class="panel" style="margin-top:16px"><div class="notice">Dashboard earnings are approved payout credits. See the Earnings & Balance Policy for what this amount means.</div><div class="table-wrap" style="margin-top:13px"><table class="table"><thead><tr><th>Date</th><th>Program</th><th>Amount</th><th>Status</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${niceDate(e.date)}</td><td>${esc(e.program)}</td><td class="amount green">${money(e.amount)}</td><td><span class="tag green">Approved</span></td></tr>`).join('')}</tbody></table></div></div>`}
 function studentWithdraw(s){
   if(s.kyc?.status !== 'Verified') {
     return `<div class="subpage-head"><div><h1>Withdraw</h1><p style="color:#748195">Request your available approved balance.</p></div></div><div class="panel" style="text-align:center; padding:40px 20px;"><div style="font-size:48px; margin-bottom:16px;">🔒</div><h2>Withdrawals Locked</h2><p style="color:#8fa1b8; margin-top:10px; max-width:400px; margin-left:auto; margin-right:auto;">Complete KYC identity verification in your profile before requesting withdrawals.</p><button class="btn primary" style="margin-top:24px;" data-dash="profile">Go to Profile</button></div>`;
