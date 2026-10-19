@@ -541,7 +541,6 @@ async function loadCloudEarnings(){
     if(!error&&data){
       state.earnings=data.map(e=>({id:e.id,studentId:e.student_id,date:(e.earning_date||'').slice(0,10),program:e.program||'General',amount:Number(e.amount||0),note:e.description||'',cloud:true}));
       save();
-      if(typeof render==='function'){try{render();}catch(e){}}
     }
   }catch(e){}
   _loadingEarnings=false;
