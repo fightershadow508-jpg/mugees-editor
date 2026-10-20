@@ -1,7 +1,7 @@
 // Google Drive video proxy — streams a publicly shared Drive file as native MP4
 // so in-page <video> playback (incl. iOS Safari + seeking) works for Drive lessons.
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36';
-const CHUNK = 10 * 1024 * 1024; // cap each response at 10MB so one function call stays fast; players request more ranges as needed
+const CHUNK = 10 * 1024 * 1024; // cap each response at 10MB; players request more ranges as needed
 
 module.exports = async function handler(req, res) {
   try {
@@ -19,37 +19,46 @@ module.exports = async function handler(req, res) {
       } catch (e) {}
     };
     const isRedirect = (s) => s === 301 || s === 302 || s === 303 || s === 307 || s === 308;
+    const get = (url, extra) => fetch(url, { headers: Object.assign({ 'User-Agent': UA, 'Cookie': cookies.join('; ') }, extra || {}), redirect: 'manual' });
+    const ucUrl = 'https://drive.google.com/uc?export=download&id=' + encodeURIComponent(id);
+    const confirmUrl = (uuid) => 'https://drive.usercontent.google.com/download?id=' + encodeURIComponent(id) + '&export=download&confirm=t&uuid=' + encodeURIComponent(uuid);
+    const uuidFrom = async (r) => { try { const html = await r.text(); const m = html.match(/name="uuid" value="([^"]+)"/); return m ? m[1] : null; } catch (e) { return null; } };
 
-    // Step 1: resolve the real stream URL (Drive interstitial dance for large files)
-    let r = await fetch('https://drive.google.com/uc?export=download&id=' + encodeURIComponent(id), { headers: { 'User-Agent': UA }, redirect: 'manual' });
-    grab(r);
+    // Step 1: walk Drive's download dance (redirect hop, then virus-scan interstitial w/ uuid) to find the real stream URL
     let streamUrl = null;
-    if (isRedirect(r.status)) {
-      streamUrl = r.headers.get('location');
-    } else if (r.ok) {
-      const ct1 = r.headers.get('content-type') || '';
-      if (ct1.includes('video') || ct1.includes('octet-stream')) {
-        streamUrl = 'https://drive.google.com/uc?export=download&id=' + encodeURIComponent(id);
+    let r1 = await get(ucUrl); grab(r1);
+    if (isRedirect(r1.status)) {
+      const loc1 = r1.headers.get('location');
+      let r1b = await get(loc1); grab(r1b);
+      if (isRedirect(r1b.status)) {
+        streamUrl = r1b.headers.get('location');
+      } else if (((r1b.headers.get('content-type') || '').includes('text/html'))) {
+        const u = await uuidFrom(r1b);
+        if (u) streamUrl = confirmUrl(u);
       } else {
-        const html = await r.text();
-        const um = html.match(/name="uuid" value="([^"]+)"/);
-        if (um) streamUrl = 'https://drive.usercontent.google.com/download?id=' + encodeURIComponent(id) + '&export=download&confirm=t&uuid=' + encodeURIComponent(um[1]);
+        streamUrl = loc1;
+      }
+    } else if (r1.ok) {
+      const ct1 = r1.headers.get('content-type') || '';
+      if (ct1.includes('text/html')) {
+        const u = await uuidFrom(r1);
+        if (u) streamUrl = confirmUrl(u);
+      } else {
+        streamUrl = ucUrl;
       }
     }
     if (!streamUrl) { res.status(502).send('Could not resolve Drive file'); return; }
 
-    // Step 2: bounded range for this response
+    // Step 2: fetch the stream with a bounded range (players fetch more as they play/seek)
     let start = 0, end = null;
     const rm = String(req.headers.range || '').match(/bytes=(\d+)-(\d*)/);
     if (rm) { start = parseInt(rm[1], 10) || 0; if (rm[2]) end = parseInt(rm[2], 10); }
     if (end === null || end - start + 1 > CHUNK) end = start + CHUNK - 1;
-
-    const h2 = { 'User-Agent': UA, 'Cookie': cookies.join('; '), 'Range': 'bytes=' + start + '-' + end };
-    let r2 = await fetch(streamUrl, { headers: h2, redirect: 'manual' });
-    grab(r2);
+    const h2 = { 'Range': 'bytes=' + start + '-' + end };
+    let r2 = await get(streamUrl, h2); grab(r2);
     if (isRedirect(r2.status)) {
-      const loc = r2.headers.get('location');
-      r2 = await fetch(loc, { headers: h2, redirect: 'follow' });
+      const loc2 = r2.headers.get('location');
+      r2 = await fetch(loc2, { headers: Object.assign({ 'User-Agent': UA, 'Cookie': cookies.join('; ') }, h2), redirect: 'follow' });
     }
     const ct = r2.headers.get('content-type') || '';
     if (ct.includes('text/html')) { res.status(502).send('Drive returned a page, not a video'); return; }
