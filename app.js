@@ -413,6 +413,7 @@ window.playLesson = function(id) {
 window.setSpeed=function(r,btn){const v=document.getElementById('lessonVideo');if(v)v.playbackRate=r;document.querySelectorAll('[data-speed]').forEach(b=>{const on=parseFloat(b.getAttribute('data-speed'))===r;b.classList.toggle('primary',on);b.classList.toggle('light',!on);});};
 window.toggleFullscreen=function(){const v=document.getElementById('lessonVideo');if(!v)return;if(document.fullscreenElement){document.exitFullscreen();}else if(v.requestFullscreen)v.requestFullscreen();else if(v.webkitEnterFullscreen)v.webkitEnterFullscreen();};
 document.addEventListener('ended',function(e){if(e.target&&e.target.id==='lessonVideo'&&window.videoEnded)window.videoEnded(state.currentLessonId);},true);
+document.addEventListener('error',function(e){var t=e.target;if(t&&t.id==='lessonVideo'&&t.getAttribute&&t.getAttribute('data-drive-embed')){var f=document.createElement('iframe');f.src=t.getAttribute('data-drive-embed');f.setAttribute('width','100%');f.setAttribute('height','100%');f.setAttribute('frameborder','0');f.setAttribute('allowfullscreen','');f.setAttribute('allow','accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share');f.style.cssText='border:0;background:#000;display:block';t.replaceWith(f);}},true);
 window.videoEnded=function(id){toast('🎬 Video finished! Tap "Mark as Complete" below.');const b=document.querySelector('[data-action="toggle-complete-lesson"]');if(b){b.style.boxShadow='0 0 0 3px rgba(139,92,246,.5)';b.scrollIntoView({behavior:'smooth',block:'nearest'});}};
 window.saveNotes = function(id) {
   if(!state.studentNotes) state.studentNotes = {};
@@ -440,13 +441,14 @@ function studentCourses(s){
   const total = _lessons.length;
   const comp = s.completedLessons.length;
   const progress = Math.round((comp/total)*100) || 0;
+  const _did = driveId(current.video_url||current.url);
 
   return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">Progress: ${progress}% complete</p></div></div>
   <div style="display:flex; gap:20px; flex-wrap:wrap;">
     <div style="flex: 1 1 600px; display:flex; flex-direction:column; gap:16px;">
        <div style="background:#000; border-radius:12px; overflow:hidden; aspect-ratio:16/9;">
-         ${current.kind==='file'
-         ?`<video id="lessonVideo" src="${current.video_url||current.url}" controls playsinline preload="metadata" onended="videoEnded('${current.id}')" style="width:100%;height:100%;background:#000;"></video>
+         ${(current.kind==='file'||_did)
+         ?`<video id="lessonVideo" src="${current.kind==='file'?(current.video_url||current.url):('/api/drive?id='+_did)}"${_did&&current.kind!=='file'?(' poster="https://drive.google.com/thumbnail?id='+_did+'&sz=w1000" data-drive-embed="'+embedUrl(current.video_url||current.url)+'"'):''} controls playsinline preload="metadata" style="width:100%;height:100%;background:#000;"></video>
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">
               <span style="color:#8fa1b8;font-size:13px;">▶ Speed:</span>
               ${[0.5,0.75,1,1.25,1.5,2].map(r=>`<button class="btn small ${r===1?'primary':'light'}" data-speed="${r}" data-action="set-speed" data-speed="${r}">${r}x</button>`).join('')}
@@ -1339,6 +1341,7 @@ function syncHeader(){
 // Attaches click AND touchstart directly to each element — no delegation.
 
 function embedUrl(u){try{u=String(u||'');var m=u.match(/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]+)/);if(m)return 'https://drive.google.com/file/d/'+m[1]+'/preview';return u;}catch(e){return u;}}
+function driveId(u){try{var m=String(u||'').match(/drive\.google\.com\/file\/d\/([A-Za-z0-9_-]+)/);return m?m[1]:null;}catch(e){return null;}}
 function keepActiveDashTabVisible(){
   try{setTimeout(function(){var ab=document.querySelector('.side-nav button.active');var nv=document.querySelector('.sidebar');if(ab&&nv){nv.scrollLeft=ab.offsetLeft-nv.clientWidth/2+ab.clientWidth/2;}},50);}catch(e){}
 }
