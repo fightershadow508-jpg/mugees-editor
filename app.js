@@ -412,6 +412,7 @@ window.playLesson = function(id) {
 };
 window.setSpeed=function(r,btn){const v=document.getElementById('lessonVideo');if(v)v.playbackRate=r;document.querySelectorAll('[data-speed]').forEach(b=>{const on=parseFloat(b.getAttribute('data-speed'))===r;b.classList.toggle('primary',on);b.classList.toggle('light',!on);});};
 window.toggleFullscreen=function(){const v=document.getElementById('lessonVideo');if(!v)return;if(document.fullscreenElement){document.exitFullscreen();}else if(v.requestFullscreen)v.requestFullscreen();else if(v.webkitEnterFullscreen)v.webkitEnterFullscreen();};
+document.addEventListener('ended',function(e){if(e.target&&e.target.id==='lessonVideo'&&window.videoEnded)window.videoEnded(state.currentLessonId);},true);
 window.videoEnded=function(id){toast('🎬 Video finished! Tap "Mark as Complete" below.');const b=document.querySelector('[data-action="toggle-complete-lesson"]');if(b){b.style.boxShadow='0 0 0 3px rgba(139,92,246,.5)';b.scrollIntoView({behavior:'smooth',block:'nearest'});}};
 window.saveNotes = function(id) {
   if(!state.studentNotes) state.studentNotes = {};
@@ -451,8 +452,9 @@ function studentCourses(s){
               ${[0.5,0.75,1,1.25,1.5,2].map(r=>`<button class="btn small ${r===1?'primary':'light'}" data-speed="${r}" data-action="set-speed" data-speed="${r}">${r}x</button>`).join('')}
               <button class="btn small light" data-action="toggle-fullscreen" style="margin-left:auto;">⛶ Fullscreen</button>
             </div>`
-         :`<iframe src="${embedUrl(current.video_url||current.url)}" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>`}
+         :`<iframe src="${embedUrl(current.video_url||current.url)}" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="border:0;background:#000;display:block"></iframe>`}
        </div>
+       ${current.kind!=='file'?`<div style="text-align:center;padding:2px 0 0"><a href="${esc(current.video_url||current.url||'')}" target="_blank" rel="noopener" style="color:#8fa1b8;font-size:13px;text-decoration:underline">&#9654; Video not playing? Watch it on Google Drive</a></div>`:''}
        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
          <div>
            <h2 style="margin:0; font-size:20px; color:#edf5ff;">${esc(current.title)}</h2>
