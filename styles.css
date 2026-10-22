@@ -1085,3 +1085,11 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   .sidebar .side-profile-rich strong{font-size:13.5px;line-height:1.3}
   .dashboard-main{padding-bottom:104px}
 }
+
+/* Support Inbox mobile fix (2026-10-22): stop ticket preview line from blowing out the layout */
+@media (max-width: 768px) {
+  .support-layout { grid-template-columns: minmax(0, 1fr); }
+  .ticket-list, .ticket-card, .ticket-detail { min-width: 0; }
+  .ticket-detail > div:first-child { flex-wrap: wrap; gap: 10px; }
+}
+#replySupportForm textarea { width: 100%; box-sizing: border-box; }
