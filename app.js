@@ -476,12 +476,13 @@ function studentCourses(s){
 function studentLive(){return `<div class="subpage-head"><div><h1>Curriculum</h1><p style="color:#748195">Upcoming sessions and previous recordings.</p></div></div><div class="live-grid">${state.classes.map(c=>`<div class="live-card"><span class="tag ${c.status==='Upcoming'?'orange':'green'}">${esc(c.status)}</span><h3 style="margin-top:14px">${esc(c.title)}</h3><p style="color:#748195">${niceDate(c.date)} · ${esc(c.time)}<br>${esc(c.trainer)} · ${esc(c.batch)}</p><button class="btn primary" data-action="class-detail" data-id="${c.id}">${c.status==='Upcoming'?'Join Class':'Watch Recording'}</button></div>`).join('')}</div>`}
 function studentTrends(){return `<div class="subpage-head"><div><h1>Trend Updates</h1><p style="color:#748195">New creator trends published by Admin.</p></div></div><div class="cards">${state.trends.map(t=>`<div class="card"><div style="display:flex;justify-content:space-between"><span class="pill">${esc(t.program)}</span><span class="tag ${t.status==='New'?'green':''}">${esc(t.status)}</span></div><h3 style="margin-top:16px">${esc(t.title)}</h3><p>Difficulty: ${esc(t.difficulty)} · Added ${niceDate(t.added)}</p><button class="btn primary" data-action="trend-detail" data-id="${t.id}">View Tutorial</button></div>`).join('')}</div>`}
 
+let lbRows=null,lbAt=0;
+async function loadLeaderboard(){try{const{data,error}=await supabase.rpc('get_leaderboard');if(!error&&data){lbRows=data;lbAt=Date.now();if(dashView==='leaderboard'){try{render();}catch(e){}}}}catch(e){}}
 function studentLeaderboard(s) {
-  // Real ranking: all students sorted by total earnings (lifetime) - dynamic!
-  const ranked = (state.students||[]).map(st=>({
-    name: st.name, avatar: st.avatar, lifetime: Number(st.lifetime||0),
-    isMe: s && st.id===s.id
-  })).sort((a,b)=>b.lifetime-a.lifetime);
+  // Top 10 by total earnings (database manual_total) — identical for everyone, moves up as earnings grow.
+  if(!lbRows||Date.now()-lbAt>30000)loadLeaderboard();
+  const _src=(lbRows&&lbRows.length)?lbRows.map(r=>({name:r.name,avatar:r.avatar_url||'',lifetime:Number(r.manual_total||0),isMe:s&&r.id===s.id})):(state.students||[]).map(st=>({name:st.name,avatar:st.avatar,lifetime:Number(st.manual_total||0),isMe:s&&st.id===s.id}));
+  const ranked = _src.sort((a,b)=>b.lifetime-a.lifetime||String(a.name).localeCompare(String(b.name))).slice(0,10);
 
   const medal = ['🥇','🥈','🥉'];
   const badge = i => i===0?'👑 Champion': i===1?'🥈 Runner-up': i===2?'🥉 3rd Place': '#'+(i+1);
