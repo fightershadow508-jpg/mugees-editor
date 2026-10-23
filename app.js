@@ -316,43 +316,13 @@ function openResetPassword(){
 }
 function closeModals(){$$('.modal').forEach(m=>m.classList.remove('open'));}
 
-function sparkline(values) {
-  const w=620, h=220, p=25, max=Math.max(...values), min=Math.min(...values), range=Math.max(1, max-min);
-  const coords = values.map((v,i) => [p+i*((w-2*p)/(values.length-1)), h-p-((v-min)/range)*(h-2*p)]);
-  let d = `M ${coords[0][0]} ${coords[0][1]}`;
-  for(let i=0; i<coords.length-1; i++) {
-    const [x0,y0] = coords[i];
-    const [x1,y1] = coords[i+1];
-    const cx = (x0 + x1) / 2;
-    d += ` C ${cx} ${y0}, ${cx} ${y1}, ${x1} ${y1}`;
-  }
-  const areaD = d + ` L ${coords[coords.length-1][0]} ${h-p} L ${coords[0][0]} ${h-p} Z`;
-  const gridLines = [0, 0.25, 0.5, 0.75, 1].map(ratio => {
-    const y = p + ratio * (h - 2*p);
-    return `<line x1="${p}" y1="${y}" x2="${w-p}" y2="${y}" stroke="rgba(255,255,255,0.06)" stroke-width="1" stroke-dasharray="4 4"/>`;
-  }).join('');
-  return `<svg class="earn-chart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
-    <defs>
-      <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#8b5cf6" stop-opacity=".45"/>
-        <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
-      </linearGradient>
-      <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stop-color="#8b5cf6"/>
-        <stop offset="1" stop-color="#22d3ee"/>
-      </linearGradient>
-      <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur stdDeviation="3" result="blur"/>
-        <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-      </filter>
-    </defs>
-    ${gridLines}
-    <path d="${areaD}" fill="url(#area)" stroke="none"/>
-    <path d="${d}" fill="none" stroke="url(#line)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-    ${coords.map(([x,y], i) => `<circle cx="${x}" cy="${y}" r="3.5" fill="#0d192a" stroke="#a78bfa" stroke-width="2" style="cursor:pointer;" filter="url(#glow)"><title>${values[i]}</title></circle>`).join('')}
-  </svg>`;
+function earningsBars(s){
+  const av=Number(s.manual_available||0), pe=Number(s.manual_pending||0), pa=Number(s.manual_paid||0), tot=Number(s.manual_total||0);
+  const max=Math.max(av,pe,pa,1);
+  const row=(label,val,cls)=>`<div class="earn-bar-row"><span class="eb-label">${label}</span><div class="earn-bar-track"><div class="earn-bar-fill ${cls}" style="width:${val>0?Math.max(4,Math.round(val/max*100)):0}%"></div></div><span class="eb-val">${money(val)}</span></div>`;
+  const empty=(av===0&&pe===0&&pa===0)?`<p class="earn-bars-empty">No approved earnings yet. Your earnings will appear here once the admin approves them.</p>`:'';
+  return `<div class="earn-bars">${row('Available',av,'avail')}${row('Pending',pe,'pend')}${row('Paid out',pa,'paid')}</div><div class="earn-bars-total"><span>Total earned</span><strong>${money(tot)}</strong></div>${empty}`;
 }
-
 function studentSidebar(s){
   const ac = state.adminControls || { showLeaderboard: true, showTrends: true, showWithdrawals: true };
   const uc = state.unreadCounts || { trends: 0, adminSupport: 0 };
@@ -402,7 +372,7 @@ function studentView(s){
  return `<div class="dash-top"><div><h1>Welcome back, ${esc(s.name.split(' ')[0])} 👋</h1><p style="display:flex;align-items:center;gap:8px;margin:6px 0 0"><span class="role-badge role-student">Student</span> <span style="color:#8fa1b8">${esc(s.program)}</span></p></div><div class="dash-actions"><button class="btn light" data-dash="notifications">🔔 ${myN}</button>${ac.showWithdrawals?`<button class="btn primary" data-dash="withdraw">Withdraw</button>`:''}</div></div>
  <div class="dash-card-grid"><div class="dash-card"><small>Today's Earnings</small><strong>${money(s.manual_today||0)}</strong><div class="delta">Approved payout credit</div></div><div class="dash-card"><small>Last 7 Days</small><strong>${money(s.manual_week||0)}</strong><div class="delta">Recent activity</div></div><div class="dash-card"><small>Last 30 Days</small><strong>${money(s.manual_month||0)}</strong><div class="delta">Rolling total</div></div><div class="dash-card"><small>Total Earnings</small><strong>${money(s.manual_total||0)}</strong><div class="delta">Approved history</div></div></div>
  <div class="dash-card-grid" style="margin-top:14px"><div class="dash-card"><small>Available Balance</small><strong style="color:#059669">${money(s.manual_available||0)}</strong><div class="delta">Available to request</div></div><div class="dash-card"><small>Pending Balance</small><strong style="color:#d97706">${money(s.manual_pending||0)}</strong><div class="delta">Awaiting admin review</div></div><div class="dash-card"><small>Total Paid</small><strong>${money(s.manual_paid||0)}</strong><div class="delta">Completed payouts</div></div><div class="dash-card"><small>Performance</small><strong>${esc(s.performance)}</strong><div class="delta">Attendance ${s.attendance}%</div></div></div>
- <div class="dashboard-grid"><div class="panel"><div class="panel-head"><h3>Earning activity</h3><div class="tabs" id="chartTabs"><button data-range="1W">1W</button><button class="active" data-range="1M">1M</button><button data-range="3M">3M</button><button data-range="1Y">1Y</button></div></div><div id="chartContainer">${sparkline([12,20,15,31,28,41,36,56,49,62,58,71])}</div></div><div class="panel"><div class="panel-head"><h3>Next live class</h3><span class="tag orange">Upcoming</span></div>${nextClassCard()}</div></div>
+ <div class="dashboard-grid"><div class="panel"><div class="panel-head"><h3>Your earnings</h3></div>${earningsBars(s)}</div><div class="panel"><div class="panel-head"><h3>Next live class</h3><span class="tag orange">Upcoming</span></div>${nextClassCard()}</div></div>
  <div class="dashboard-grid"><div class="panel"><div class="panel-head"><h3>Recent earnings</h3><button class="btn small light" data-dash="earnings">View all</button></div><div class="list">${myE.map(e=>`<div class="list-item"><div class="meta"><strong>${esc(e.program)}</strong><small>${niceDate(e.date)}</small></div><span class="amount green">+ ${money(e.amount)}</span></div>`).join('')||'<div class="empty">No earnings yet.</div>'}</div></div>${ac.showTrends?`<div class="panel"><div class="panel-head"><h3>Latest trends</h3><button class="btn small light" data-dash="trends">View</button></div><div class="list">${state.trends.slice(0,3).map(t=>`<div class="list-item"><div class="meta"><strong>${esc(t.program)}</strong><small>${esc(t.title)}</small></div><span class="tag ${t.status==='New'?'green':''}">${esc(t.status)}</span></div>`).join('')}</div></div>`:''}</div>`
 }
 function nextClassCard(){const c=state.classes.find(x=>x.status==='Upcoming')||state.classes[0];return `<h3 style="margin:6px 0">${esc(c.title)}</h3><p style="color:#728096">${niceDate(c.date)} · ${esc(c.time)}<br>${esc(c.trainer)} · ${esc(c.batch)}</p><button class="btn primary" data-action="class-detail" data-id="${c.id}">Open Class</button>`}
@@ -1538,23 +1508,6 @@ document.addEventListener('click', async e => {
   }
 
   // ── Chart filter tabs ─────────────────────────────────────────────────────
-  const chartBtn = e.target.closest('#chartTabs button');
-  if (chartBtn) {
-    const parent = chartBtn.parentElement;
-    if (parent) {
-      parent.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-    }
-    chartBtn.classList.add('active');
-    const r = chartBtn.dataset.range;
-    const data = r==='1W' ? [12,15,14,20,18,25,28] :
-                 r==='3M' ? [20,30,25,40,45,60,55,70,85,80,95,110] :
-                 r==='1Y' ? [50,60,45,80,95,120,110,140,160,180,170,210] :
-                 [12,20,15,31,28,41,36,56,49,62,58,71];
-    const cc = document.getElementById('chartContainer');
-    if (cc) cc.innerHTML = sparkline(data);
-    return;
-  }
-
   // ── Sidebar / dashboard nav (data-dash) ───────────────────────────────────
   const dashEl = e.target.closest('.side-nav [data-dash], .dash-top [data-dash], .dashboard-page [data-dash], #mobileMenu [data-dash], .mobile-menu [data-dash]');
   if (dashEl) {
