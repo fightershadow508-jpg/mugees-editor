@@ -321,7 +321,7 @@ function fmtPKR(usd){const n=Math.round(Number(usd||0)*275*100)/100;return 'Rs '
 function pkrPanel(s){
   const av=Number(s.manual_available||0), pe=Number(s.manual_pending||0), pa=Number(s.manual_paid||0), tot=Number(s.manual_total||0);
   const row=(label,usd)=>`<div class="list-item"><div class="meta"><strong>${label}</strong><small>${money(usd)}</small></div><span class="amount green">${fmtPKR(usd)}</span></div>`;
-  return `<div class="panel"><div class="panel-head"><h3>\uD83D\uDCB1 Earnings in PKR</h3><span class="tag green">$1 = Rs 275</span></div><div class="list">${row('Available',av)}${row('Pending',pe)}${row('Paid out',pa)}${row('Total earned',tot)}</div><div class="field" style="margin-top:14px;margin-bottom:0"><label>Check any amount ($)</label><input type="number" id="pkrUsd" min="0" step="0.01" placeholder="e.g. 50"></div><p style="margin:10px 0 0;font-size:15px">In rupees: <strong id="pkrOut">Rs 0</strong></p></div>`;
+  return `<div class="panel"><div class="panel-head"><h3>\uD83D\uDCB1 Earnings in PKR</h3><span class="tag green">$1 = Rs 275</span></div><div class="list">${row('Available',av)}${row('Pending',pe)}${row('Total Paid',pa)}${row('Total earned',tot)}</div><div class="field" style="margin-top:14px;margin-bottom:0"><label>Check any amount ($)</label><input type="number" id="pkrUsd" min="0" step="0.01" placeholder="e.g. 50"></div><p style="margin:10px 0 0;font-size:15px">In rupees: <strong id="pkrOut">Rs 0</strong></p></div>`;
 }
 document.addEventListener('input',function(e){if(e.target&&e.target.id==='pkrUsd'){var o=document.getElementById('pkrOut');if(o){var v=parseFloat(e.target.value);o.textContent=isNaN(v)?'Rs 0':fmtPKR(v);}}},true);
 function earningsBars(s){
@@ -329,7 +329,7 @@ function earningsBars(s){
   const max=Math.max(av,pe,pa,1);
   const row=(label,val,cls)=>`<div class="earn-bar-row"><span class="eb-label">${label}</span><div class="earn-bar-track"><div class="earn-bar-fill ${cls}" style="width:${val>0?Math.max(4,Math.round(val/max*100)):0}%"></div></div><span class="eb-val">${money(val)}</span></div>`;
   const empty=(av===0&&pe===0&&pa===0)?`<p class="earn-bars-empty">No approved earnings yet. Your earnings will appear here once the admin approves them.</p>`:'';
-  return `<div class="earn-bars">${row('Available',av,'avail')}${row('Pending',pe,'pend')}${row('Paid out',pa,'paid')}</div><div class="earn-bars-total"><span>Total earned</span><strong>${money(tot)}</strong></div>${empty}`;
+  return `<div class="earn-bars">${row('Available',av,'avail')}${row('Pending',pe,'pend')}${row('Total Paid',pa,'paid')}</div><div class="earn-bars-total"><span>Total earned</span><strong>${money(tot)}</strong></div>${empty}`;
 }
 function studentSidebar(s){
   const ac = state.adminControls || { showLeaderboard: true, showTrends: true, showWithdrawals: true };
