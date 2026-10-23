@@ -319,9 +319,7 @@ function closeModals(){$$('.modal').forEach(m=>m.classList.remove('open'));}
 
 function fmtPKR(usd){const n=Math.round(Number(usd||0)*275*100)/100;return 'Rs '+n.toLocaleString('en-US',{maximumFractionDigits:2});}
 function pkrPanel(s){
-  const av=Number(s.manual_available||0), pe=Number(s.manual_pending||0), pa=Number(s.manual_paid||0), tot=Number(s.manual_total||0);
-  const row=(label,usd)=>`<div class="list-item"><div class="meta"><strong>${label}</strong><small>${money(usd)}</small></div><span class="amount green">${fmtPKR(usd)}</span></div>`;
-  return `<div class="panel"><div class="panel-head"><h3>\uD83D\uDCB1 Earnings in PKR</h3><span class="tag green">$1 = Rs 275</span></div><div class="list">${row('Available',av)}${row('Pending',pe)}${row('Total Paid',pa)}${row('Total earned',tot)}</div><div class="field" style="margin-top:14px;margin-bottom:0"><label>Check any amount ($)</label><input type="number" id="pkrUsd" min="0" step="0.01" placeholder="e.g. 50"></div><p style="margin:10px 0 0;font-size:15px">In rupees: <strong id="pkrOut">Rs 0</strong></p></div>`;
+  return `<div class="panel"><div class="panel-head"><h3>\uD83D\uDCB1 Earnings in PKR</h3><span class="tag green">$1 = Rs 275</span></div><div class="field" style="margin-bottom:0"><label>Check any amount ($)</label><input type="number" id="pkrUsd" min="0" step="0.01" placeholder="e.g. 50"></div><p style="margin:12px 0 0;font-size:15px">In rupees: <strong id="pkrOut">Rs 0</strong></p></div>`;
 }
 document.addEventListener('input',function(e){if(e.target&&e.target.id==='pkrUsd'){var o=document.getElementById('pkrOut');if(o){var v=parseFloat(e.target.value);o.textContent=isNaN(v)?'Rs 0':fmtPKR(v);}}},true);
 function earningsBars(s){
