@@ -1093,3 +1093,17 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   .ticket-detail > div:first-child { flex-wrap: wrap; gap: 10px; }
 }
 #replySupportForm textarea { width: 100%; box-sizing: border-box; }
+
+/* Earnings bars (student dashboard, replaces fake chart 2026-10-23) */
+.earn-bars{display:flex;flex-direction:column;gap:14px;margin-top:6px}
+.earn-bar-row{display:grid;grid-template-columns:82px 1fr 70px;align-items:center;gap:10px;font-size:13px}
+.earn-bar-row .eb-label{color:#a9b8cc;font-weight:600}
+.earn-bar-row .eb-val{color:#edf5ff;font-weight:700;text-align:right}
+.earn-bar-track{height:10px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden}
+.earn-bar-fill{height:100%;border-radius:99px}
+.earn-bar-fill.avail{background:linear-gradient(90deg,#059669,#34d399)}
+.earn-bar-fill.pend{background:linear-gradient(90deg,#d97706,#fbbf24)}
+.earn-bar-fill.paid{background:linear-gradient(90deg,#2563eb,#22d3ee)}
+.earn-bars-total{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07);display:flex;justify-content:space-between;font-size:13.5px;color:#a9b8cc}
+.earn-bars-total strong{color:#edf5ff}
+.earn-bars-empty{color:#748195;font-size:13px;margin:12px 0 0}
