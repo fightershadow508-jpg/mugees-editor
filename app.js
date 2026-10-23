@@ -115,7 +115,7 @@ function loadState() {
 }
 let state=loadState();
 (function(){try{const _v='4';const _sv=localStorage.getItem('me_data_version');if(_sv!==_v){localStorage.setItem('me_data_version',_v);if(state&&state.students){state.students.forEach(s=>{s.available=0;s.pending=0;s.paid=0;s.lifetime=0;});}if(state){state.earnings=[];state.withdrawals=[];}save();}}catch(e){}})();
-(function(){try{if(state&&state.session&&state.session.role==='student'&&state.session.studentId){try{loadCloudEarnings();loadCloudWithdrawals();loadStudents();setTimeout(()=>{try{if(typeof render==='function')render();}catch(e){}},800);}catch(e){}}}catch(e){}})();
+(function(){try{if(state&&state.session&&state.session.role==='student'&&state.session.studentId){try{loadCloudEarnings();loadCloudWithdrawals();loadStudents();setTimeout(()=>{try{if(typeof render==='function')render();}catch(e){}},800);}catch(e){}}else if(state&&state.session&&state.session.role==='admin'){try{loadStudents();}catch(e){}}}catch(e){}})();
 let dashView='overview';
 let adminView='overview';
 function save(){localStorage.setItem('me_creator_state_v2',JSON.stringify(state));}
@@ -664,8 +664,11 @@ async function loadStudents(){
           s.name=p.name||p.full_name||s.name; s.phone=p.phone||s.phone; s.network=p.network||s.network; s.cnic=p.cnic||s.cnic; s.program=p.program||s.program; s.avatar=p.avatar_url||''; s.joinDate=jdate; s.manual_today=Number(p.manual_today||0);s.manual_week=Number(p.manual_week||0);s.manual_month=Number(p.manual_month||0);s.manual_total=Number(p.manual_total||0);s.manual_available=Number(p.manual_available||0);s.manual_pending=Number(p.manual_pending||0);s.manual_paid=Number(p.manual_paid||0);
         }
       });
+      const _dbEmails=new Set(data.map(p=>(p.email||'').toLowerCase()));
+      state.students=state.students.filter(x=>_dbEmails.has((x.email||'').toLowerCase())||x.id===(state.session&&state.session.studentId));
       save();
       if(adminView==='students'){const c=document.getElementById('adminContent');if(c){const _tw=c.querySelector('.table-wrap');const _sl=_tw?_tw.scrollLeft:0;c.innerHTML=adminStudents();bindGlobal();const _ntw=c.querySelector('.table-wrap');if(_ntw)_ntw.scrollLeft=_sl;}}
+      else if(state.session&&state.session.role==='admin'){const c=document.getElementById('adminContent');if(c){c.innerHTML=adminPanel();bindGlobal();}}
     }
   }catch(e){}
   _loadingStudents=false;
@@ -1093,7 +1096,7 @@ function bindForms(){
       window._reapplyProfId = prof.id;
       bindForms();
       return;
-    } if(prof.role==='admin' || email.toLowerCase()===state.admin.email.toLowerCase()){state.session={role:'admin'}; save(); closeModals(); location.hash='#/admin'; render(); loadApprovals(); loadLessons(); return;} let s=state.students.find(x=>x.email.toLowerCase()===email.toLowerCase());
+    } if(prof.role==='admin' || email.toLowerCase()===state.admin.email.toLowerCase()){state.session={role:'admin'}; save(); closeModals(); location.hash='#/admin'; render(); loadApprovals(); loadLessons(); loadStudents(); return;} let s=state.students.find(x=>x.email.toLowerCase()===email.toLowerCase());
   const profJoin = prof.created_at ? prof.created_at.slice(0,10) : todayISO();
   if(!s){s={id:prof.id||uid('ST'),name:prof.name||prof.full_name||email.split('@')[0],avatar:prof.avatar_url||'',email:email.toLowerCase(),password:'',phone:prof.phone||'',network:prof.network||'',cnic:prof.cnic||'',status:'Active Student',program:prof.program||'Creator Program',joinDate:profJoin,today:0,week:0,month:0,lifetime:0,available:0,pending:0,paid:0,manual_today:0,manual_week:0,manual_month:0,manual_total:0,manual_available:0,manual_pending:0,manual_paid:0,attendance:100,progress:0,tasksDone:0,tasksTotal:20,trendParticipation:0,performance:'New',payoutMethod:'',payoutAccount:'',city:'',bio:''}; state.students.push(s);}
   else { s.name=prof.name||prof.full_name||s.name; s.phone=prof.phone||s.phone; s.network=prof.network||s.network; s.cnic=prof.cnic||s.cnic; s.program=prof.program||s.program; s.avatar=prof.avatar_url||s.avatar; if(prof.created_at) s.joinDate=prof.created_at.slice(0,10); save(); } if(s.available===500&&s.paid===150&&s.lifetime===650){s.available=0;s.paid=0;s.lifetime=0;s.pending=0;}
@@ -1472,7 +1475,7 @@ document.addEventListener('click', async e => {
       dashView = dashTarget;
       if (route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } else { render(); }
     } else if (adminTarget) {
-      adminView = adminTarget; if(adminTarget==='students')loadStudents();
+      adminView = adminTarget; loadStudents();
       if (route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
     } else if (actionTarget === 'logout' || mobileBtn.innerText.toLowerCase().includes('logout')) {
       if (window.supabase && supabase.auth) {
