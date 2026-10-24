@@ -661,7 +661,7 @@ async function loadStudents(){
   if(_loadingStudents)return;
   _loadingStudents=true;
   try{
-    const {data,error}=await supabase.from('profiles').select('id,email,name,full_name,phone,network,cnic,program,avatar_url,status,role,created_at,manual_today,manual_week,manual_month,manual_total,manual_available,manual_pending,manual_paid,name_change_count').neq('status','pending').neq('status','rejected');
+    const {data,error}=await supabase.from('profiles').select('id,email,name,full_name,phone,network,cnic,program,avatar_url,status,role,created_at,manual_today,manual_week,manual_month,manual_total,manual_available,manual_pending,manual_paid').neq('status','pending').neq('status','rejected');
     if(!error&&data){
       const rows=data.filter(p=>p.role!=='admin');
       rows.forEach(p=>{
