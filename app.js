@@ -1317,18 +1317,25 @@ const rap=$('#reapplyForm');if(rap)rap.onsubmit=async e=>{e.preventDefault();con
   if(progWrap)progWrap.style.display='block';
   try{
     const sess=(await supabase.auth.getSession()).data.session;
-    const upUrl='https://ijsvpdraigzvxeeuedzd.supabase.co/storage/v1/object/lesson-videos/'+fpath;
-    await new Promise((resolve,reject)=>{
-      const xhr=new XMLHttpRequest();
-      xhr.open('POST',upUrl);
-      xhr.setRequestHeader('apikey','sb_publishable_FlaAOinEJSeHyLTEaEAJrQ_QR_N3dBe');
-      if(sess&&sess.access_token)xhr.setRequestHeader('Authorization','Bearer '+sess.access_token);
-      xhr.setRequestHeader('Content-Type',vf.type||'video/mp4');
-      xhr.upload.onprogress=(e)=>{if(e.lengthComputable&&progBar){const pct=Math.round((e.loaded/e.total)*100);progBar.style.width=pct+'%';if(progPct)progPct.textContent=pct+'%';}};
-      xhr.onload=()=>{if(xhr.status>=200&&xhr.status<300)resolve();else{var _msg='';try{_msg=JSON.parse(xhr.responseText||'{}').message||'';}catch(e){_msg=(xhr.responseText||'').slice(0,120);}reject(new Error('Upload failed (HTTP '+xhr.status+') '+_msg));}};
-      xhr.onerror=()=>reject(new Error('Upload network error'));
-      xhr.send(vf);
-    });
+    if(!sess||!sess.access_token)throw new Error('Session expired. Please login again.');
+    const SUPA='https://ijsvpdraigzvxeeuedzd.supabase.co';
+    const APIK='sb_publishable_FlaAOinEJSeHyLTEaEAJrQ_QR_N3dBe';
+    const b64=function(str){return btoa(unescape(encodeURIComponent(str)));};
+    const meta='bucketName '+b64('lesson-videos')+', objectName '+b64(fpath)+', contentType '+b64(vf.type||'video/mp4');
+    const create=await fetch(SUPA+'/storage/v1/upload/resumable',{method:'POST',headers:{'Authorization':'Bearer '+sess.access_token,'apikey':APIK,'Tus-Resumable':'1.0.0','Upload-Length':String(vf.size),'Upload-Metadata':meta}});
+    if(!create.ok){var _ct='';try{var _cj=await create.json();_ct=_cj.message||'';}catch(e){}throw new Error('Upload failed (HTTP '+create.status+') '+_ct);}
+    let upUrl=create.headers.get('Location');
+    if(!upUrl)throw new Error('Upload failed: no upload URL returned');
+    if(upUrl.indexOf('http')!==0)upUrl=SUPA+upUrl;
+    const CH=6*1024*1024;let off=0;
+    while(off<vf.size){
+      const chunk=vf.slice(off,Math.min(off+CH,vf.size));
+      const res=await fetch(upUrl,{method:'PATCH',headers:{'Authorization':'Bearer '+sess.access_token,'apikey':APIK,'Tus-Resumable':'1.0.0','Upload-Offset':String(off),'Content-Type':'application/offset+octet-stream'},body:chunk});
+      if(!res.ok){var _pt='';try{var _pj=await res.json();_pt=_pj.message||'';}catch(e){}throw new Error('Upload failed (HTTP '+res.status+') '+_pt);}
+      const noff=parseInt(res.headers.get('Upload-Offset')||'0',10);
+      off=(isNaN(noff)||noff<=off)?off+chunk.size:noff;
+      if(progBar){const pct=Math.round((off/vf.size)*100);progBar.style.width=pct+'%';if(progPct)progPct.textContent=pct+'%';}
+    }
   }catch(upErr){if(progWrap)progWrap.style.display='none';toast('Upload failed: '+(upErr.message||upErr));return;}
   if(progWrap)progWrap.style.display='none'; url=supabase.storage.from('lesson-videos').getPublicUrl(fpath).data.publicUrl; kind='file';}
  if(!url){toast('Please upload a video file or paste a video URL.');return;}
@@ -1710,7 +1717,7 @@ if(a==='back-to-lectures'){state.currentLessonId=null;save();render();return;}
     if (a === 'trend-detail')       { showTrendDetail(id); return; }
     if (a === 'edit-course')        { editCourseModal(id); return; }
     if (a === 'reset-demo')         { if (confirm('Reset all local data?')) resetDemo(); return; }
-    if (a === 'delete-lesson')      { if(!confirm('Delete this lesson?'))return; const {error:delErr}=await supabase.from('lessons').delete().eq('id',id); if(delErr){toast('Delete failed: '+delErr.message);return;} toast('Lesson deleted.'); loadLessons(); return; }
+    if (a === 'delete-lesson')      { if(!confirm('Delete this lesson?'))return; const _dl=(dbLessons||[]).find(x=>x.id===id); const {error:delErr}=await supabase.from('lessons').delete().eq('id',id); if(delErr){toast('Delete failed: '+delErr.message);return;} let _clean=true; if(_dl&&_dl.kind==='file'&&_dl.url){try{const _p=String(_dl.url).split('/lesson-videos/')[1]; if(_p){const _r=await supabase.storage.from('lesson-videos').remove([decodeURIComponent(_p)]); if(_r.error)_clean=false;}}catch(e){_clean=false;}} toast(_clean?'Lesson deleted.':'Lesson deleted (video file cleanup failed).'); loadLessons(); return; }
     if (a === 'ai-overview') {
       const btn=actionEl, res=document.getElementById('ai_ov_result'), txt=document.getElementById('ai_ov_text'), hint=document.getElementById('ai_ov_hint');
       const title=btn.getAttribute('data-title')||'', mod=btn.getAttribute('data-module')||'', saved=btn.getAttribute('data-overview')||'', videoUrl=btn.getAttribute('data-url')||'';
