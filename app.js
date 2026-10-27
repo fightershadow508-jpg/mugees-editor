@@ -1325,7 +1325,7 @@ const rap=$('#reapplyForm');if(rap)rap.onsubmit=async e=>{e.preventDefault();con
       if(sess&&sess.access_token)xhr.setRequestHeader('Authorization','Bearer '+sess.access_token);
       xhr.setRequestHeader('Content-Type',vf.type||'video/mp4');
       xhr.upload.onprogress=(e)=>{if(e.lengthComputable&&progBar){const pct=Math.round((e.loaded/e.total)*100);progBar.style.width=pct+'%';if(progPct)progPct.textContent=pct+'%';}};
-      xhr.onload=()=>{if(xhr.status>=200&&xhr.status<300)resolve();else reject(new Error('Upload failed (HTTP '+xhr.status+')'));};
+      xhr.onload=()=>{if(xhr.status>=200&&xhr.status<300)resolve();else{var _msg='';try{_msg=JSON.parse(xhr.responseText||'{}').message||'';}catch(e){_msg=(xhr.responseText||'').slice(0,120);}reject(new Error('Upload failed (HTTP '+xhr.status+') '+_msg));}};
       xhr.onerror=()=>reject(new Error('Upload network error'));
       xhr.send(vf);
     });
