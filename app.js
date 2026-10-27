@@ -116,7 +116,7 @@ function loadState() {
 }
 let state=loadState();
 (function(){try{const _v='4';const _sv=localStorage.getItem('me_data_version');if(_sv!==_v){localStorage.setItem('me_data_version',_v);if(state&&state.students){state.students.forEach(s=>{s.available=0;s.pending=0;s.paid=0;s.lifetime=0;});}if(state){state.earnings=[];state.withdrawals=[];}save();}}catch(e){}})();
-(function(){try{if(state&&state.session&&state.session.role==='student'&&state.session.studentId){try{loadCloudEarnings();loadCloudWithdrawals();loadStudents();setTimeout(()=>{try{if(typeof render==='function')render();}catch(e){}},800);}catch(e){}}else if(state&&state.session&&state.session.role==='admin'){try{loadStudents();}catch(e){}}}catch(e){}})();
+(function(){try{if(state&&state.session&&state.session.role==='student'&&state.session.studentId){try{loadCloudEarnings();loadCloudWithdrawals();loadStudents();setTimeout(()=>{try{if(typeof render==='function')render();}catch(e){}},800);}catch(e){}}else if(state&&state.session&&state.session.role==='admin'){try{loadStudents();loadResources();}catch(e){}}}catch(e){}})();
 let dashView='overview';
 let adminView='overview';
 function save(){localStorage.setItem('me_creator_state_v2',JSON.stringify(state));}
@@ -332,7 +332,7 @@ function earningsBars(s){
 function studentSidebar(s){
   const ac = state.adminControls || { showLeaderboard: true, showTrends: true, showWithdrawals: true };
   const uc = state.unreadCounts || { trends: 0, adminSupport: 0 };
-  let items=[['overview','🏠 Dashboard'],['courses','📚 My Courses'],['assignments','📝 Assignments'],['live','🎥 Curriculum']];
+  let items=[['overview','🏠 Dashboard'],['courses','📚 My Courses'],['resources','📁 Resources'],['assignments','📝 Assignments'],['live','🎥 Curriculum']];
   if(ac.showTrends) items.push(['trends','🔥 Trends']);
   items.push(['performance','📊 Performance'],['earnings','💰 Earnings']);
   if(ac.showLeaderboard) items.push(['leaderboard','🏆 Leaderboard']);
@@ -362,7 +362,7 @@ window.loadEarnings = async function(sId) {
 
 function studentDashboard(){if(!state.session||state.session.role!=='student'){openAuth('login');location.hash='#/';return homePage()}const s=currentStudent(); loadEarnings(s.id); return `<div class="dashboard-page"><div class="dashboard-shell">${studentSidebar(s)}<section class="dashboard-main" id="dashContent">${studentView(s)}</section></div></div>`}
 function studentView(s){
- if(dashView==='courses') return studentCourses(s); if(dashView==='assignments') return studentAssignments(s);
+ if(dashView==='courses') return studentCourses(s); if(dashView==='resources') return studentResources(s); if(dashView==='assignments') return studentAssignments(s);
  if(dashView==='live') return studentLive(s);
  if(dashView==='trends') return studentTrends(s);
  if(dashView==='performance') return studentPerformance(s);
@@ -397,6 +397,42 @@ window.saveNotes = function(id) {
   save();
   toast('✅ Notes Saved!');
 };
+
+let dbResourceFolders=null, dbResourceItems=null;
+function resourceEmbedUrl(u){try{u=String(u||'');let m=u.match(/[?&]v=([A-Za-z0-9_-]{6,})/);if(m)return 'https://www.youtube.com/embed/'+m[1];m=u.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/);if(m)return 'https://www.youtube.com/embed/'+m[1];m=u.match(/vimeo\.com\/(\d+)/);if(m)return 'https://player.vimeo.com/video/'+m[1];return u;}catch(e){return u;}}
+function resourceIsVideo(u){try{return !!driveId(u)||/youtube\.com|youtu\.be|vimeo\.com/.test(String(u||''));}catch(e){return false;}}
+async function loadResources(){try{const f=await supabase.from('resource_folders').select('*').order('created_at',{ascending:true});if(!f.error)dbResourceFolders=f.data||[];const it=await supabase.from('resource_items').select('*').order('created_at',{ascending:true});if(!it.error)dbResourceItems=it.data||[];}catch(e){if(dbResourceFolders===null)dbResourceFolders=[];if(dbResourceItems===null)dbResourceItems=[];}
+ if(adminView==='resources'){const c=$('#adminContent');if(c){c.innerHTML=adminResources();bindForms();}}
+ if(typeof dashView!=='undefined'&&dashView==='resources'&&route()==='dashboard'){const d=$('#dashContent');if(d){try{d.innerHTML=studentView(currentStudent());bindGlobal();}catch(e){}}}}
+function studentResources(s){
+  if(dbResourceFolders===null||dbResourceItems===null){loadResources();return `<div class="subpage-head"><div><h1>Resources</h1><p style="color:#748195">Loading material…</p></div></div>`;}
+  const folders=dbResourceFolders||[], items=dbResourceItems||[];
+  const playing=state.playingResourceId?items.find(x=>x.id===state.playingResourceId):null;
+  let playerHtml='';
+  if(playing&&resourceIsVideo(playing.url)){const did=driveId(playing.url);
+    playerHtml=`<div class="panel" style="margin-bottom:16px;"><div style="background:#000;border-radius:12px;overflow:hidden;aspect-ratio:16/9;">${did?`<video id="lessonVideo" src="/api/drive?id=${did}" poster="https://drive.google.com/thumbnail?id=${did}&sz=w1000" data-drive-embed="${embedUrl(playing.url)}" controls playsinline preload="metadata" style="width:100%;height:100%;background:#000;"></video>`:`<iframe src="${resourceEmbedUrl(playing.url)}" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="border:0;background:#000;display:block"></iframe>`}</div>${did?`<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;"><span style="color:#8fa1b8;font-size:13px;">▶ Speed:</span>${[0.5,0.75,1,1.25,1.5,2].map(r=>`<button class="btn small ${r===1?'primary':'light'}" data-speed="${r}" data-action="set-speed" data-speed="${r}">${r}x</button>`).join('')}<button class="btn small light" data-action="toggle-fullscreen" style="margin-left:auto;">⛶ Fullscreen</button></div>`:''}<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;"><h3 style="margin:0;">${esc(playing.title)}</h3><button class="btn small light" data-action="close-resource-player">✕ Close player</button></div>${did?`<div style="text-align:center;padding:6px 0 0"><a href="${esc(playing.url)}" target="_blank" rel="noopener" style="color:#8fa1b8;font-size:13px;text-decoration:underline">▶ Video not playing? Watch it on Google Drive</a></div>`:''}</div>`;}
+  const openId=state.openResourceFolderId;
+  if(openId){const f=folders.find(x=>x.id===openId);
+    if(f){const fitems=items.filter(x=>x.folder_id===openId);
+      return `<div class="subpage-head"><div><h1>📁 ${esc(f.title)}</h1><p style="color:#748195">${fitems.length} item(s)</p></div><button class="btn small light" data-action="close-resource-folder">← All folders</button></div>${playerHtml}<div class="panel"><div class="list">${fitems.length===0?'<div class="empty" style="padding:20px;">No material in this folder yet.</div>':fitems.map(it=>{const isVid=resourceIsVideo(it.url);return `<div class="list-item"><div class="meta"><strong>${esc(it.title)}</strong><small>${isVid?'🎥 Video':'🔗 Link'}</small></div>${isVid?`<button class="btn small primary" data-action="play-resource-item" data-id="${it.id}">▶ Watch</button>`:`<a class="btn small primary" href="${esc(it.url)}" target="_blank" rel="noopener">Open ↗</a>`}</div>`}).join('')}</div></div>`;}}
+  return `<div class="subpage-head"><div><h1>Resources</h1><p style="color:#748195">Material shared by your admin — open a folder to see what's inside.</p></div></div>${playerHtml}<div class="panel">${folders.length===0?'<div class="empty" style="padding:20px;">No resources shared yet.</div>':`<div class="list">${folders.map(f=>{const n=items.filter(x=>x.folder_id===f.id).length;return `<div class="list-item"><div class="meta"><strong>📁 ${esc(f.title)}</strong><small>${n} item(s)</small></div><button class="btn small primary" data-action="open-resource-folder" data-id="${f.id}">Open</button></div>`}).join('')}</div>`}</div>`;
+}
+function adminResources(){
+  if(dbResourceFolders===null||dbResourceItems===null){loadResources();return `<div class="subpage-head"><div><h1>Resources</h1><p style="color:#748195">Loading…</p></div></div>`;}
+  const folders=dbResourceFolders||[], items=dbResourceItems||[];
+  const folderRows=folders.map(f=>{
+    const n=items.filter(x=>x.folder_id===f.id).length;
+    const editing=state.editingFolderId===f.id;
+    const open=state.openResourceFolderId===f.id;
+    let row=`<div class="list-item"><div class="meta">${editing?`<input id="renameFolderInput" value="${esc(f.title)}" style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.2);color:#e2e8f0;">`:`<strong>📁 ${esc(f.title)}</strong><small>${n} item(s)</small>`}</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${editing?`<button class="btn small primary" data-action="save-folder-rename" data-id="${f.id}">Save</button><button class="btn small light" data-action="cancel-folder-rename">Cancel</button>`:`<button class="btn small light" data-action="open-resource-folder" data-id="${f.id}">${open?'Hide':'Show'} items</button><button class="btn small light" data-action="rename-resource-folder" data-id="${f.id}">Rename</button><button class="btn small danger" data-action="delete-resource-folder" data-id="${f.id}">Delete</button>`}</div></div>`;
+    if(open){const fitems=items.filter(x=>x.folder_id===f.id);
+      row+=`<div style="padding:8px 0 8px 20px;">${fitems.length===0?'<div class="empty">No material in this folder yet.</div>':fitems.map(it=>`<div class="list-item"><div class="meta"><strong>${esc(it.title)}</strong><small>${esc(it.url)}</small></div><div style="display:flex;gap:6px;"><a class="btn small light" href="${esc(it.url)}" target="_blank" rel="noopener">Open</a><button class="btn small danger" data-action="delete-resource-item" data-id="${it.id}">Delete</button></div></div>`).join('')}</div>`;}
+    return row;}).join('');
+  return `<div class="subpage-head"><div><h1>Resources</h1><p style="color:#748195">Create Drive-like folders and share links or videos with all students.</p></div></div>
+  <div class="panel"><div class="panel-head"><h3>Create Folder</h3></div><form id="addFolderForm" style="display:flex;gap:12px;padding:20px;flex-wrap:wrap;"><div class="field" style="flex:1;"><label>Folder Name</label><input name="title" required placeholder="e.g. Editing Assets"></div><button class="btn primary" type="submit">Create Folder</button></form></div>
+  <div class="panel" style="margin-top:16px;"><div class="panel-head"><h3>Folders</h3></div><div class="list" style="padding:0 20px 20px;">${folders.length===0?'<div class="empty">No folders yet. Create one above.</div>':folderRows}</div></div>
+  <div class="panel" style="margin-top:16px;"><div class="panel-head"><h3>Add Material</h3></div><form id="addResourceForm" style="display:flex;flex-direction:column;gap:12px;padding:20px;"><div class="field"><label>Folder</label><select name="folder_id" required>${folders.length===0?'<option value="">Create a folder first</option>':folders.map(f=>`<option value="${f.id}">${esc(f.title)}</option>`).join('')}</select></div><div class="field"><label>Title</label><input name="title" required placeholder="e.g. Viral Hooks Pack"></div><div class="field"><label>Link / Video URL</label><input name="url" required placeholder="https://…"><p class="micro" style="color:#748195;margin-top:6px;">YouTube, Vimeo, Google Drive ya koi bhi link.</p></div><button class="btn primary" type="submit">Add Material</button></form></div>`;
+}
 
 function studentCourses(s){
   if(dbLessons===null){loadLessons();return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">Loading lessons…</p></div></div>`;} let _lessons=(dbLessons!==null)?dbLessons:(state.curriculum||[]);
@@ -638,12 +674,12 @@ function studentSupport(s=currentStudent()){
 function adminSidebar(){
   if(!state.unreadCounts) state.unreadCounts = { trends: 0, adminSupport: 0, withdrawals: 0, kyc: 0, approvals: 0 };
   const uc = state.unreadCounts;
-  const items=[['overview','🏠 Overview'],['students','👥 Students'],['approvals','✅ Approvals'],['kyc','🆔 KYC Approvals'],['curriculum','📤 Video Upload'],['assignments','📝 Assignments'],['courses','📚 Courses'],['live','🎥 Curriculum'],['programs','🧩 Programs'],['trends','🔥 Trends'],['earnings','💰 Earnings'],['withdrawals','🏦 Withdrawals'],['notifications','🔔 Notify'],['support','💬 Support'],['settings','⚙️ Settings']];
+  const items=[['overview','🏠 Overview'],['students','👥 Students'],['approvals','✅ Approvals'],['kyc','🆔 KYC Approvals'],['curriculum','📤 Video Upload'],['assignments','📝 Assignments'],['courses','📚 Courses'],['resources','📁 Resources'],['live','🎥 Curriculum'],['programs','🧩 Programs'],['trends','🔥 Trends'],['earnings','💰 Earnings'],['withdrawals','🏦 Withdrawals'],['notifications','🔔 Notify'],['support','💬 Support'],['settings','⚙️ Settings']];
   return `<aside class="sidebar"><div class="side-profile"><strong>${esc(state.admin.name)}</strong><div style="margin-top:5px"><span class="role-badge role-admin">Admin</span></div></div><div class="side-nav">${items.map(([id,l])=>`<button class="${adminView===id?'active':''}" data-admin="${id}" style="display:flex;justify-content:space-between;align-items:center;"><span>${l}</span>${id==='support' && uc.adminSupport>0?`<span class="nav-badge">${uc.adminSupport}</span>`:id==='withdrawals' && uc.withdrawals>0?`<span class="nav-badge">${uc.withdrawals}</span>`:id==='kyc' && uc.kyc>0?`<span class="nav-badge">${uc.kyc}</span>`:id==='approvals' && uc.approvals>0?`<span class="nav-badge">${uc.approvals}</span>`:''}</button>`).join('')}<button data-action="logout">↩ Logout</button></div></aside>`
 }
 function adminDashboard(){if(!state.session||state.session.role!=='admin'){openAuth('login');location.hash='#/';return homePage()}return `<div class="dashboard-page"><div class="dashboard-shell">${adminSidebar()}<section class="dashboard-main" id="adminContent">${adminPanel()}</section></div></div>`}
 function adminPanel(){
- if(adminView==='students') return adminStudents(); if(adminView==='approvals') return adminApprovals(); if(adminView==='kyc') return adminKYC(); if(adminView==='curriculum') return adminCurriculum(); if(adminView==='assignments') return adminAssignments(); if(adminView==='courses') return adminCourses(); if(adminView==='live') return adminLive(); if(adminView==='programs') return adminPrograms(); if(adminView==='trends') return adminTrends(); if(adminView==='earnings') return adminEarnings(); if(adminView==='withdrawals') return adminWithdrawals(); if(adminView==='notifications') return adminNotify(); if(adminView==='support') return adminSupport(); if(adminView==='settings') return adminSettings();
+ if(adminView==='students') return adminStudents(); if(adminView==='approvals') return adminApprovals(); if(adminView==='kyc') return adminKYC(); if(adminView==='curriculum') return adminCurriculum(); if(adminView==='assignments') return adminAssignments(); if(adminView==='courses') return adminCourses(); if(adminView==='resources') return adminResources(); if(adminView==='live') return adminLive(); if(adminView==='programs') return adminPrograms(); if(adminView==='trends') return adminTrends(); if(adminView==='earnings') return adminEarnings(); if(adminView==='withdrawals') return adminWithdrawals(); if(adminView==='notifications') return adminNotify(); if(adminView==='support') return adminSupport(); if(adminView==='settings') return adminSettings();
  const pending=state.withdrawals.filter(w=>w.status==='Pending').length,totalPaid=state.withdrawals.filter(w=>w.status==='Paid').reduce((a,b)=>a+b.amount,0);
  const totalRevenue = state.students.reduce((sum, s) => sum + (Number(s.manual_total) || 0), 0);
  const activeSubs = state.students.filter(s => s.status !== 'Suspended').length;
@@ -1111,7 +1147,7 @@ function bindForms(){
       window._reapplyProfId = prof.id;
       bindForms();
       return;
-    } if(prof.role==='admin' || email.toLowerCase()===state.admin.email.toLowerCase()){state.session={role:'admin'}; save(); closeModals(); location.hash='#/admin'; render(); loadApprovals(); loadLessons(); loadStudents(); return;} let s=state.students.find(x=>x.email.toLowerCase()===email.toLowerCase());
+    } if(prof.role==='admin' || email.toLowerCase()===state.admin.email.toLowerCase()){state.session={role:'admin'}; save(); closeModals(); location.hash='#/admin'; render(); loadApprovals(); loadLessons(); loadStudents(); loadResources(); return;} let s=state.students.find(x=>x.email.toLowerCase()===email.toLowerCase());
   const profJoin = prof.created_at ? prof.created_at.slice(0,10) : todayISO();
   if(!s){s={id:prof.id||uid('ST'),name:prof.name||prof.full_name||email.split('@')[0],avatar:prof.avatar_url||'',email:email.toLowerCase(),password:'',phone:prof.phone||'',network:prof.network||'',cnic:prof.cnic||'',status:'Active Student',program:prof.program||'Creator Program',joinDate:profJoin,today:Number(prof.manual_today||0),week:Number(prof.manual_week||0),month:Number(prof.manual_month||0),lifetime:Number(prof.manual_total||0),available:Number(prof.manual_available||0),pending:Number(prof.manual_pending||0),paid:Number(prof.manual_paid||0),manual_today:Number(prof.manual_today||0),manual_week:Number(prof.manual_week||0),manual_month:Number(prof.manual_month||0),manual_total:Number(prof.manual_total||0),manual_available:Number(prof.manual_available||0),manual_pending:Number(prof.manual_pending||0),manual_paid:Number(prof.manual_paid||0),attendance:100,progress:0,tasksDone:0,tasksTotal:20,trendParticipation:0,performance:'New',payoutMethod:'',payoutAccount:'',city:'',bio:'',nameChangeCount:Number(prof.name_change_count||1)}; state.students.push(s);}
   else { s.name=prof.name||prof.full_name||s.name; s.phone=prof.phone||s.phone; s.network=prof.network||s.network; s.cnic=prof.cnic||s.cnic; s.program=prof.program||s.program; s.avatar=prof.avatar_url||s.avatar; s.manual_today=Number(prof.manual_today||0);s.manual_week=Number(prof.manual_week||0);s.manual_month=Number(prof.manual_month||0);s.manual_total=Number(prof.manual_total||0);s.manual_available=Number(prof.manual_available||0);s.manual_pending=Number(prof.manual_pending||0);s.manual_paid=Number(prof.manual_paid||0); s.lifetime=s.manual_total;s.available=s.manual_available;s.pending=s.manual_pending;s.paid=s.manual_paid;s.nameChangeCount=Number(prof.name_change_count||1); if(prof.created_at) s.joinDate=prof.created_at.slice(0,10); save(); } if(s.available===500&&s.paid===150&&s.lifetime===650){s.available=0;s.paid=0;s.lifetime=0;s.pending=0;}
@@ -1253,6 +1289,9 @@ window.generateAIOverview = async function(){
   }catch(e){ toast('AI failed: '+e.message); }
   if(btn){btn.disabled=false;btn.textContent='🤖 Generate with AI';}
 };
+const afd=$('#addFolderForm');if(afd)afd.onsubmit=async e=>{e.preventDefault();const fd=new FormData(afd);const title=String(fd.get('title')||'').trim();if(!title)return;try{const{error}=await supabase.from('resource_folders').insert({title});if(error)throw error;toast('Folder created.');afd.reset();}catch(err){toast('Failed: '+((err&&err.message)||'try again'));}loadResources();};
+const arf=$('#addResourceForm');if(arf)arf.onsubmit=async e=>{e.preventDefault();const fd=new FormData(arf);const folder_id=String(fd.get('folder_id')||'');const title=String(fd.get('title')||'').trim();const url=String(fd.get('url')||'').trim();if(!folder_id){toast('Pehle folder banao.');return;}try{const{error}=await supabase.from('resource_items').insert({folder_id,title,url});if(error)throw error;toast('Material added.');arf.reset();}catch(err){toast('Failed: '+((err&&err.message)||'try again'));}loadResources();};
+
 const rap=$('#reapplyForm');if(rap)rap.onsubmit=async e=>{e.preventDefault();const fd=new FormData(rap);const pid=window._reapplyProfId;if(!pid){toast('Session expired. Please login again.');return;}const btn=rap.querySelector('button[type="submit"]');if(btn){btn.disabled=true;btn.textContent='Submitting...';}try{const upd={status:'pending',name:String(fd.get('name')).trim(),phone:String(fd.get('phone')).trim(),network:String(fd.get('network')).trim(),cnic:String(fd.get('cnic')).trim(),program:String(fd.get('program')||'').trim()};const {error:upErr}=await supabase.from('profiles').update(upd).eq('id',pid);if(upErr)throw upErr;await supabase.auth.signOut();window._reapplyProfId=null;closeModals();toast('✅ Re-application submitted! Admin will review it soon.');}catch(err){if(btn){btn.disabled=false;btn.textContent='📝 Submit Re-application';}toast('Failed: '+((err&&err.message)||'try again'));}}; const alf=$('#addLessonForm');if(alf)alf.onsubmit=async e=>{e.preventDefault();const fd=new FormData(alf);const title=String(fd.get('title')).trim(),module=String(fd.get('module')).trim(),duration=String(fd.get('duration')).trim(),lessonProgram=String(fd.get('program')||'All').trim();const vf=fd.get('videofile');let url=String(fd.get('url')||'').trim(),kind='embed';
  if(vf&&vf.size>0){if(vf.size>500*1024*1024){toast('Video must be under 500MB.');return;} const ext=(String(vf.name).split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'')||'mp4';const fpath=Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
   const progWrap=document.getElementById('upload_progress_wrap'),progBar=document.getElementById('upload_progress_bar'),progPct=document.getElementById('upload_progress_pct');
@@ -1356,6 +1395,7 @@ function bindMobileMenu() {
       if (dashTarget) {
         var _sy2 = 0; try { _sy2 = window.scrollY; } catch(e){} dashView = dashTarget;
         if(dashTarget==='courses')loadLessons();
+        if(dashTarget==='resources')loadResources();
         if (route() !== 'dashboard') { location.hash = '#/dashboard'; }
         render(); try { keepActiveDashTabVisible(); } catch(e){}
       } else if (adminTarget) {
@@ -1535,6 +1575,7 @@ document.addEventListener('click', async e => {
     if (d === 'notifications' && state.session?.role === 'student') { const s = currentStudent(); if(s.unreadCounts?.studentAlerts > 0) { s.unreadCounts.studentAlerts = 0; save(); } }
     dashView = d;
     if(d==='assignments'){loadAssignments(); loadMySubmissions();}
+    if(d==='resources')loadResources();
     const mm = document.getElementById('mobileMenu');
     if (mm) mm.classList.remove('open');
     if (route() !== 'dashboard') { location.hash = '#/dashboard'; render(); } else { render(); }
@@ -1553,6 +1594,7 @@ document.addEventListener('click', async e => {
     if(d==='approvals')loadApprovals();
     if(d==='curriculum')loadLessons();
     if(d==='assignments')loadAssignments();
+    if(d==='resources')loadResources();
     const mm = document.getElementById('mobileMenu');
     if (mm) mm.classList.remove('open');
     if (route() !== 'admin') { location.hash = '#/admin'; render(); } else { render(); }
@@ -1596,6 +1638,16 @@ document.addEventListener('click', async e => {
     if(a==='reject-user'){if(!confirm('Reject this signup request?'))return;const pid=actionEl.dataset.id;const{error:rjErr}=await supabase.from('profiles').update({status:'rejected'}).eq('id',pid);if(rjErr){toast('Reject failed: '+rjErr.message);return;}toast('Request rejected.');notifyEmail('rejected',pid);loadApprovals();return;}
     if(a==='approve-name-change'){const rid=actionEl.dataset.id;const r=pendingNameChanges.find(x=>x.id===rid);if(!r){toast('Request not found.');return;}try{let used=1;try{const{data:prof}=await supabase.from('profiles').select('name_change_count').eq('id',r.student_id).single();if(prof&&prof.name_change_count!=null)used=Number(prof.name_change_count);}catch(e){}if(used>=3){toast('This student has already used all 3 name changes.');return;}let{error:upErr}=await supabase.from('profiles').update({name:r.new_name,name_change_count:used+1}).eq('id',r.student_id);let bumped=!upErr;if(upErr){const retry=await supabase.from('profiles').update({name:r.new_name}).eq('id',r.student_id);if(retry.error)throw retry.error;}await supabase.from('name_change_requests').update({status:'approved'}).eq('id',rid);const st=state.students.find(x=>x.id===r.student_id);if(st){st.name=r.new_name;if(bumped)st.nameChangeCount=used+1;}save();try{notify(r.student_id,'Name change approved','Your new name "'+r.new_name+'" is now active.');}catch(e){}toast('Name change approved.');}catch(err){toast('Approval failed.');}loadNameChanges();loadStudents();return;}
     if(a==='reject-name-change'){const rid=actionEl.dataset.id;try{await supabase.from('name_change_requests').update({status:'rejected'}).eq('id',rid);toast('Name change rejected.');}catch(err){toast('Failed.');}loadNameChanges();return;}
+    if(a==='open-resource-folder'){const fid=actionEl.dataset.id;state.openResourceFolderId=(state.openResourceFolderId===fid?null:fid);save();render();return;}
+if(a==='close-resource-folder'){state.openResourceFolderId=null;save();render();return;}
+if(a==='play-resource-item'){state.playingResourceId=actionEl.dataset.id;save();render();return;}
+if(a==='close-resource-player'){state.playingResourceId=null;save();render();return;}
+if(a==='rename-resource-folder'){state.editingFolderId=actionEl.dataset.id;save();render();return;}
+if(a==='cancel-folder-rename'){state.editingFolderId=null;save();render();return;}
+if(a==='save-folder-rename'){const fid=actionEl.dataset.id;const inp=document.getElementById('renameFolderInput');const title=inp?inp.value.trim():'';if(!title){toast('Folder name khaali nahi ho sakta.');return;}try{const{error}=await supabase.from('resource_folders').update({title}).eq('id',fid);if(error)throw error;state.editingFolderId=null;save();toast('Folder renamed.');}catch(err){toast('Rename failed.');}loadResources();return;}
+if(a==='delete-resource-folder'){const fid=actionEl.dataset.id;if(!confirm('Delete this folder and all its material?'))return;try{const{error}=await supabase.from('resource_folders').delete().eq('id',fid);if(error)throw error;if(state.openResourceFolderId===fid)state.openResourceFolderId=null;if(state.editingFolderId===fid)state.editingFolderId=null;save();toast('Folder deleted.');}catch(err){toast('Delete failed.');}loadResources();return;}
+if(a==='delete-resource-item'){const iid=actionEl.dataset.id;if(!confirm('Delete this material?'))return;try{const{error}=await supabase.from('resource_items').delete().eq('id',iid);if(error)throw error;if(state.playingResourceId===iid)state.playingResourceId=null;save();toast('Material deleted.');}catch(err){toast('Delete failed.');}loadResources();return;}
+
     if(a==='refresh-approvals'){loadApprovals();return;}
     if (a === 'open-forgot-password') { openForgotPassword(); return; }
     if (a === 'close-modal')          { closeModals(); await supabase.auth.signOut().catch(()=>{}); window._reapplyProfId=null; return; }
