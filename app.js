@@ -440,6 +440,21 @@ function studentCourses(s){
   if(_sprog!=='TikTok Growth + Hypic + CapCut + Dreamina'){
     _lessons=_lessons.filter(l=>{const _lp=String(l.program||'All').trim();return _lp==='All'||(_sprog&&_lp===_sprog);});
   }
+  const _combo=_sprog==='TikTok Growth + Hypic + CapCut + Dreamina';
+  const _courseUnlocked=c=>_combo||_sprog===c;
+  const _courseList=c=>_lessons.filter(l=>{const _lp=String(l.program||'All').trim();return _lp===c||_lp==='All';});
+  if(!state.openCourse){
+    const _cards=[['TikTok Growth','🎵'],['Hypic + CapCut + Dreamina','✨']].map(([c,ic])=>{const _cl=_courseList(c);const _done=_cl.filter(l=>s.completedLessons&&s.completedLessons.includes(l.id)).length;const _un=_courseUnlocked(c);return `<div class="panel" style="padding:20px;"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;"><div><h2 style="margin:0;">${ic} ${esc(c)}</h2><p style="margin:6px 0 0;color:#8fa1b8;font-size:14px;">${_cl.length} lecture(s)${_done?` · ${_done} completed`:''}</p></div>${_un?`<button class="btn primary" data-action="open-course" data-course="${esc(c)}">Open</button>`:`<span style="text-align:right;"><span class="tag">🔒 Locked</span><span style="display:block;color:#8fa1b8;font-size:12px;margin-top:6px;">Contact admin for access.</span></span>`}</div></div>`;}).join('');
+    return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">Choose your course — only courses you have access to are unlocked.</p></div></div><div style="display:flex;flex-direction:column;gap:16px;">${_cards}</div>`;
+  }
+  const _oc=state.openCourse;
+  let _courseLessons=_courseList(_oc);
+  const _playing=state.currentLessonId?_courseLessons.find(l=>l.id===state.currentLessonId):null;
+  if(!_playing){
+    return `<div class="subpage-head"><div><h1>${esc(_oc)}</h1><p style="color:#748195">${_courseLessons.length} lecture(s)</p></div><button class="btn small light" data-action="back-to-courses">← All courses</button></div><div class="panel"><div class="list">${_courseLessons.length===0?'<div class="empty" style="padding:20px;">No lectures in this course yet.</div>':_courseLessons.map(l=>{const _done=s.completedLessons&&s.completedLessons.includes(l.id);const _gen=String(l.program||'All').trim()==='All';return `<div class="list-item"><div class="meta"><strong>${l.module?esc(l.module)+': ':''}${esc(l.title)}</strong><small>${_gen?'🌐 General · ':''}${esc(l.duration||'')}</small></div><div style="display:flex;gap:8px;align-items:center;">${_done?'<span style="color:#34d399;">✅</span>':''}<button class="btn small primary" data-action="play-lesson" data-id="${l.id}">▶ Watch</button></div></div>`}).join('')}</div></div>`;
+  }
+  _lessons=_courseLessons;
+
   if(_lessons.length === 0) {
     return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">No video lessons available for your course yet.</p></div></div>`;
   }
@@ -451,11 +466,11 @@ function studentCourses(s){
   const notes = state.studentNotes[current.id] || '';
   const isCompleted = s.completedLessons.includes(current.id);
   const total = _lessons.length;
-  const comp = s.completedLessons.length;
+  const comp = _lessons.filter(l=>s.completedLessons.includes(l.id)).length;
   const progress = Math.round((comp/total)*100) || 0;
   const _did = driveId(current.video_url||current.url);
 
-  return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">Progress: ${progress}% complete</p></div></div>
+  return `<div class="subpage-head"><div><h1>${esc(state.openCourse||'My Courses')}</h1><p style="color:#748195">Progress: ${progress}% complete</p></div><button class="btn small light" data-action="back-to-lectures">← Lectures</button></div>
   <div style="display:flex; gap:20px; flex-wrap:wrap;">
     <div style="flex: 1 1 600px; display:flex; flex-direction:column; gap:16px;">
        <div style="background:#000; border-radius:12px; overflow:hidden; aspect-ratio:16/9;">
@@ -809,8 +824,8 @@ function adminCurriculum(){
   <div class="panel">
     <div class="panel-head"><h3>Add New Video Lesson</h3></div><p class="micro" style="padding:0 20px;color:#748195;">Upload a recording or paste a YouTube/Vimeo link — lessons appear for all students instantly.</p>
     <form id="addLessonForm" style="display:flex; flex-direction:column; gap:12px; padding:20px;">
-       <div class="field"><label>Lesson Title</label><input name="title" required placeholder="e.g. Intro to Video Editing"></div>
-       <div class="field"><label>Module / Chapter Name</label><input name="module" required placeholder="e.g. Module 1: Basics"></div>
+       <div class="field"><label>Lesson Title</label><input name="title" required placeholder="e.g. Account Setup"></div>
+       <div class="field"><label>Module / Lecture</label><input name="module" required placeholder="e.g. Lecture 1"></div>
        <div class="field"><label>Course / Program</label><select name="program" required><option value="All">All Courses (visible to everyone)</option><option value="TikTok Growth">TikTok Growth</option><option value="Hypic + CapCut + Dreamina">Hypic + CapCut + Dreamina</option><option value="TikTok Growth + Hypic + CapCut + Dreamina">TikTok Growth + Hypic + CapCut + Dreamina</option></select><p class="micro" style="color:#748195;margin-top:6px;">Only students enrolled in this course will see the lesson.</p></div>
        <div class="field"><label>Option A — Upload recording (video file)</label><input type="file" name="videofile" id="lesson_videofile" accept="video/*"><p class="micro" style="color:#748195;margin-top:6px;">MP4 recommended. If you choose a file, the URL field below is ignored.</p><div id="upload_progress_wrap" style="display:none;margin-top:10px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:13px;color:#8fa1b8;">Uploading...</span><span id="upload_progress_pct" style="font-size:13px;font-weight:600;color:#8b5cf6;">0%</span></div><div style="height:10px;background:rgba(255,255,255,0.08);border-radius:6px;overflow:hidden;"><div id="upload_progress_bar" style="height:100%;width:0%;background:linear-gradient(90deg,#8b5cf6,#6366f1);border-radius:6px;transition:width 0.2s;"></div></div></div></div><div class="field"><label>Option B — Video URL (YouTube/Vimeo embed)</label><input name="url" id="lesson_url" placeholder="https://www.youtube.com/embed/..."></div>
        <div class="field"><label>Duration (minutes)</label><input name="duration" required inputmode="numeric" placeholder="e.g. 10"></div>
@@ -1395,6 +1410,7 @@ function bindMobileMenu() {
       if (dashTarget) {
         var _sy2 = 0; try { _sy2 = window.scrollY; } catch(e){} dashView = dashTarget;
         if(dashTarget==='courses')loadLessons();
+        if(dashTarget==='courses'){state.openCourse=null;state.currentLessonId=null;save();}
         if(dashTarget==='resources')loadResources();
         if (route() !== 'dashboard') { location.hash = '#/dashboard'; }
         render(); try { keepActiveDashTabVisible(); } catch(e){}
@@ -1575,6 +1591,7 @@ document.addEventListener('click', async e => {
     if (d === 'notifications' && state.session?.role === 'student') { const s = currentStudent(); if(s.unreadCounts?.studentAlerts > 0) { s.unreadCounts.studentAlerts = 0; save(); } }
     dashView = d;
     if(d==='assignments'){loadAssignments(); loadMySubmissions();}
+    if(d==='courses'){state.openCourse=null;state.currentLessonId=null;save();}
     if(d==='resources')loadResources();
     const mm = document.getElementById('mobileMenu');
     if (mm) mm.classList.remove('open');
@@ -1647,6 +1664,10 @@ if(a==='cancel-folder-rename'){state.editingFolderId=null;save();render();return
 if(a==='save-folder-rename'){const fid=actionEl.dataset.id;const inp=document.getElementById('renameFolderInput');const title=inp?inp.value.trim():'';if(!title){toast('Folder name khaali nahi ho sakta.');return;}try{const{error}=await supabase.from('resource_folders').update({title}).eq('id',fid);if(error)throw error;state.editingFolderId=null;save();toast('Folder renamed.');}catch(err){toast('Rename failed.');}loadResources();return;}
 if(a==='delete-resource-folder'){const fid=actionEl.dataset.id;if(!confirm('Delete this folder and all its material?'))return;try{const{error}=await supabase.from('resource_folders').delete().eq('id',fid);if(error)throw error;if(state.openResourceFolderId===fid)state.openResourceFolderId=null;if(state.editingFolderId===fid)state.editingFolderId=null;save();toast('Folder deleted.');}catch(err){toast('Delete failed.');}loadResources();return;}
 if(a==='delete-resource-item'){const iid=actionEl.dataset.id;if(!confirm('Delete this material?'))return;try{const{error}=await supabase.from('resource_items').delete().eq('id',iid);if(error)throw error;if(state.playingResourceId===iid)state.playingResourceId=null;save();toast('Material deleted.');}catch(err){toast('Delete failed.');}loadResources();return;}
+
+    if(a==='open-course'){state.openCourse=actionEl.dataset.course;state.currentLessonId=null;save();render();return;}
+if(a==='back-to-courses'){state.openCourse=null;state.currentLessonId=null;save();render();return;}
+if(a==='back-to-lectures'){state.currentLessonId=null;save();render();return;}
 
     if(a==='refresh-approvals'){loadApprovals();return;}
     if (a === 'open-forgot-password') { openForgotPassword(); return; }
