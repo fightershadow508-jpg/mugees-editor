@@ -437,8 +437,8 @@ function adminResources(){
 function studentCourses(s){
   if(dbLessons===null){loadLessons();return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">Loading lessons…</p></div></div>`;} let _lessons=(dbLessons!==null)?dbLessons:(state.curriculum||[]);
   const _sprog=String(s.program||'').trim();
-  if(_sprog&&_sprog!=='TikTok Growth + Hypic + CapCut + Dreamina'){
-    _lessons=_lessons.filter(l=>{const _lp=String(l.program||'All').trim();return _lp==='All'||_lp===_sprog;});
+  if(_sprog!=='TikTok Growth + Hypic + CapCut + Dreamina'){
+    _lessons=_lessons.filter(l=>{const _lp=String(l.program||'All').trim();return _lp==='All'||(_sprog&&_lp===_sprog);});
   }
   if(_lessons.length === 0) {
     return `<div class="subpage-head"><div><h1>My Courses</h1><p style="color:#748195">No video lessons available for your course yet.</p></div></div>`;
