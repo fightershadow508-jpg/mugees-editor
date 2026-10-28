@@ -399,7 +399,8 @@ window.saveNotes = function(id) {
 };
 
 let dbResourceFolders=null, dbResourceItems=null;
-function resourceEmbedUrl(u){try{u=String(u||'');let m=u.match(/[?&]v=([A-Za-z0-9_-]{6,})/);if(m)return 'https://www.youtube.com/embed/'+m[1];m=u.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/);if(m)return 'https://www.youtube.com/embed/'+m[1];m=u.match(/vimeo\.com\/(\d+)/);if(m)return 'https://player.vimeo.com/video/'+m[1];return u;}catch(e){return u;}}
+function resourceEmbedUrl(u){try{u=String(u||'');let m=u.match(/[?&]v=([A-Za-z0-9_-]{6,})/);if(m)return 'https://www.youtube.com/embed/'+m[1];m=u.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/);if(m)return 'https://www.youtube.com/embed/'+m[1];m=u.match(/youtube\.com\/shorts\/([A-Za-z0-9_-]{6,})/);if(m)return 'https://www.youtube.com/embed/'+m[1];m=u.match(/youtube\.com\/live\/([A-Za-z0-9_-]{6,})/);if(m)return 'https://www.youtube.com/embed/'+m[1];m=u.match(/vimeo\.com\/(\d+)/);if(m)return 'https://player.vimeo.com/video/'+m[1];return u;}catch(e){return u;}}
+function watchLabel(u,did){try{u=String(u||'');if(/youtube\.com|youtu\.be/.test(u))return 'YouTube';if(/vimeo\.com/.test(u))return 'Vimeo';if(did||driveId(u))return 'Google Drive';return 'the original site';}catch(e){return 'the original site';}}
 function resourceIsVideo(u){try{return !!driveId(u)||/youtube\.com|youtu\.be|vimeo\.com/.test(String(u||''));}catch(e){return false;}}
 async function loadResources(){try{const f=await supabase.from('resource_folders').select('*').order('created_at',{ascending:true});if(!f.error)dbResourceFolders=f.data||[];else{dbResourceFolders=[];toast('Resources load failed: '+(f.error.message||'try again'));}const it=await supabase.from('resource_items').select('*').order('created_at',{ascending:true});if(!it.error)dbResourceItems=it.data||[];else{dbResourceItems=[];}}catch(e){if(dbResourceFolders===null)dbResourceFolders=[];if(dbResourceItems===null)dbResourceItems=[];}
  if(adminView==='resources'){const c=$('#adminContent');if(c){c.innerHTML=adminResources();bindForms();}}
@@ -481,9 +482,9 @@ function studentCourses(s){
               ${[0.5,0.75,1,1.25,1.5,2].map(r=>`<button class="btn small ${r===1?'primary':'light'}" data-speed="${r}" data-action="set-speed" data-speed="${r}">${r}x</button>`).join('')}
               <button class="btn small light" data-action="toggle-fullscreen" style="margin-left:auto;">⛶ Fullscreen</button>
             </div>`
-         :`<iframe src="${embedUrl(current.video_url||current.url)}" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="border:0;background:#000;display:block"></iframe>`}
+         :`<iframe src="${resourceEmbedUrl(current.video_url||current.url)}" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="border:0;background:#000;display:block"></iframe>`}
        </div>
-       ${current.kind!=='file'?`<div style="text-align:center;padding:2px 0 0"><a href="${esc(current.video_url||current.url||'')}" target="_blank" rel="noopener" style="color:#8fa1b8;font-size:13px;text-decoration:underline">&#9654; Video not playing? Watch it on Google Drive</a></div>`:''}
+       ${current.kind!=='file'?`<div style="text-align:center;padding:2px 0 0"><a href="${esc(current.video_url||current.url||'')}" target="_blank" rel="noopener" style="color:#8fa1b8;font-size:13px;text-decoration:underline">&#9654; Video not playing? Watch it on ${watchLabel(current.video_url||current.url,_did)}</a></div>`:''}
        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
          <div>
            <h2 style="margin:0; font-size:20px; color:#edf5ff;">${esc(current.title)}</h2>
