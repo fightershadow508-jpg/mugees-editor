@@ -479,7 +479,7 @@ function studentCourses(s){
     <div style="flex: 1 1 600px; display:flex; flex-direction:column; gap:16px;">
        <div style="background:#000; border-radius:12px; overflow:hidden; aspect-ratio:16/9;">
          ${(current.isGated||current.kind==='file'||_did)
-         ?`<video id="lessonVideo" src="${current.isGated?_gatedSrc:(current.kind==='file'?(current.video_url||current.url):('/api/drive?id='+_did))}"${_did&&current.kind!=='file'?(' poster="https://drive.google.com/thumbnail?id='+_did+'&sz=w1000" data-drive-embed="'+embedUrl(current.video_url||current.url)+'"'):''} controls playsinline preload="metadata" style="width:100%;height:100%;background:#000;"></video>
+         ?`<video id="lessonVideo" src="${current.isGated?_gatedSrc:(current.kind==='file'?(current.video_url||current.url):('/api/drive?id='+_did))}"${_did&&current.kind!=='file'?(' poster="https://drive.google.com/thumbnail?id='+_did+'&sz=w1000" data-drive-embed="'+embedUrl(current.video_url||current.url)+'"'):''} controls${current.isGated?' controlsList="nodownload"':''} playsinline preload="metadata" style="width:100%;height:100%;background:#000;"></video>
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">
               <span style="color:#8fa1b8;font-size:13px;">▶ Speed:</span>
               ${[0.5,0.75,1,1.25,1.5,2].map(r=>`<button class="btn small ${r===1?'primary':'light'}" data-speed="${r}" data-action="set-speed" data-speed="${r}">${r}x</button>`).join('')}
@@ -487,7 +487,7 @@ function studentCourses(s){
             </div>`
          :`<iframe src="${resourceEmbedUrl(current.video_url||current.url)}" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="border:0;background:#000;display:block"></iframe>`}
        </div>
-       ${(current.kind!=='file'&&!current.isGated)?`<div style="text-align:center;padding:2px 0 0"><a href="${esc(current.video_url||current.url||'')}" target="_blank" rel="noopener" style="color:#8fa1b8;font-size:13px;text-decoration:underline">&#9654; Video not playing? Watch it on ${watchLabel(current.video_url||current.url,_did)}</a></div>`:''}
+
        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
          <div>
            <h2 style="margin:0; font-size:20px; color:#edf5ff;">${esc(current.title)}</h2>
