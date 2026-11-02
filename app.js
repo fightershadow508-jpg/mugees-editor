@@ -382,8 +382,9 @@ function studentView(s){
  <div class="dashboard-grid"><div class="panel"><div class="panel-head"><h3>Recent earnings</h3><button class="btn small light" data-dash="earnings">View all</button></div><div class="list">${myE.map(e=>`<div class="list-item"><div class="meta"><strong>${esc(e.program)}</strong><small>${niceDate(e.date)}</small></div><span class="amount green">+ ${money(e.amount)}</span></div>`).join('')||'<div class="empty">No earnings yet.</div>'}</div></div>${ac.showTrends?`<div class="panel"><div class="panel-head"><h3>Latest trends</h3><button class="btn small light" data-dash="trends">View</button></div><div class="list">${state.trends.slice(0,3).map(t=>`<div class="list-item"><div class="meta"><strong>${esc(t.program)}</strong><small>${esc(t.title)}</small></div><span class="tag ${t.status==='New'?'green':''}">${esc(t.status)}</span></div>`).join('')}</div></div>`:''}</div>`
 }
 function nextClassCard(){const c=state.classes.find(x=>x.status==='Upcoming')||state.classes[0];return `<h3 style="margin:6px 0">${esc(c.title)}</h3><p style="color:#728096">${niceDate(c.date)} · ${esc(c.time)}<br>${esc(c.trainer)} · ${esc(c.batch)}</p><button class="btn primary" data-action="class-detail" data-id="${c.id}">Open Class</button>`}
-window.playLesson = function(id) {
+window.playLesson = async function(id) {
   state.currentLessonId = id;
+  try { const _s = await supabase.auth.getSession(); if(_s&&_s.data&&_s.data.session){ state.sbToken = _s.data.session.access_token; } } catch(_){}
   render();
 };
 window.setSpeed=function(r,btn){const v=document.getElementById('lessonVideo');if(v)v.playbackRate=r;document.querySelectorAll('[data-speed]').forEach(b=>{const on=parseFloat(b.getAttribute('data-speed'))===r;b.classList.toggle('primary',on);b.classList.toggle('light',!on);});};
@@ -441,6 +442,7 @@ function studentCourses(s){
   if(_sprog!=='TikTok Growth + Hypic + CapCut + Dreamina'){
     _lessons=_lessons.filter(l=>{const _lp=String(l.program||'All').trim();return _lp==='All'||(_sprog&&_lp===_sprog);});
   }
+  _lessons=_lessons.filter(l=>!l.isGated||l.invited===true);
   const _combo=_sprog==='TikTok Growth + Hypic + CapCut + Dreamina';
   const _courseUnlocked=c=>_combo||_sprog===c;
   const _courseList=c=>_lessons.filter(l=>{const _lp=String(l.program||'All').trim();return _lp===c||_lp==='All';});
@@ -470,13 +472,14 @@ function studentCourses(s){
   const comp = _lessons.filter(l=>s.completedLessons.includes(l.id)).length;
   const progress = Math.round((comp/total)*100) || 0;
   const _did = driveId(current.video_url||current.url);
+  const _gatedSrc = current.isGated ? ('/api/gated-drive?lesson=' + current.id + '&token=' + encodeURIComponent(state.sbToken || '')) : null;
 
   return `<div class="subpage-head"><div><h1>${esc(state.openCourse||'My Courses')}</h1><p style="color:#748195">Progress: ${progress}% complete</p></div><button class="btn small light" data-action="back-to-lectures">← Lectures</button></div>
   <div style="display:flex; gap:20px; flex-wrap:wrap;">
     <div style="flex: 1 1 600px; display:flex; flex-direction:column; gap:16px;">
        <div style="background:#000; border-radius:12px; overflow:hidden; aspect-ratio:16/9;">
-         ${(current.kind==='file'||_did)
-         ?`<video id="lessonVideo" src="${current.kind==='file'?(current.video_url||current.url):('/api/drive?id='+_did)}"${_did&&current.kind!=='file'?(' poster="https://drive.google.com/thumbnail?id='+_did+'&sz=w1000" data-drive-embed="'+embedUrl(current.video_url||current.url)+'"'):''} controls playsinline preload="metadata" style="width:100%;height:100%;background:#000;"></video>
+         ${(current.isGated||current.kind==='file'||_did)
+         ?`<video id="lessonVideo" src="${current.isGated?_gatedSrc:(current.kind==='file'?(current.video_url||current.url):('/api/drive?id='+_did))}"${_did&&current.kind!=='file'?(' poster="https://drive.google.com/thumbnail?id='+_did+'&sz=w1000" data-drive-embed="'+embedUrl(current.video_url||current.url)+'"'):''} controls playsinline preload="metadata" style="width:100%;height:100%;background:#000;"></video>
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">
               <span style="color:#8fa1b8;font-size:13px;">▶ Speed:</span>
               ${[0.5,0.75,1,1.25,1.5,2].map(r=>`<button class="btn small ${r===1?'primary':'light'}" data-speed="${r}" data-action="set-speed" data-speed="${r}">${r}x</button>`).join('')}
@@ -484,7 +487,7 @@ function studentCourses(s){
             </div>`
          :`<iframe src="${resourceEmbedUrl(current.video_url||current.url)}" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="border:0;background:#000;display:block"></iframe>`}
        </div>
-       ${current.kind!=='file'?`<div style="text-align:center;padding:2px 0 0"><a href="${esc(current.video_url||current.url||'')}" target="_blank" rel="noopener" style="color:#8fa1b8;font-size:13px;text-decoration:underline">&#9654; Video not playing? Watch it on ${watchLabel(current.video_url||current.url,_did)}</a></div>`:''}
+       ${(current.kind!=='file'&&!current.isGated)?`<div style="text-align:center;padding:2px 0 0"><a href="${esc(current.video_url||current.url||'')}" target="_blank" rel="noopener" style="color:#8fa1b8;font-size:13px;text-decoration:underline">&#9654; Video not playing? Watch it on ${watchLabel(current.video_url||current.url,_did)}</a></div>`:''}
        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);">
          <div>
            <h2 style="margin:0; font-size:20px; color:#edf5ff;">${esc(current.title)}</h2>
@@ -820,7 +823,7 @@ function adminKYC(){
 function parseDurationSecs(d){d=String(d==null?'':d).trim();if(!d)return 0;var parts=d.split(':').map(function(p){return p.trim();});function num(p){return parseInt(String(p).replace(/[^0-9]/g,''),10)||0;}if(parts.length===1)return num(parts[0])*60;if(parts.length===2)return num(parts[0])*60+num(parts[1]);if(parts.length===3)return num(parts[0])*3600+num(parts[1])*60+num(parts[2]);return 0;}
 function fmtDuration(secs){secs=Math.max(0,Math.round(secs||0));if(!secs)return '';var h=Math.floor(secs/3600),m=Math.floor((secs%3600)/60),s=secs%60,ss=String(s).padStart(2,'0');if(h)return h+':'+String(m).padStart(2,'0')+':'+ss;return m+':'+ss;}
 
-async function loadLessons(){try{const{data,error}=await supabase.from('lessons').select('*').order('created_at',{ascending:false});if(!error)dbLessons=(data||[]).map(l=>({id:l.id,title:l.title,module:l.description||'',url:l.video_url,kind:l.kind||'embed',program:l.program||'All',duration:l.duration_minutes?fmtDuration(l.duration_minutes):''}));}catch(e){if(dbLessons===null)dbLessons=[];}
+async function loadLessons(){try{const{data,error}=await supabase.from('lessons').select('*').order('created_at',{ascending:false});if(!error){dbLessons=(data||[]).map(l=>({id:l.id,title:l.title,module:l.description||'',url:l.video_url,kind:l.kind||'embed',program:l.program||'All',duration:l.duration_minutes?fmtDuration(l.duration_minutes):'',isGated:!!l.is_gated}));try{const _sess=await supabase.auth.getSession();state.sbToken=_sess&&_sess.data&&_sess.data.session?_sess.data.session.access_token:null;const _adm=state.session&&state.session.role==='admin';for(const _gl of dbLessons.filter(x=>x.isGated)){if(_adm){_gl.invited=true;continue;}try{const _r=await supabase.rpc('is_lesson_invited',{p_lesson_id:_gl.id});_gl.invited=_r&&_r.data===true;}catch(_){_gl.invited=false;}}}catch(_){}}}catch(e){if(dbLessons===null)dbLessons=[];}
  if(adminView==='curriculum'){const c=$('#adminContent');if(c){c.innerHTML=adminCurriculum();bindForms();}}
  if(typeof dashView!=='undefined'&&dashView==='courses'&&route()==='dashboard'){const d=$('#dashContent');if(d){try{d.innerHTML=studentView(currentStudent());bindGlobal();}catch(e){}}}}
 function adminCurriculum(){
@@ -841,7 +844,7 @@ function adminCurriculum(){
   <div class="panel" style="margin-top:20px;">
     <div class="panel-head"><h3>Existing Lessons</h3></div>
     <div class="list">
-       ${(dbLessons!==null?dbLessons:state.curriculum).length===0?'<div class="empty" style="padding:20px;">No lessons uploaded yet.</div>' : (dbLessons!==null?dbLessons:state.curriculum).map(l=>`<div class="list-item" style="justify-content:space-between"><div class="meta"><strong>${esc(l.title)}</strong><small>${esc(l.module)} · ${esc(l.duration||'')} ${l.kind==='file'?'· 📤':'· 🔗'} · <span style="color:#8b5cf6;">${esc(l.program||'All')}</span></small></div><button class="btn small light" data-action="delete-lesson" data-id="${l.id}" style="color:#ef4444; border-color:#ef4444;">Delete</button></div>`).join('')}
+       ${(dbLessons!==null?dbLessons:state.curriculum).length===0?'<div class="empty" style="padding:20px;">No lessons uploaded yet.</div>' : (dbLessons!==null?dbLessons:state.curriculum).map(l=>`<div class="list-item" style="justify-content:space-between"><div class="meta"><strong>${esc(l.title)}</strong><small>${esc(l.module)} · ${esc(l.duration||'')} ${l.kind==='file'?'· 📤':'· 🔗'} · <span style="color:#8b5cf6;">${esc(l.program||'All')}</span>${l.isGated?' · 🔒 Gated':''}</small></div><button class="btn small light" data-action="delete-lesson" data-id="${l.id}" style="color:#ef4444; border-color:#ef4444;">Delete</button></div>`).join('')}
     </div>
   </div>`;
 }
